@@ -270,7 +270,7 @@ a {
 
 .section-hero {
   background-color: var(--secondary-color);
-  padding: 6rem 0 2rem;
+  padding: 4rem 0 2rem;
 }
 
 .hero {
@@ -504,22 +504,6 @@ a {
   font-size: 2rem;
   text-decoration: none;
   transition: var(--main-transition);
-}
-
-.footer .box .social .phone:hover {
-  background-color: #1877f2;
-}
-
-.footer .box .social .whatsapp:hover {
-  background-color: #128c7e;
-}
-
-.footer .box .social .instagram:hover {
-  background-color: #833ab4;
-}
-
-.footer .box .social .snapchat:hover {
-  background-color: #bec038;
 }
 
 .footer .box .text {
@@ -828,7 +812,7 @@ a {
   }
 
   .section-hero {
-    padding: 2.4rem 0 6.4rem 0;
+    padding: 2.4rem 0 2rem 0;
   }
 
   .hero {
@@ -1374,6 +1358,7 @@ a {
 .slider {
   padding: 1rem;
   position: relative;
+  margin: 4rem auto;
 }
 
 .slider-text {
@@ -1393,6 +1378,7 @@ a {
 
 .juxtapose {
   width: 100%;
+  margin: 2rem auto;
 }
 .jx-slider {
   margin-top: 1em;
@@ -1909,3 +1895,258 @@ a.jx-knightlab:focus span.juxtapose-name {
 }
 
 /* End Features */
+
+/* start tint page */
+
+/* start tint number */
+.tint-number {
+  padding: 6rem 2rem;
+  position: relative;
+  background-color: var(--secondary-color);
+}
+
+.tint-number-container .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 3rem;
+}
+
+.tint-number-container .flip {
+  position: relative;
+  width: 100%;
+
+  > .front,
+  > .back {
+    display: block;
+    transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition-duration: 0.5s;
+    transition-property: transform, opacity;
+  }
+
+  > .front {
+    transform: rotateY(0deg);
+  }
+
+  > .back {
+    position: absolute;
+    opacity: 0;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    transform: rotateY(-180deg);
+  }
+
+  &:hover {
+    > .front {
+      transform: rotateY(180deg);
+    }
+
+    > .back {
+      opacity: 1;
+      transform: rotateY(0deg);
+    }
+  }
+}
+
+.tint-number-container .flip {
+  position: relative;
+  display: inline-block;
+  margin: 2rem auto;
+  width: 350px;
+  > .front,
+  > .back {
+    display: block;
+    color: white;
+    width: inherit;
+    background-size: cover !important;
+    background-position: center !important;
+    height: 220px;
+    padding: 20px;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    > h2 {
+      font-size: 4rem;
+      color: var(--text-color-2);
+      text-align: center;
+    }
+  }
+}
+
+/* end tint number */
+/* start specifications */
+.specifications {
+  padding: 4rem 2rem;
+  background-color: #f4f6f8;
+}
+.specifications .container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+.specifications .container .box {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+}
+.specifications .container .box:nth-child(2) .img {
+  order: 2;
+}
+.specifications .container .box .last {
+  order: 2;
+}
+.specifications .container .box .img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+.specifications .container .box img {
+  width: 100%;
+  border-radius: var(--border-radius);
+}
+.specifications .container .box .box-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+}
+.specifications .container .box .box-text h3 {
+  font-size: 3.5rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+}
+.specifications .container .box .box-text p {
+  font-size: 2rem;
+  font-weight: 400;
+  color: var(--p-color);
+  width: 70%;
+  line-height: 1.7;
+}
+
+@media (max-width: 450px) {
+  .specifications .container .box {
+    grid-template-columns: 1fr;
+  }
+  .specifications .container .box:nth-child(2) .img {
+    order: 0;
+  }
+  .specifications .container .box .last {
+    order: 0;
+  }
+}
+@media (max-width: 575px) {
+  .specifications .container .box {
+    grid-template-columns: 1fr;
+  }
+  .specifications .container .box:nth-child(2) .img {
+    order: 0;
+  }
+  .specifications .container .box .last {
+    order: 0;
+  }
+}
+/* end specifications */
+/* end tint page */
+/* start terms page */
+/* start items */
+.conditions,
+.instructions,
+.warranty {
+  padding: 6rem 3rem;
+}
+/* mobile */
+
+@media (max-width: 450px) {
+  .conditions,
+  .instructions,
+  .warranty {
+    padding: 2rem;
+  }
+}
+.conditions .container ul {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  color: var(--primary-color);
+  list-style-type: square;
+  margin: 2.5rem;
+  line-height: 1.8;
+}
+
+.conditions .container ul li {
+  font-size: 2.4rem;
+  margin: 15px 0;
+}
+
+.conditions .container ul li span {
+  font-weight: bold;
+}
+
+.conditions .container ul li .red {
+  font-size: 2.4rem;
+  color: red;
+  font-weight: normal;
+}
+
+/* end items */
+/* start instructions */
+.instructions .container dt {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  color: var(--primary-color);
+  text-decoration: underline;
+  margin: 25px;
+  font-weight: bold;
+  font-size: 24px;
+  line-height: 1.8;
+}
+
+.instructions .container dl dd {
+  font-size: 2.4rem;
+  margin: 8px;
+  color: var(--primary-color);
+  line-height: 1.8;
+}
+
+.instructions .container dl dd span {
+  font-weight: bold;
+}
+
+.instructions .container dl dd .red {
+  color: red;
+  font-weight: normal;
+}
+
+/* end instructions */
+/* start warranty */
+.warranty .container .body,
+.warranty .container .tint {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+  color: var(--primary-color);
+  list-style-type: square;
+  margin: 25px;
+  font-size: 24px;
+  line-height: 1.8;
+}
+
+.warranty .container h2 {
+  color: var(--primary-color);
+  font-size: 24px;
+  text-decoration: underline;
+}
+
+.warranty .container span {
+  color: red;
+}
+
+/* end  warranty */
+/* end terms-page */
+
+/* end terms page */

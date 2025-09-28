@@ -190,6 +190,7 @@ a {
   height: 9.6rem;
   padding: 0 4.8rem;
   position: relative;
+  z-index: 1000;
 }
 
 .logo {
@@ -265,12 +266,11 @@ a {
 .sticky .section-hero {
   margin-top: 9.6rem;
 }
-
 /* start hero  */
 
 .section-hero {
   background-color: var(--secondary-color);
-  padding: 4.8rem 0 9.6rem 0;
+  padding: 6rem 0 2rem;
 }
 
 .hero {
@@ -1188,7 +1188,7 @@ a {
 .accordion-button::after {
   background-image: none;
   font-family: "Font Awesome 7 Free";
-  content: "\f068";
+  content: "\2b";
   height: 35px;
   width: 35px;
   font-size: 2rem;
@@ -1206,7 +1206,7 @@ a {
 
 .accordion-button:not(.collapsed)::after {
   background-image: none;
-  content: "\2b";
+  content: "\f068";
   color: var(--text-color-2);
 }
 
@@ -1289,7 +1289,7 @@ a {
   margin-left: auto;
   margin-right: auto;
   font-size: 3rem;
-  background-color: var(--primary-color);
+  background-color: var(--lighter-color);
   width: 80%;
   padding: 2rem 4rem;
   border-radius: var(--border-radius);
@@ -1300,7 +1300,7 @@ a {
   box-shadow: var(--shadow);
 }
 .contactus .container .contactus-link a:hover li {
-  background-color: var(--lighter-color);
+  background-color: var(--primary-color);
 }
 .contactus .container .contactus-link a {
   color: var(--text-color-2);
@@ -1314,3 +1314,598 @@ a {
   margin-left: 3rem;
 }
 /* end contactus */
+
+/* start protication-page  */
+/* start protication */
+.section-hero .protication img {
+  width: 100%;
+}
+.protication .container {
+  display: flex;
+  position: relative;
+  bottom: 5rem;
+  right: -5rem;
+}
+.protication .container .protication-text {
+  margin: auto;
+  height: fit-content;
+  text-align: center;
+  border-radius: var(--border-radius);
+  line-height: 1.7;
+  position: absolute;
+  bottom: 10rem;
+  right: 5rem;
+  width: 70%;
+}
+.protication .container .protication-text h1 {
+  width: fit-content;
+  color: var(--text-color-2);
+  background-color: #0d3a6bb3;
+  font-size: 4rem;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+/* mobile */
+
+@media (max-width: 450px) {
+  .protication .container .protication-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    position: absolute;
+    bottom: -5rem;
+    right: 5rem;
+  }
+}
+@media (max-width: 768px) {
+  .protication .container .protication-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    width: 100%;
+    position: absolute;
+    top: -2rem;
+    left: 3rem;
+  }
+  .protication .container .protication-text h1 {
+    font-size: 2rem;
+  }
+}
+/* end protication */
+/* start slider */
+.slider {
+  padding: 1rem;
+  position: relative;
+}
+
+.slider-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.slider-text h2 {
+  color: var(--primary-color);
+  font-size: 24px;
+}
+.slider-text p {
+  color: var(--primary-color);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.juxtapose {
+  width: 100%;
+}
+.jx-slider {
+  margin-top: 1em;
+}
+div.juxtapose {
+  width: 100%;
+}
+
+div.jx-slider {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  color: #f3f3f3;
+}
+
+div.jx-handle {
+  position: absolute;
+  height: 100%;
+  width: 40px;
+  cursor: col-resize;
+  z-index: 15;
+  margin-left: -20px;
+}
+
+.vertical div.jx-handle {
+  height: 40px;
+  width: 100%;
+  cursor: row-resize;
+  margin-top: -20px;
+  margin-left: 0;
+}
+
+div.jx-control {
+  height: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  width: 3px;
+  background-color: currentColor;
+}
+
+.vertical div.jx-control {
+  height: 3px;
+  width: 100%;
+  background-color: currentColor;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+div.jx-controller {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  height: 60px;
+  width: 9px;
+  margin-left: -3px;
+  background-color: currentColor;
+}
+
+.vertical div.jx-controller {
+  height: 9px;
+  width: 100px;
+  margin-left: auto;
+  margin-right: auto;
+  top: -3px;
+  position: relative;
+}
+
+div.jx-arrow {
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  transition: all 0.2s ease;
+}
+
+.vertical div.jx-arrow {
+  position: absolute;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  transition: all 0.2s ease;
+}
+
+div.jx-arrow.jx-left {
+  left: 2px;
+  border-style: solid;
+  border-width: 8px 8px 8px 0;
+  border-color: transparent currentColor transparent transparent;
+}
+
+div.jx-arrow.jx-right {
+  right: 2px;
+  border-style: solid;
+  border-width: 8px 0 8px 8px;
+  border-color: transparent transparent transparent currentColor;
+}
+
+.vertical div.jx-arrow.jx-left {
+  left: 0px;
+  top: 2px;
+  border-style: solid;
+  border-width: 0px 8px 8px 8px;
+  border-color: transparent transparent currentColor transparent;
+}
+
+.vertical div.jx-arrow.jx-right {
+  right: 0px;
+  top: auto;
+  bottom: 2px;
+  border-style: solid;
+  border-width: 8px 8px 0 8px;
+  border-color: currentColor transparent transparent transparent;
+}
+
+div.jx-handle:hover div.jx-arrow.jx-left,
+div.jx-handle:active div.jx-arrow.jx-left {
+  left: -1px;
+}
+
+div.jx-handle:hover div.jx-arrow.jx-right,
+div.jx-handle:active div.jx-arrow.jx-right {
+  right: -1px;
+}
+
+.vertical div.jx-handle:hover div.jx-arrow.jx-left,
+.vertical div.jx-handle:active div.jx-arrow.jx-left {
+  left: 0px;
+  top: 0px;
+}
+
+.vertical div.jx-handle:hover div.jx-arrow.jx-right,
+.vertical div.jx-handle:active div.jx-arrow.jx-right {
+  right: 0px;
+  bottom: 0px;
+}
+
+div.jx-image {
+  position: absolute;
+  height: 100%;
+  display: inline-block;
+  top: 0;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.vertical div.jx-image {
+  width: 100%;
+  left: 0;
+  top: auto;
+}
+
+div.jx-image img {
+  height: 100%;
+  width: auto;
+  z-index: 5;
+  position: absolute;
+  margin-bottom: 0;
+
+  max-height: none;
+  max-width: none;
+  max-height: initial;
+  max-width: initial;
+}
+
+.vertical div.jx-image img {
+  height: auto;
+  width: 100%;
+}
+
+div.jx-image.jx-left {
+  left: 0;
+  background-position: left;
+}
+
+div.jx-image.jx-left img {
+  left: 0;
+}
+
+div.jx-image.jx-right {
+  right: 0;
+  background-position: right;
+}
+
+div.jx-image.jx-right img {
+  right: 0;
+  bottom: 0;
+}
+
+.veritcal div.jx-image.jx-left {
+  top: 0;
+  background-position: top;
+}
+
+.veritcal div.jx-image.jx-left img {
+  top: 0;
+}
+
+.vertical div.jx-image.jx-right {
+  bottom: 0;
+  background-position: bottom;
+}
+
+.veritcal div.jx-image.jx-right img {
+  bottom: 0;
+}
+
+div.jx-image div.jx-label {
+  font-size: 1em;
+  padding: 0.25em 0.75em;
+  position: relative;
+  display: inline-block;
+  top: 0;
+  background-color: #000; /* IE 8 */
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  z-index: 10;
+  white-space: nowrap;
+  line-height: 18px;
+  vertical-align: middle;
+}
+
+div.jx-image.jx-left div.jx-label {
+  float: left;
+  left: 0;
+}
+
+div.jx-image.jx-right div.jx-label {
+  float: right;
+  right: 0;
+}
+
+.vertical div.jx-image div.jx-label {
+  display: table;
+  position: absolute;
+}
+
+.vertical div.jx-image.jx-right div.jx-label {
+  left: 0;
+  bottom: 0;
+  top: auto;
+}
+
+div.jx-credit {
+  line-height: 1.1;
+  font-size: 0.75em;
+}
+
+div.jx-credit em {
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* Animation */
+
+div.jx-image.transition {
+  transition: width 0.5s ease;
+}
+
+div.jx-handle.transition {
+  transition: left 0.5s ease;
+}
+
+.vertical div.jx-image.transition {
+  transition: height 0.5s ease;
+}
+
+.vertical div.jx-handle.transition {
+  transition: top 0.5s ease;
+}
+
+/* Knight Lab Credit */
+a.jx-knightlab {
+  background-color: #000; /* IE 8 */
+  background-color: rgba(0, 0, 0, 0.25);
+  bottom: 0;
+  display: table;
+  height: 14px;
+  line-height: 14px;
+  padding: 1px 4px 1px 5px;
+  position: absolute;
+  right: 0;
+  text-decoration: none;
+  z-index: 10;
+}
+
+a.jx-knightlab div.knightlab-logo {
+  display: inline-block;
+  background-image: url(../image/favicon_io/favicon-16x16.png);
+  vertical-align: middle;
+  height: 16px;
+  width: 16px;
+
+  top: -1.25px;
+  position: relative;
+  cursor: pointer;
+}
+
+a.jx-knightlab:hover {
+  background-color: #000; /* IE 8 */
+  background-color: rgba(0, 0, 0, 0.35);
+}
+a.jx-knightlab:hover div.knightlab-logo {
+  background-color: var(--primary-color);
+}
+
+a.jx-knightlab span.juxtapose-name {
+  display: table-cell;
+  margin: 0;
+  padding: 0;
+  font-weight: 300;
+  color: white;
+  font-size: 10px;
+  padding-left: 0.375em;
+  vertical-align: middle;
+  line-height: normal;
+  text-shadow: none;
+}
+
+/* keyboard accessibility */
+div.jx-controller:focus,
+div.jx-image.jx-left div.jx-label:focus,
+div.jx-image.jx-right div.jx-label:focus,
+a.jx-knightlab:focus {
+  background: #eae34a;
+  color: #000;
+}
+a.jx-knightlab:focus span.juxtapose-name {
+  color: #000;
+  border: none;
+}
+
+/* Medium */
+@media (min-width: 992px) {
+  .slider.juxtapose {
+    width: 970px;
+    text-align: center;
+    position: relative;
+    color: var(--text-color);
+    text-shadow: none;
+    font-size: 16px;
+    margin-bottom: 25px;
+  }
+}
+
+/* Large */
+@media (min-width: 1200px) {
+  .slider .juxtapose {
+    width: 1170px;
+    text-align: center;
+    position: relative;
+    color: var(--text-color);
+    text-shadow: none;
+    font-size: 16px;
+    margin-bottom: 25px;
+  }
+}
+/* Small */
+@media (max-width: 768px) {
+  .slider .juxtapose {
+    width: 90%;
+    text-align: center;
+    position: relative;
+    color: var(--text-color);
+    text-shadow: none;
+    font-size: 16px;
+    margin-bottom: 25px;
+  }
+  /* .slider .container .juxtapose img {
+    width: 100%;
+  } */
+}
+@media (max-width: 450px) {
+  .slider .container .juxtapose {
+    width: 100%;
+    text-align: center;
+    position: relative;
+    color: var(--text-color);
+    text-shadow: none;
+    font-size: 1rem;
+    margin-bottom: 25px;
+  }
+}
+
+/* end slider */
+/* Start Features */
+.features {
+  padding: 3rem;
+  position: relative;
+  background-color: white;
+}
+
+.features .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.features .box {
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.features .box .img-holder {
+  position: relative;
+  overflow: hidden;
+}
+
+.features .box .img-holder img {
+  max-width: 100%;
+  height: 300px;
+}
+
+.features .box:hover .img-holder::after {
+  border-width: 170px 500px 170px 0;
+}
+
+.features .box p {
+  line-height: 2;
+  font-size: 20px;
+  margin: 30px 0;
+  padding: 25px;
+  color: #3a3838;
+}
+
+.features .box h2 {
+  position: relative;
+  color: var(--primary-color);
+  position: relative;
+  font-size: 40px;
+  margin: auto;
+  width: fit-content;
+  display: block;
+  border: 3px solid transparent;
+  width: fit-content;
+  margin: 10px auto 30px;
+  font-weight: bold;
+  font-size: 22px;
+  padding: 10px 30px;
+  border-radius: 6px;
+  transition: var(--main-transition);
+}
+
+.features .box h2::after {
+  content: "";
+  position: absolute;
+  bottom: -20px;
+  left: 15px;
+  height: 5px;
+  width: calc(100% - 30px);
+  background-color: var(--primary-color);
+}
+
+.features .platinum .img-holder::before {
+  background-color: transparent;
+}
+
+.features .platinum h2::after {
+  background-color: var(--primary-color);
+}
+
+.features .platinum h2 {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: linear-gradient(to right, var(--primary-color) 50%, white 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+}
+
+.features .gold .img-holder::before {
+  background-color: transparent;
+}
+
+.features .gold h2::after {
+  background-color: var(--primary-color);
+}
+
+.features .gold h2 {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: linear-gradient(to right, var(--primary-color) 50%, white 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+}
+
+.features .silver .img-holder::before {
+  background-color: transparent;
+}
+
+.features .silver h2::after {
+  background-color: var(--primary-color);
+}
+
+.features .silver h2 {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: linear-gradient(to right, var(--primary-color) 50%, white 50%);
+  background-size: 200% 100%;
+  background-position: right bottom;
+}
+
+.features .box:hover h2 {
+  background-position: left bottom;
+  color: white;
+}
+
+/* End Features */

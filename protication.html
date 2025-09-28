@@ -35,7 +35,9 @@
   <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
   <!-- css style -->
   <link rel="stylesheet" href="css/style.css" />
-
+  <!-- slider-boot -->
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <!-- font-awesome  -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
   <!-- js -->
@@ -69,137 +71,113 @@
   <!-- start hero -->
   <main>
     <section class="section-hero" id="section-hero">
-      <div class="hero">
-        <div class="hero-text-box">
-          <h1 class="heading-primary">
-            هافركامب
-          </h1>
-          <p class="hero-description">
-            الوكيل الحصري لحمايات هافركامب الالمانية في الشرق الاوسط
-            الوكيل الحصري لحمايات كلايف ديزاين الكورية
-            <br>
-            <br>
-            مليت من الشركات اللي تجص عليك وتركب ليك حماية سيئة وتقول لك انها
-            حماية ممتازة؟
-            حياك وراح تشوف الفرق بنفسك
-            <br>
-            <br>
-            نقدم لكم أفضل حماية للسيارات
-            باستخدام أحدث التقنيات والمواد عالية الجودة
-
-          </p>
-
-          <a href="./contactus.html" class="btn btn--outline"> تواصل معنا &darr;</a>
-        </div>
-        <div class="hero-img-box">
-          <picture>
-            <source srcset="./img/main_page/haverkamp.webp" type="image/webp" />
-            <source srcset="./img/main_page/haverkamp.png" type="image/png" />
-
-            <img src="./img/main_page/haverkamp.png" class="hero-img"
-              alt="Woman enjoying food, meals in storage container, and food bowls on a table" />
-          </picture>
+      <div class="protication">
+        <img src="./img/protication/protication.webp" alt="protication">
+        <div class="container">
+          <div class="protication-text">
+            <h1>مع حمايات هافركامب احمي سيارتك من طقات الحصي والصخر المتطاير على الطريق</h1>
+          </div>
         </div>
       </div>
+      <!-- end hero -->
     </section>
     <!-- end hero -->
-    <!-- start statistics -->
-    <div class="statistics" id="statistics">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          منذ اكثر من 15 عشر عام ومازلنا مستمرون بثقتكم
-        </h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <i class="fa-solid fa-chart-line fa-2x fa-fw"></i>
-          <span class="number" data-goal="14">15</span>
-          <span class="text">خبرة</span>
-        </div>
-        <div class="box">
-          <i class="fa-solid fa-people-group fa-2x fa-fw"></i>
-          <span class="number" data-goal="8500">6,500</span>
-          <span class="text">عميل</span>
-        </div>
-        <div class="box">
-          <i class="fa-solid fa-car fa-2x fa-fw"></i>
-          <span class="number" data-goal="10000">10,000</span>
-          <span class="text">سيارة</span>
+    <section>
+      <!-- start slider -->
+      <div class="slider">
+        <div class="container">
+          <div class="slider-text">
+            <h2>تمتع براحة بال مع افلام الحماية من هافركامب </h2>
+            <p>حافظ علي بدي سيارتك من طقات الحصي والصخر المتتطاير علي الطريق حيث تعمل افلام الحماية علي حفظ بدي السيارة
+              والمحافظة علي صبغ الوكالة </p>
+            <p>مع حصية المعالجة الذاتية ترجع الحماية الي حالته الطبيعية مرة اخري بفضل الحرارة </p>
+          </div>
+          <div class="juxtapose">
+            <img src="./img/protication/ppf-before.webp" data-label="قبل ازالة الحماية" alt="hot" />
+            <img src="./img/protication/ppf-after.webp" data-label="بعد ازالة الحماية" alt="could" />
+          </div>
         </div>
       </div>
-    </div>
-    <!-- end statistics -->
-    <!-- start services section -->
+      <!-- end slider -->
+    </section>
+
+    <section>
+      <!-- Start Features -->
+      <div class="features" id="features">
+        <div class="center-text">
+          <h2 class="heading-secondary">
+            انواع الحمايات </h2>
+        </div>
+        <div class="container">
+          <div class="box platinum">
+            <div class="img-holder">
+              <img src="./img/protication/lam3a-1.jpg" alt="platinum" />
+            </div>
+            <h2>شفاف</h2>
+            <p>حماية شفافة مع لمعة اضافية تصل الى 70% على لمعة السيارة الاصلية</p>
+          </div>
+          <div class="box time gold">
+            <div class="img-holder">
+              <img src="./img/protication/mate.png" alt="" />
+            </div>
+            <h2>مطفية</h2>
+            <p>
+              اللون المطفي لمسة عصرية وانيقة لسيارتك إذا كنت تبحث عن مظهر فريد وجذاب لسيارتك، فإن اللون المطفي هو الخيار
+              الأمثل لك
+            </p>
+          </div>
+          <div class="box passion silver">
+            <div class="img-holder">
+              <img src="./img/protication/color.jpg" alt="" />
+            </div>
+            <h2>تغير لون</h2>
+            <p>
+              غير لون سيارتك الى اي لون حسب اختيارك من حمايات الالوان المتوفرة
+              لدينا
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- End Features -->
+    </section>
+    <!-- start ppf-type section -->
     <section class="section-services" id="services">
       <div class="center-text">
         <h2 class="heading-secondary">
-          خدمتنا </h2>
-        <h2 class="heading-secondary">
-        </h2>
+          تعرف علي انواع الحمايات المتوفرة لدينا </h2>
       </div>
       <div class="container">
         <div class="services-box">
-          <img src="./img/main_page/protication1.png" alt="protication">
+          <img src="./img/protication/haverkamp.png" alt="protication">
           <div class="services-info">
             <a href="./protication.html" target="_blank">
-              <h3> حماية</h3>
+              <h3> هافركامب</h3>
             </a>
           </div>
 
         </div>
         <div class="services-box">
-          <img src="./img/main_page/tint.png" alt="handball">
+          <img src="./img/protication/clif-logo.jpg" alt="handball">
           <div class="services-info">
-            <h3> عازل</h3>
+            <h3> كلايف ديزاين</h3>
           </div>
         </div>
         <div class="services-box">
-          <img src="./img/main_page/painting.jpg" alt="handball">
+          <img src="./img/protication/hexis.png" alt="handball">
           <div class="services-info">
-            <h3> صبغ</h3>
+            <h3> هكسيس</h3>
           </div>
         </div>
         <div class="services-box">
-          <img src="./img/main_page/polishing.png" alt="handball">
+          <img src="./img/protication/iron.png" alt="handball">
           <div class="services-info">
-            <h3>بوليش </h3>
-          </div>
-        </div>
-        <div class="services-box">
-          <img src="./img/main_page/swarfsky.webp" alt="handball">
-          <div class="services-info">
-            <h3> اكسسوارات</h3>
-          </div>
-        </div>
-        <div class="services-box">
-          <img src="./img/main_page/wash.png" alt="handball">
-          <div class="services-info">
-            <h3>غسيل </h3>
+            <h3>ايرون شيلد </h3>
           </div>
         </div>
       </div>
     </section>
-    <!-- end services section -->
-    <!-- start why us section -->
-    <section class="section-why-us" id="why-us">
-      <div class="center-text">
-        <span class="subheading"> </span>
-        <h2 class="heading-secondary">
-          لماذا تختار هافركامب </h2>
-      </div>
-      <div class="container">
-        <div class="img"><img src="./img/main_page/haverkamp.png" alt=""></div>
-        <ul class="about-list">
-          <li><i class="fa-solid fa-medal"></i> فنيون مدربون علي اعلي مستوي</li>
-          <li>
-            <i class="fa-solid fa-chart-line"></i>خبرة اكثر من 14 عام
-          </li>
-          <li> <i class="fa-solid fa-fire"></i> نهتم بادق التفاصيل</li>
+    <!-- end ppf-type section -->
 
-        </ul>
-      </div>
-    </section>
-    <!-- end why us section -->
     <!-- start gallery -->
     <section class="gallery" id="gallery">
       <div class="center-text">
@@ -385,6 +363,113 @@
       </div>
     </div>
     <!-- End Testimonials -->
+
+    <!-- start faq -->
+    <div class="faq" id="faq">
+      <div class="center-text">
+        <h2 class="heading-secondary">
+          الاسئلةالشائعة</h2>
+      </div>
+      <div class="container">
+        <section class="working-process my-5">
+          <div class="container">
+            <div class="row">
+              <div class="row d-flex flex-nowrap flex-row">
+              </div>
+            </div>
+            <div class="row">
+              <div class="accordion mt-5" id="accordionExample">
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingOne">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      <span class="accordian-numbers">01</span> ما هو سمك الحماية
+                    </button>
+                  </h2>
+                  <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      سمك الحماية 9 ميكروميلى
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingTwo">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      <span class="accordian-numbers">02</span> مدة الكفالة
+                    </button>
+                  </h2>
+                  <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      10 سنوات علي عيوب التركيب
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingThree">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      <span class="accordian-numbers">03</span> طريقة التركيب
+                    </button>
+                  </h2>
+                  <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      قص احترافي وقطع كاملة بدون وصلات وتركيب داخلي
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingFour">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                      <span class="accordian-numbers">04</span> المعالجة الذاتية
+                    </button>
+                  </h2>
+                  <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      تحتوي الحماية علي خاصية المعالجة الذاتية عن طريق تعريضها الي الحرارة
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingFive">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                      <span class="accordian-numbers">05</span> نسبة اللمعة الاضافية
+                    </button>
+                  </h2>
+                  <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      تصل اللمعة الاضافيةالي 70٪
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item mb-4">
+                  <h2 class="accordion-header" id="headingSix">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                      <span class="accordian-numbers">06</span> هل يوجد سيرفس دوري
+                    </button>
+                  </h2>
+                  <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix"
+                    data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                      نعم يوجد سيرفس دوري لفحص الحماية كل 6 اشهور مجانا
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <!-- end faq -->
     <section class="section-cta" id="cta">
       <div class="container">
         <div class="cta">
@@ -504,6 +589,7 @@
   </div> -->
   <!-- End Footer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
+  <script src="./js/slider.js"></script>
 </body>
 
 </html>

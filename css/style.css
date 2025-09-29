@@ -7,6 +7,7 @@
   --darker-color: #001a2e;
   --border-radius: 2rem;
   --shadow: 2px 8px 12px rgba(0, 0, 0, 0.4);
+  --main-transition: 1s;
 }
 
 * {
@@ -1674,11 +1675,10 @@ a.jx-knightlab {
 
 a.jx-knightlab div.knightlab-logo {
   display: inline-block;
-  background-image: url(../image/favicon_io/favicon-16x16.png);
+  background-image: url(../img/favicon_io/favicon-16x16.png);
   vertical-align: middle;
   height: 16px;
   width: 16px;
-
   top: -1.25px;
   position: relative;
   cursor: pointer;
@@ -1771,6 +1771,67 @@ a.jx-knightlab:focus span.juxtapose-name {
 }
 
 /* end slider */
+
+/* start ppf-type */
+.ppf-type {
+  padding: 4rem 2rem;
+  background-color: #ececec;
+}
+.ppf-type .container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
+  gap: 3rem;
+}
+.ppf-type .container .box {
+  box-shadow: var(--shadow);
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: 1s ease-in-out;
+}
+.ppf-type .container .box:hover {
+  transform: translateY(-10px);
+}
+.ppf-type .container .box img {
+  width: 100%;
+  max-width: 100%;
+}
+.ppf-type .container .box .content {
+  padding: 2rem;
+}
+.ppf-type .container .box .content h3 {
+  color: var(--primary-color);
+}
+.ppf-type .container .box .content p {
+  margin: 10px 0 0;
+  line-height: 1.5;
+  color: #777;
+}
+.ppf-type .container .box .info {
+  padding: 2rem;
+  border-top: 1px solid #e6e6e7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+.ppf-type .container .box .info a {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+.ppf-type .container .box .info i {
+  color: var(--primary-color);
+}
+.ppf-type .container .box:hover .info i {
+  animation: moving-arrow 0.6s linear infinite;
+}
+@keyframes moving-arrow {
+  100% {
+    transform: translateX(10px);
+  }
+}
+/* end ppf-type */
 /* Start Features */
 .features {
   padding: 3rem;
@@ -1896,13 +1957,148 @@ a.jx-knightlab:focus span.juxtapose-name {
 
 /* End Features */
 
+/* Start Pricing */
+.pricing {
+  padding: 4rem 2rem;
+  position: relative;
+}
+
+.pricing .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 3rem;
+}
+
+.pricing .box {
+  position: relative;
+  box-shadow: var(--shadow);
+  transition: var(--main-transition);
+  background: white;
+  text-align: center;
+  z-index: 1;
+}
+
+.pricing .box::before,
+.pricing .box::after {
+  content: "";
+  width: 0;
+  height: 50%;
+  background-color: #f6f6f6;
+  position: absolute;
+  z-index: -1;
+  transition: var(--main-transition);
+}
+
+.pricing .box::before {
+  left: 0;
+  top: 0;
+}
+
+.pricing .box::after {
+  right: 0;
+  bottom: 0;
+}
+
+.pricing .box:hover::before,
+.pricing .box:hover::after {
+  width: 100%;
+}
+
+@media (min-width: 1200px) {
+  .pricing .box.popular {
+    top: -20px;
+  }
+}
+
+.pricing .box.popular .label {
+  position: absolute;
+  writing-mode: vertical-rl;
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: bold;
+  padding: 10px 10px 35px 10px;
+  font-size: 18px;
+  right: 20px;
+  width: 40px;
+}
+
+.pricing .box.popular .label::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border-style: solid;
+  border-color: transparent transparent white;
+  border-width: 20px;
+}
+
+.pricing .box .title {
+  font-weight: bold;
+  margin: 30px 0;
+  font-size: 25px;
+  letter-spacing: -1px;
+}
+
+.pricing .box .price {
+  margin-bottom: 20px;
+}
+
+.pricing .box .amount {
+  display: block;
+  font-size: 4rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: var(--primary-color);
+}
+
+.pricing .box .time {
+  color: #777;
+}
+
+.pricing .box ul {
+  text-align: right;
+  list-style: none;
+}
+
+.pricing .box ul li {
+  padding: 1rem 2rem;
+  border-top: 1px solid #eee;
+}
+
+.pricing .box ul li::before {
+  font-family: "Font Awesome 7 Free";
+  content: "\f00c";
+  margin-left: 10px;
+  font-weight: 900;
+  color: var(--primary-color);
+}
+
+.pricing .box a {
+  display: block;
+  width: fit-content;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  margin: 30px auto 40px;
+  padding: 15px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: var(--main-transition);
+}
+
+.pricing .box a:hover {
+  background-color: var(--primary-color-alt);
+  border-color: var(--primary-color-alt);
+  color: white;
+}
+
+/* End Pricing */
+
 /* start tint page */
 
 /* start tint number */
 .tint-number {
   padding: 6rem 2rem;
   position: relative;
-  background-color: var(--secondary-color);
 }
 
 .tint-number-container .container {
@@ -2148,5 +2344,3 @@ a.jx-knightlab:focus span.juxtapose-name {
 
 /* end  warranty */
 /* end terms-page */
-
-/* end terms page */

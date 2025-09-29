@@ -1265,9 +1265,12 @@ a {
 .contactus .container .contactus-link ul {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-around;
   text-align: center;
   gap: 3rem;
+}
+.contactus .container .contactus-link a:last-child {
+  margin-bottom: 4rem;
 }
 .contactus .container .contactus-link li {
   text-decoration: none;
@@ -1275,7 +1278,7 @@ a {
   margin-right: auto;
   font-size: 3rem;
   background-color: var(--lighter-color);
-  width: 80%;
+  width: 90%;
   padding: 2rem 4rem;
   border-radius: var(--border-radius);
   display: flex;
@@ -1286,6 +1289,10 @@ a {
 }
 .contactus .container .contactus-link a:hover li {
   background-color: var(--primary-color);
+}
+.contactus .container .contactus-link a:hover img {
+  transform: scale(1.5);
+  transition: var(--main-transition);
 }
 .contactus .container .contactus-link a {
   color: var(--text-color-2);

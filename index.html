@@ -36,82 +36,105 @@
   <!-- Schema.org JSON-LD -->
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Service",
-        "serviceType": "حماية سيارات",
-        "provider": {
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
           "@type": "LocalBusiness",
-          "name": "هافركامب ",
-          "url": "https://haverkampkw.com/protication.html"
-        },
-        "areaServed": {
-          "@type": "Place",
-          "name": "الكويت"
-        },
-        "description": "اقوي حماية سيارات بالكويت | حماية فل بدي كفالة 10 سنوات اسعار تبدا من 400 دينار"
-      },
-      {
-        "@type": "Service",
-        "serviceType": " حماية بدي المانية",
-        "provider": {
-          "@type": "LocalBusiness",
-          "name": "هافركامب",
-          "url": "https://haverkampkw.com/haverkamp.html"
-        },
-        "areaServed": {
-          "@type": "Place",
-          "name": "الكويت"
-        },
-        "description": "حماية المانية سماكة 9.5 ميكروميلي كفالة 10 سنوات"
-      },
-      {
-        "@type": "Service",
-        "serviceType": "عازل حراري ",
-        "provider": {
-          "@type": "LocalBusiness",
+          "@id": "https://haverkampkw.com/#business",
           "name": "هافركامب الكويت",
-          "url": "https://haverkampkw.com/tint.html"
-        },
-        "areaServed": {
-          "@type": "Place",
-          "name": "الكويت"
-        },
-        "description": "عازل حراري ألماني يحجب الحرارة والأشعة فوق البنفسجية بنسبة تتجاوز 90%، يحافظ على برودة السيارة ويوفر الخصوصية."
-      },
-      {
-        "@type": "Service",
-        "serviceType": "بوليش وتلميع احترافي",
-        "provider": {
-          "@type": "LocalBusiness",
-          "name": "هافركامب الكويت",
-          "url": "https://haverkampkw.com"
-        },
-        "areaServed": {
-          "@type": "Place",
-          "name": "الكويت"
-        },
-        "description": "خدمة بوليش احترافية لإزالة الخدوش السطحية وتجديد لمعان الطلاء باستخدام أدوات ومواد ألمانية عالية الجودة."
-      },
-      {
-        "@type": "Service",
-        "serviceType": "نانو للمقاعد والداخلية",
-        "provider": {
-          "@type": "LocalBusiness",
-          "name": "هافركامب الكويت",
-          "url": "https://haverkampkw.com"
-        },
-        "areaServed": {
-          "@type": "Place",
-          "name": "الكويت"
-        },
-        "description": "نانو سيراميك خاص للمقاعد الداخلية يمنع امتصاص السوائل والبقع ويحافظ على الجلد والأقمشة نظيفة لفترة أطول."
-      }
-    ]
-  }
-  </script>
+          "url": "https://haverkampkw.com/",
+          "logo": "https://haverkampkw.com/img/main_page/haverkamp.webp",
+          "image": "https://haverkampkw.com/img/contact/cover.jpeg",
+          "description": "هافركامب الكويت - مركز متخصص في حماية السيارات والعزل الحراري والنانو سيراميك بأعلى جودة ألمانية مع ضمان معتمد.",
+          "telephone": "+965651111154",
+          "priceRange": "$$",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "الري - قطعة 3- شارع 19",
+            "addressLocality": "الكويت",
+            "postalCode": "00000",
+            "addressCountry": "KW"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 29.30775020210312,
+            "longitude": 47.939808414371264
+          },
+          "openingHoursSpecification": [
+            {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": [
+                "Saturday",
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday"
+              ],
+              "opens": "10:00",
+              "closes": "20:00"
+            }
+          ],
+          "sameAs": [
+            "https://www.instagram.com/haverkampkw",
+            "https://maps.app.goo.gl/3bcseGdCETquaemU8"
+          ],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "خدمات هافركامب الكويت",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "حماية سيارات",
+                  "url": "https://haverkampkw.com/protication.html",
+                  "description": "أقوى حماية سيارات بالكويت | حماية فل بدي كفالة 10 سنوات بأسعار تبدأ من 400 دينار."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "حماية بدي ألمانية",
+                  "url": "https://haverkampkw.com/haverkamp.html",
+                  "description": "حماية ألمانية سماكة 9.5 ميكروميلي مع كفالة 10 سنوات."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "عازل حراري",
+                  "url": "https://haverkampkw.com/tint.html",
+                  "description": "عازل حراري ألماني يحجب الحرارة والأشعة فوق البنفسجية بنسبة تتجاوز 90%."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "بوليش وتلميع احترافي",
+                  "url": "https://haverkampkw.com/",
+                  "description": "خدمة بوليش احترافية لإزالة الخدوش وتجديد لمعان الطلاء باستخدام أدوات ألمانية عالية الجودة."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "نانو للمقاعد والداخلية",
+                  "url": "https://haverkampkw.com/",
+                  "description": "نانو سيراميك خاص للمقاعد الداخلية يمنع امتصاص السوائل ويحافظ على نظافة الجلد والأقمشة لفترة أطول."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+    </script>
   <!-- favicon -->
   <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">

@@ -509,43 +509,14 @@ a {
 
 .footer .box .text {
   line-height: 2;
-  color: var(--text-color-2);
-}
-
-.footer .box .links li {
-  padding: 15px 0;
-  transition: var(--main-transition);
-}
-
-.footer .box .links li:not(:last-child) {
-  border-bottom: 1px solid whitesmoke;
-}
-
-.footer .box .links li:hover {
-  padding-left: 10px;
-}
-
-.footer .box .links li:hover a {
-  color: white;
-  padding-right: 20px;
-}
-
-.footer .box .links li a {
-  color: whitesmoke;
-  transition: var(--main-transition);
-}
-
-.footer .box .links li a::before {
-  font-family: "Font Awesome 5 Free";
-  content: "\f100";
-  font-weight: 900;
-  margin-left: 10px;
+  font-size: 1.4rem;
   color: var(--text-color-2);
 }
 
 .footer .box .line {
   display: flex;
   align-items: center;
+  justify-content: center;
   color: var(--text-color-2);
   margin-bottom: 30px;
 }
@@ -1018,6 +989,7 @@ a {
   background-color: var(--primary-color);
   color: #fff;
   border: none;
+  font-size: 2rem;
   font-family: monospace;
   font-weight: bold;
 }
@@ -2070,6 +2042,7 @@ a.jx-knightlab:focus span.juxtapose-name {
 .pricing .box ul li {
   padding: 1rem 2rem;
   border-top: 1px solid #eee;
+  font-size: 1.4rem;
 }
 
 .pricing .box ul li::before {

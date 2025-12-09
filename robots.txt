@@ -16,9 +16,3 @@ Disallow: /private
 
 # تحديد رابط خريطة الموقع (sitemap)
 Sitemap: https://haverkampkw.com/sitemap.xml
-
-# ============================
-# ملاحظات:
-# 1. تأكد أن ملف sitemap.xml موجود فعلاً في نفس المسار.
-# 2. بعد رفع الملف، أضفه يدويًا في Google Search Console.
-# ============================

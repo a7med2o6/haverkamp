@@ -22,6 +22,29 @@
   <meta property="og:url" content="https://haverkampkw.com" />
   <meta property="og:site_name" content="هافركامب">
   <link rel="canonical" href="https://www.haverkampkw.com/">
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "serviceType": "حماية سيارات المانية - كورية - امريكية",
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "هافركامب الكويت",
+      "image": "https://haverkampkw.com/img/contact/cover.jpeg",
+      "telephone": "+965651111154",
+      "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "الري - قطعة 3- شارع 19",
+              "addressLocality": "الكويت",
+              "addressCountry": "KW"
+       }
+    },
+    "description": "مجموعة متنوعة من حمايات السيارات الالمانية - الكورية - الامريكية - كفالة 10 سنوات",
+    "url": "https://haverkampkw.com/tint.html"
+  }
+  </script>
+
   <!-- favicon -->
   <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
@@ -493,17 +516,19 @@
               <input type="hidden" name="_captcha" value="false">
               <div>
                 <label for="full-name">الاسم بالكامل </label>
-                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required />
+                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required
+                  autocomplete="given-name" />
               </div>
 
               <div>
                 <label for="email">البريد الالكتروني </label>
-                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required />
+                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required
+                  autocomplete="off" />
               </div>
 
               <div>
-                <label for="select-where">اترك رسالتك</label>
-                <textarea name="message" id="message" placeholder="اترك رسالتك هنا "></textarea>
+                <label for="message">اترك رسالتك</label>
+                <textarea name="message" id="message" placeholder="اترك رسالتك هنا " autocomplete="off"></textarea>
                 </select>
               </div>
 

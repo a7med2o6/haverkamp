@@ -22,7 +22,28 @@
   <meta property="og:site_name" content="هافركامب">
   <meta name="theme-color" content="#00345c">
   <link rel="canonical" href="https://www.haverkampkw.com/">
-
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "serviceType": "عازل حراري للسيارات",
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "هافركامب الكويت",
+    "image": "https://haverkampkw.com/img/contact/cover.jpeg",
+    "telephone": "+965651111154",
+    "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "الري - قطعة 3- شارع 19",
+            "addressLocality": "الكويت",
+            "addressCountry": "KW"
+     }
+  },
+  "description": "عازل حراري ألماني يحجب الحرارة والأشعة فوق البنفسجية بنسبة تتجاوز 90%.",
+  "url": "https://haverkampkw.com/tint.html"
+}
+</script>
   <!-- favicon -->
 
   <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
@@ -30,7 +51,6 @@
   <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href=".//img/favicon_io/android-chrome-512x512.png">
   <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <link rel="manifest" href="./site.webmanifest">
   <!-- font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -535,25 +555,29 @@
       <div class="container">
         <div class="cta">
           <div class="cta-text-box">
-            <h2 class="heading-secondary">احمي سيارتك الان
+            <h2 class="heading-secondary">ركب عازل لسيارتك الان
             </h2>
             <p class="cta-text">
-              نقدم لكم أفضل حماية للسيارات باستخدام أحدث التقنيات والمواد عالية الجودة</p>
+              نقدم لكم أفضل عازل حراري للسيارات باستخدام أحدث التقنيات والمواد عالية الجودة</p>
 
-            <form class="cta-form" name="sign-up" netlify>
+            <form class="cta-form" name="sign-up" action="https://formsubmit.co/ef7d656274c363dc9eb3ce5c5ff03525"
+              method="post">
+              <input type="hidden" name="_captcha" value="false">
               <div>
                 <label for="full-name">الاسم بالكامل </label>
-                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required />
+                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required
+                  autocomplete="given-name" />
               </div>
 
               <div>
                 <label for="email">البريد الالكتروني </label>
-                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required />
+                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required
+                  autocomplete="off" />
               </div>
 
               <div>
-                <label for="select-where">اترك رسالتك</label>
-                <textarea name="message" id="message" placeholder="اترك رسالتك هنا "></textarea>
+                <label for="message">اترك رسالتك</label>
+                <textarea name="message" id="message" placeholder="اترك رسالتك هنا " autocomplete="off"></textarea>
                 </select>
               </div>
 

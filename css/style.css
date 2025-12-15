@@ -417,7 +417,26 @@ a {
   background-size: cover;
   background-position: center;
 }
-
+.cta-img-box-paint {
+  background-image: 
+  /* linear-gradient(
+      to right bottom,
+      rgba(171, 189, 244, 0.35),
+      rgba(163, 222, 247, 0.35)
+    ), */ url("../img/paint/paint-form.png");
+  background-size: cover;
+  background-position: center;
+}
+.cta-img-box-polish {
+  background-image: 
+  /* linear-gradient(
+      to right bottom,
+      rgba(171, 189, 244, 0.35),
+      rgba(163, 222, 247, 0.35)
+    ), */ url("../img/polish/polish-form.png");
+  background-size: cover;
+  background-position: center;
+}
 .cta-form {
   display: grid;
   grid-template-columns: 1fr 1fr;

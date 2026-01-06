@@ -1772,19 +1772,22 @@ a.jx-knightlab:focus span.juxtapose-name {
 
 /* start ppf-type */
 .tint-type,
-.ppf-type {
+.ppf-type,
+.perfume-type {
   padding: 4rem 2rem;
   background-color: #ececec;
 }
 .tint-type .container,
-.ppf-type .container {
+.ppf-type .container,
+.perfume-type .container {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
   gap: 3rem;
 }
 .tint-type .container .box,
-.ppf-type .container .box {
+.ppf-type .container .box,
+.perfume-type .container .box {
   box-shadow: var(--shadow);
   background-color: white;
   border-radius: var(--border-radius);
@@ -1792,30 +1795,36 @@ a.jx-knightlab:focus span.juxtapose-name {
   transition: 1s ease-in-out;
 }
 .tint-type .container .box:hover,
-.ppf-type .container .box:hover {
+.ppf-type .container .box:hover,
+.perfume-type .container .box:hover {
   transform: translateY(-10px);
 }
 .tint-type .container .box img,
-.ppf-type .container .box img {
+.ppf-type .container .box img,
+.perfume-type .container .box img {
   width: 100%;
   max-width: 100%;
 }
 .tint-type .container .box .content,
-.ppf-type .container .box .content {
+.ppf-type .container .box .content,
+.perfume-type .container .box .content {
   padding: 2rem;
 }
 .tint-type .container .box .content h3,
-.ppf-type .container .box .content h3 {
+.ppf-type .container .box .content h3,
+.perfume-type .container .box .content h3 {
   color: var(--primary-color);
 }
 .tint-type .container .box .content p,
-.ppf-type .container .box .content p {
+.ppf-type .container .box .content p,
+.perfume-type .container .box .content p {
   margin: 10px 0 0;
   line-height: 1.5;
   color: #777;
 }
 .tint-type .container .box .info,
-.ppf-type .container .box .info {
+.ppf-type .container .box .info,
+.perfume-type .container .box .info {
   padding: 2rem;
   border-top: 1px solid #e6e6e7;
   display: flex;

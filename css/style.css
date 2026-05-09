@@ -1203,12 +1203,11 @@ a {
 }
 .contactus .container {
   max-width: 500px;
-  height: 100vh;
 }
 .contactus .profile {
   max-width: 20rem;
   position: absolute;
-  top: 20%;
+  top: 15%;
   left: 30%;
   border-radius: var(--border-radius);
   overflow: hidden;

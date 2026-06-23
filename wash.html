@@ -1,608 +1,997 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- seo -->
-  <title>هافركامب |افضل شركة غسيل سيارات بالكويت</title>
-  <meta name="robots" content="index, follow">
-  <meta name="description"
-    content=" هافركامب افضل شركة غسيل سيارات بالكويت نقدم خدمة غسيل سيارات احترافية في الكويت تشمل الغسيل الخارجي والداخلي والتنظيف الشامل باستخدام مواد عالية الجودة وآمنة على طلاء السيارة والمقصورة الداخلية. نركز على التفاصيل الدقيقة لنمنح سيارتك نظافة حقيقية تحافظ على قيمتها وتمنحك مظهرًا أنيقًا يدوم.  " />
-  <meta name="author" content="Ahmad M-Nofal">
-  <!-- Google tag (gtag.js) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="خدمة غسيل سيارات احترافية متنقلة في الكويت. غسيل بدون خدوش بمواد آمنة ومعتمدة مع خدمة الأتيان إليك. باقات VIP وذهبية وفضية بأسعار تنافسية." />
+  <meta name="keywords" content="غسيل سيارات الكويت، غسيل متنقل، car wash Kuwait، غسيل بدون خدوش، هافركامب غسيل" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Haverkamp Kuwait" />
+  <link rel="canonical" href="https://haverkampkw.com/wash.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://haverkampkw.com/wash.html" />
+  <meta property="og:title" content="غسيل سيارات متنقل في الكويت — هافركامب | نحضر إليك" />
+  <meta property="og:description" content="خدمة غسيل سيارات احترافية متنقلة في الكويت. غسيل بدون خدوش بمواد آمنة ومعتمدة مع خدمة الأتيان إليك. باقات VIP وذهبية وفضية بأسعار تنافسية." />
+  <meta property="og:image" content="https://haverkampkw.com/assets/main.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_KW" />
+  <meta property="og:site_name" content="هافركامب — Haverkamp Kuwait" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="غسيل سيارات متنقل في الكويت — هافركامب | نحضر إليك" />
+  <meta name="twitter:description" content="خدمة غسيل سيارات احترافية متنقلة في الكويت. غسيل بدون خدوش بمواد آمنة ومعتمدة مع خدمة الأتيان إليك. باقات VIP وذهبية وفضية بأسعار تنافسية." />
+  <meta name="twitter:image" content="https://haverkampkw.com/assets/main.webp" />
+  <title>غسيل سيارات متنقل في الكويت — هافركامب | نحضر إليك</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <style>
+    .svc-page {
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 32px;
+      padding-top: 80px;
+    }
+
+    .svc-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-1);
+      text-decoration: none;
+      font-size: 14px;
+      margin: 28px 0 0;
+      padding: 8px 14px;
+      border-radius: var(--r-pill);
+      background: var(--glass-tint);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--glass-border);
+      transition: all .25s;
+    }
+
+    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
+
+    /* ── Hero ── */
+    .svc-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      padding: 56px 0 72px;
+      position: relative;
+    }
+
+    .svc-hero::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -80px;
+      width: 70%;
+      height: calc(100% + 80px);
+      background: radial-gradient(ellipse 60% 70% at 65% 50%, rgba(94,184,255,.07), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .svc-hero-text { position: relative; z-index: 1; }
+
+    .svc-hero-text .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    [data-theme="light"] .svc-hero-text .tag { color: #00345C; }
+
+    .svc-hero-text .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-hero-text h1 {
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .svc-hero-text h1 .em { color: #00345C; }
+    [data-theme="dark"] .svc-hero-text h1 .em { color: var(--accent); }
+
+    .svc-hero-text .subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-0);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .svc-hero-text p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 560px;
+      text-wrap: pretty;
+      margin-bottom: 32px;
+    }
+
+    .svc-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .svc-hero-img {
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      position: relative;
+    }
+
+    .svc-hero-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .trust-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+    }
+
+    .trust-badge .tb-icon { font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .svc-hero { grid-template-columns: 1fr; padding: 36px 0 56px; }
+      .svc-hero::after { display: none; }
+      .svc-hero-img { order: -1; }
+    }
+
+    /* ── Sections ── */
+    .svc-sec { padding: 64px 0; }
+    .svc-sec-head { margin-bottom: 40px; }
+
+    .svc-sec-head .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    [data-theme="light"] .svc-sec-head .tag { color: #00345C; }
+
+    .svc-sec-head .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-sec-head h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-sec-head p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-top: 12px;
+      text-wrap: pretty;
+    }
+
+    /* ── Packages ── */
+    .packages-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) { .packages-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .packages-grid { grid-template-columns: 1fr; } }
+
+    .pkg-card {
+      border-radius: var(--r-xl);
+      padding: 32px 28px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1), box-shadow .3s;
+    }
+
+    .pkg-card:hover { transform: translateY(-6px); box-shadow: 0 0 0 1px rgba(94,184,255,.25), 0 0 40px rgba(94,184,255,.10), var(--glass-shadow); }
+
+    .pkg-card.featured {
+      border-color: rgba(0,52,92,.35);
+      background: linear-gradient(135deg, rgba(0,52,92,.08), rgba(0,52,92,.03));
+    }
+
+    [data-theme="dark"] .pkg-card.featured {
+      border-color: rgba(94,184,255,.35);
+      background: linear-gradient(135deg, rgba(94,184,255,.09), rgba(94,184,255,.03));
+    }
+
+    .pkg-badge {
+      position: absolute;
+      top: -12px;
+      right: 24px;
+      background: #00345C;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      padding: 4px 14px;
+      border-radius: var(--r-pill);
+    }
+
+    [data-theme="dark"] .pkg-badge { background: var(--accent); color: #000; }
+
+    .pkg-header { display: flex; flex-direction: column; gap: 6px; }
+
+    .pkg-name {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    .pkg-note {
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    .pkg-price {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .pkg-price .amount {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      color: #00345C;
+      line-height: 1;
+    }
+
+    [data-theme="dark"] .pkg-price .amount { color: var(--accent); }
+
+    .pkg-price .currency {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink-1);
+    }
+
+    .pkg-divider {
+      height: 1px;
+      background: var(--glass-border);
+    }
+
+    .pkg-features {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pkg-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--ink-1);
+      line-height: 1.5;
+    }
+
+    .pkg-features li::before {
+      content: '✓';
+      font-size: 12px;
+      font-weight: 700;
+      color: #00345C;
+      flex-shrink: 0;
+      margin-top: 1px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0,52,92,.10);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    [data-theme="dark"] .pkg-features li::before { color: var(--accent); background: rgba(94,184,255,.12); }
+
+    .pkg-cta {
+      display: block;
+      text-align: center;
+      padding: 13px 24px;
+      border-radius: var(--r-pill);
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all .25s;
+      margin-top: auto;
+    }
+
+    .pkg-cta-primary {
+      background: #00345C;
+      color: #fff;
+    }
+
+    .pkg-cta-primary:hover { background: #004880; }
+    [data-theme="dark"] .pkg-cta-primary { background: var(--accent); color: #000; }
+    [data-theme="dark"] .pkg-cta-primary:hover { filter: brightness(1.1); }
+
+    .pkg-cta-glass {
+      background: var(--glass-tint);
+      border: 1px solid var(--glass-border);
+      color: var(--ink-0);
+      backdrop-filter: blur(var(--blur));
+    }
+
+    .pkg-cta-glass:hover { background: rgba(0,52,92,.08); border-color: rgba(0,52,92,.2); }
+    [data-theme="dark"] .pkg-cta-glass:hover { background: rgba(94,184,255,.1); border-color: rgba(94,184,255,.3); }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 760px) { .features-grid { grid-template-columns: 1fr; } }
+
+    .feature-card {
+      padding: 32px 28px;
+      border-radius: var(--r-lg);
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .feature-card:hover { transform: translateY(-4px); }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(0,52,92,.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00345C;
+    }
+
+    [data-theme="dark"] .feature-icon { background: rgba(94,184,255,.12); color: var(--accent); }
+
+    .feature-body h3 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+    .feature-body p { font-size: 14px; color: var(--ink-1); line-height: 1.65; text-wrap: pretty; }
+
+    /* ── Bento gallery ── */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 220px 220px 300px;
+      gap: 12px;
+    }
+
+    .bento-item {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform .4s cubic-bezier(.2,.7,.3,1), box-shadow .3s;
+    }
+
+    .bento-item:hover {
+      transform: scale(1.025);
+      box-shadow: 0 0 0 1px rgba(94,184,255,.35), 0 0 32px rgba(94,184,255,.14), var(--glass-shadow);
+      z-index: 2;
+    }
+
+    .bento-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2,.7,.3,1); }
+    .bento-item:hover img { transform: scale(1.04); }
+
+    .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1 / 3; }
+    .bento-item:nth-child(2) { grid-column: 1 / 3; grid-row: 3 / 4; }
+    .bento-item:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 3; }
+    .bento-item:nth-child(4) { grid-column: 4 / 5; grid-row: 1 / 2; }
+    .bento-item:nth-child(5) { grid-column: 4 / 5; grid-row: 2 / 3; }
+    .bento-item:nth-child(6) { grid-column: 3 / 5; grid-row: 3 / 4; }
+
+    @media (max-width: 900px) {
+      .bento-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 200px; }
+      .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: auto; }
+      .bento-item:nth-child(2),
+      .bento-item:nth-child(3),
+      .bento-item:nth-child(4),
+      .bento-item:nth-child(5),
+      .bento-item:nth-child(6) { grid-column: auto; grid-row: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .bento-grid { grid-template-columns: 1fr; grid-auto-rows: 220px; }
+      .bento-item:nth-child(1) { grid-column: 1; }
+    }
+
+    /* ── Reviews ── */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .reviews-grid { grid-template-columns: 1fr; } }
+
+    .review-card {
+      padding: 24px 22px;
+      border-radius: var(--r-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .review-stars { color: #F59E0B; font-size: 14px; letter-spacing: 2px; }
+
+    .review-text {
+      font-size: 14px;
+      color: var(--ink-1);
+      line-height: 1.65;
+      flex: 1;
+      text-wrap: pretty;
+    }
+
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .review-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0,52,92,.15), rgba(0,52,92,.05));
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .review-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-0);
+    }
+
+    .review-car {
+      font-size: 11px;
+      color: var(--ink-2);
+      margin-top: 1px;
+    }
+
+    /* ── FAQ ── */
+    .svc-faq { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── CTA ── */
+    .svc-cta {
+      margin: 64px 0 80px;
+      padding: 56px 48px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      border-radius: var(--r-xl);
+    }
+
+    .svc-cta h2 {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-cta p { font-size: 16px; color: var(--ink-1); max-width: 480px; line-height: 1.6; text-wrap: pretty; }
+    .svc-cta-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+    @media (max-width: 640px) {
+      .svc-page { padding: 0 16px; padding-top: 80px; }
+      .svc-cta { padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .svc-page { padding: 0 12px; padding-top: 72px; }
+      .svc-hero { gap: 28px; padding: 28px 0 44px; }
+      .svc-hero-actions { flex-direction: column; }
+      .svc-hero-actions .btn { width: 100%; justify-content: center; text-align: center; }
+      .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .bento-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+      .svc-cta { padding: 32px 16px; }
+    }
+  </style>
+  <!-- Google Ads Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16636917037"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'AW-16636917037');
   </script>
-
-  <!-- Event snippet for Contact conversion page -->
-  <script>
-    gtag('event', 'conversion', {
-      'send_to': 'AW-16636851413/56fJCOXMzs0bENXpiP09',
-      'value': 1.0,
-      'currency': 'USD'
-    });
-  </script>
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ar_AR">
-  <meta property="og:title"
-    content=" هافركامب افضل شركة غسيل سيارات بالكويت نقدم خدمة غسيل سيارات احترافية في الكويت تشمل الغسيل الخارجي والداخلي والتنظيف الشامل باستخدام مواد عالية الجودة وآمنة على طلاء السيارة والمقصورة الداخلية. نركز على التفاصيل الدقيقة لنمنح سيارتك نظافة حقيقية تحافظ على قيمتها وتمنحك مظهرًا أنيقًا يدوم  " />
-  <meta property="og:description"
-    content=" هافركامب افضل شركة غسيل سيارات بالكويت نقدم خدمة غسيل سيارات احترافية في الكويت تشمل الغسيل الخارجي والداخلي والتنظيف الشامل باستخدام مواد عالية الجودة وآمنة على طلاء السيارة والمقصورة الداخلية. نركز على التفاصيل الدقيقة لنمنح سيارتك نظافة حقيقية تحافظ على قيمتها وتمنحك مظهرًا أنيقًا يدوم  " />
-  <meta property="og:image" content="https://haverkampkw.com/img/contact/cover.jpeg" />
-  <meta property="og:url" content="https://haverkampkw.com/wash.html" />
-  <meta property="og:site_name" content="هافركامب">
-  <link rel="canonical" href="https://www.haverkampkw.com/">
-
-  <!-- Schema SEO (JSON-LD) – Reviews -->
   <script type="application/ld+json">
   {
-  "@context": "https://schema.org",
-  "@type": "CarWash",
-  "name": " هافركامب |افضل شركة غسيل سيارات بالكويت ",
-  "telephone": "+96551111154",
-  "address": {
-  "@type": "PostalAddress",
-  "streetAddress": " 19",
-  "addressLocality": "الكويت",
-  "addressRegion": "الري",
-  "addressCountry": "KW"
-  },
-  "aggregateRating": {
-  "@type": "AggregateRating",
-  "ratingValue": "5",
-  "reviewCount": "9"
-  },
-  "review": [
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "خدمة ممتازة واهتمام واضح بالتفاصيل، السيارة رجعت نظيفة بشكل ملحوظ."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "غسيل يدوي بدون خدوش ونتيجة أفضل من المتوقع."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "تعامل احترافي وسرعة في الإنجاز مع جودة ثابتة."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "نظافة داخلية دقيقة وإزالة كاملة للروائح."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "مواد تنظيف عالية الجودة ولا تترك أي آثار على السيارة."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "فريق عمل منظم ويعرف شغله بشكل احترافي."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "التزام كامل بالمواعيد وتسليم السيارة بحالة ممتازة."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "فرق واضح بين هذا الغسيل وأي غسيل عادي جربته سابقًا."
-  },
-  {
-  "@type": "Review",
-  "reviewRating": { "@type": "Rating", "ratingValue": "5" },
-  "reviewBody": "خدمة تستحق التجربة والاعتماد عليها بشكل دائم."
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "غسيل سيارات متنقل في الكويت",
+    "description": "خدمة غسيل سيارات احترافية متنقلة في الكويت. غسيل بدون خدوش بمواد آمنة مع خدمة الأتيان إليك. باقات VIP وذهبية وفضية.",
+    "url": "https://haverkampkw.com/wash.html",
+    "image": "https://haverkampkw.com/assets/main.webp",
+    "areaServed": "الكويت",
+    "serviceType": "خدمات السيارات",
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "هافركامب",
+      "url": "https://haverkampkw.com",
+      "telephone": "+96551111154",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "قطعة 1، شارع 19",
+        "addressLocality": "الري",
+        "addressCountry": "KW"
+      }
+    }
   }
-  ]
-  }
-</script>
-
-
-  <!-- favicon -->
-  <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./img/favicon_io/android-chrome-512x512.png">
-  <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <!-- font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-  <!-- faq-->
-  <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
-  <!-- css style -->
-  <link rel="stylesheet" href="css/style.css" />
-
-  <!-- font-awesome  -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
-  <!-- js -->
-  <script defer src="js/script.js"> </script>
+  </script>
 </head>
 
 <body>
-  <!-- start header -->
-  <header class="header">
-    <a href="#">
-      <img class="logo" alt="هافركامب افضل شركة غسيل سيارات بالكويت" src="./img/main_page/logo.svg" />
+
+  <div class="bg-stage" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="orb o4"></div>
+    <div class="orb o5"></div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav glass">
+      <div class="nav-brand">
+        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      </div>
+      <div class="nav-links">
+        <a href="#packages">الباقات والأسعار</a>
+        <a href="#features">لماذا نحن</a>
+        <a href="#gallery">معرض الصور</a>
+        <a href="#reviews">آراء العملاء</a>
+        <a href="terms.html">البنود والشروط</a>
+      </div>
+      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+    </nav>
+  </div>
+
+  <main class="svc-page">
+
+    <a href="index.html" class="svc-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+      الرئيسية
     </a>
 
-    <nav class="main-nav">
-      <ul class="main-nav-list">
-        <li><a class="main-nav-link" href="#services">خدمتنا</a></li>
-        <li><a class="main-nav-link" href="#why-us">لماذا نحن</a></li>
-        <li><a class="main-nav-link" href="#gallery"> معرض الصور</a></li>
-        <li><a class="main-nav-link" href="#testimonials"> اراءالعملاء</a></li>
-        <li><a class="main-nav-link" href="./terms.html"> البنود والشروط</a></li>
-        <li><a class="main-nav-link nav-cta " href="./contactus.html"> تواصل معنا</a></li>
-      </ul>
-    </nav>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <div class="svc-hero">
+      <div class="svc-hero-text">
+        <div class="tag">CAR WASH — غسيل السيارات</div>
+        <h1>نجي إليك <span class="em">أينما كنت</span></h1>
+        <p class="subtitle">أفضل خدمة غسيل سيارات في الكويت — خارجي وداخلي ومتكامل</p>
+        <p>نقدم خدمة غسيل سيارات احترافية بدون خدوش تشمل الخارجي والداخلي والتعقيم — بمواد معتمدة آمنة على الطلاء مع اهتمام بأدق التفاصيل. خدمة متنقلة نحضر إليك أينما كنت.</p>
 
-    <button class="btn-mobile-nav">
-
-      <i class="fa-solid fa-bars icon-mobile-nav" name="menu-outline"></i>
-      <i class="fa-solid fa-xmark icon-mobile-nav" name="close-outline"></i>
-    </button>
-  </header>
-  <!-- end header -->
-  <!-- start hero -->
-  <main>
-    <section class="section-hero" id="section-hero">
-      <div class="hero">
-        <div class="hero-text-box">
-          <h1 class="heading-primary">
-            هافركامب افضل شركة غسيل سيارات بالكويت
-          </h1>
-          <p class="hero-description">
-            نقدم خدمة غسيل سيارات احترافية في الكويت تشمل الغسيل الخارجي والداخلي والتنظيف الشامل باستخدام مواد عالية
-            الجودة وآمنة
-            على طلاء السيارة والمقصورة الداخلية. نركز على التفاصيل الدقيقة لنمنح سيارتك نظافة حقيقية تحافظ على قيمتها
-            وتمنحك مظهرًا
-            أنيقًا يدوم.
-
-          </p>
-
-          <a href="./contactus.html" class="btn btn--outline"> تواصل معنا &darr;</a>
+        <div class="trust-badges">
+          <span class="trust-badge"><span class="tb-icon">🚗</span> خدمة متنقلة نحضر إليك</span>
+          <span class="trust-badge"><span class="tb-icon">✨</span> غسيل بدون خدوش</span>
+          <span class="trust-badge"><span class="tb-icon">🧴</span> مواد آمنة ومعتمدة</span>
         </div>
-        <div class="hero-img-box">
-          <picture>
-            <source srcset="./img/main_page/haverkamp.webp" type="image/webp" />
-            <source srcset="./img/main_page/haverkamp.png" type="image/png" />
 
-            <img src="./img/main_page/haverkamp.png" class="hero-img"
-              alt="هافركامب افضل شركة حماية سيارات بالكويت حماية المانية كفالة 10 سنوات " />
-          </picture>
+        <div class="svc-hero-actions" style="margin-top:28px;">
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+            style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            واتساب
+          </a>
         </div>
       </div>
-    </section>
-    <!-- end hero -->
-    <!-- start specifications -->
-    <div class="specifications" id="specifications">
-      <div class="center-text">
-        <h2 class="heading-secondary"> لماذا تختار خدمة الغسيل من هافركامب</h2>
-      </div>
-      <div class="container">
 
-        <div class="box">
-          <div class="img"><img src="./img/polish/wash.png" alt="خدمة غسيل السيارة لفحص البوليش من هافركامب"></div>
-          <div class="box-text">
-            <h3> غسيل سيارات يدوي بدون خدوش </h3>
-            <p>
-              نقدم خدمة غسيل سيارات يدوي تعتمد على أساليب دقيقة تقلل الاحتكاك وتحافظ على طلاء السيارة من أي خدوش أو آثار
-              دائرية. يتم
-              استخدام أدوات مخصصة ومواد تنظيف عالية الجودة مصممة خصيصًا للعناية بسطح السيارة </p>
+      <div class="svc-hero-img glass">
+        <img src="assets/services/wash/wash-hero.png" alt="غسيل السيارات الاحترافي — هافركامب" />
+      </div>
+    </div>
+
+    <!-- ═══════════════ PACKAGES ═══════════════ -->
+    <div id="packages" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">PACKAGES — الباقات والأسعار</div>
+        <h2>اختر الباقة المناسبة لسيارتك</h2>
+        <p>ثلاث باقات مصممة لتلبية كل الاحتياجات — من الغسيل السريع إلى التنظيف الشامل المتكامل. السعر يختلف حسب نوع السيارة.</p>
+      </div>
+
+      <div class="packages-grid">
+
+        <!-- VIP -->
+        <div class="pkg-card glass featured">
+          <div class="pkg-badge">الأكثر شمولاً</div>
+          <div class="pkg-header">
+            <div class="pkg-name">VIP</div>
+            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+          </div>
+          <div class="pkg-price">
+            <span class="amount">25</span>
+            <span class="currency">د.ك يبدأ من</span>
+          </div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li>تنظيف المقاعد والمفروشات من الغبار والبقع</li>
+            <li>غسيل الأرضيات والسقف</li>
+            <li>تنظيف سجادة الدواسات</li>
+            <li>تلميع لوحة التحكم بمواد ألمانية</li>
+            <li>تلميع الكاوتش بمواد ألمانية</li>
+            <li>تنظيف فتحات التهوية</li>
+            <li>تنظيف الرمز (الجنوط)</li>
+            <li>وكس الكار</li>
+            <li>تعقيم السيارة</li>
+            <li>عمل فومشين</li>
+            <li>تعطير السيارة</li>
+            <li>نايلون حماية للكراسي والأرضيات</li>
+          </ul>
+          <a href="contactus.html" class="pkg-cta pkg-cta-primary">احجز الباقة VIP</a>
+        </div>
+
+        <!-- Gold -->
+        <div class="pkg-card glass">
+          <div class="pkg-header">
+            <div class="pkg-name">ذهبية</div>
+            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+          </div>
+          <div class="pkg-price">
+            <span class="amount">15</span>
+            <span class="currency">د.ك يبدأ من</span>
+          </div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li>تنظيف المقاعد والمفروشات</li>
+            <li>غسيل الأرضيات والسقف</li>
+            <li>تنظيف سجادة الدواسات</li>
+            <li>تنظيف فتحات التهوية</li>
+            <li>تنظيف الرمز (الجنوط)</li>
+            <li>وكس الكار</li>
+            <li>تعقيم السيارة وعمل فومشين</li>
+            <li>تعطير السيارة</li>
+            <li>نايلون حماية</li>
+          </ul>
+          <a href="contactus.html" class="pkg-cta pkg-cta-glass">احجز الباقة الذهبية</a>
+        </div>
+
+        <!-- Silver -->
+        <div class="pkg-card glass">
+          <div class="pkg-header">
+            <div class="pkg-name">فضية</div>
+            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+          </div>
+          <div class="pkg-price">
+            <span class="amount">8</span>
+            <span class="currency">د.ك يبدأ من</span>
+          </div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li>تنظيف المقاعد والمفروشات</li>
+            <li>غسيل الأرضيات والسقف</li>
+            <li>تنظيف سجادة الدواسات</li>
+            <li>تنظيف فتحات التهوية</li>
+            <li>تنظيف الرمز (الجنوط)</li>
+            <li>تعقيم وفومشين وتعطير</li>
+            <li>نايلون حماية</li>
+          </ul>
+          <a href="contactus.html" class="pkg-cta pkg-cta-glass">احجز الباقة الفضية</a>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ FEATURES ═══════════════ -->
+    <div id="features" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">WHY US — لماذا تختار هافركامب</div>
+        <h2>غسيل احترافي بدون مجهود منك</h2>
+        <p>لسنا مجرد خدمة غسيل عادية — نحن نحضر إليك بمعدات احترافية ومواد آمنة ونتيجة مضمونة.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>خدمة متنقلة — نحضر إليك</h3>
+            <p>لا تضيع وقتك في الانتظار بمحطات الغسيل — فريقنا يحضر إليك في البيت أو العمل أو أي مكان تريده ويُنجز المهمة باحترافية.</p>
           </div>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/check.png" alt="فحص السيارة في شركه هافركامب لعمل البوليش"></div>
-          <div class="box-text">
-            <h3> مواد تنظيف آمنة ومعتمدة</h3>
-            <p>
-              نعتمد في غسيل السيارات على مواد تنظيف آمنة ومعتمدة تحافظ على طلاء السيارة والمقصورة الداخلية دون التسبب
-              بأي تلف أو
-              بهتان. جميع المنتجات المستخدمة مختارة بعناية، خالية من المواد القاسية، ومناسبة للاستخدام المتكرر، مما يضمن
-              نظافة فعالة
-              مع الحفاظ على جودة السيارة وقيمتها على المدى الطويل.
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>غسيل بدون خدوش</h3>
+            <p>نعتمد أسلوب الغسيل اليدوي مع أدوات متخصصة ومحاليل تنظيف مصممة لحماية الطلاء — نتيجة لامعة دون خدش أو إتلاف.</p>
           </div>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/polish.png" alt="افضل خدمة بوليش بالكويت شركه هافركامب"></div>
-          <div class="box-text">
-            <h3> فريق متخصص في تنظيف السيارات</h3>
-            <p>
-              يضم فريق العمل لدينا مختصين في تنظيف والعناية بالسيارات يمتلكون خبرة عملية ومعرفة دقيقة بأساليب الغسيل
-              الصحيحة لكل نوع
-              سيارة. يتم تنفيذ جميع مراحل التنظيف باحترافية عالية واهتمام بالتفاصيل، لضمان نتائج ثابتة وجودة يمكن
-              ملاحظتها من أول
-              زيارة. </p>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>مواد آمنة ومعتمدة</h3>
+            <p>منتجاتنا مختارة بعناية — خالية من المواد القاسية، آمنة للاستخدام المتكرر، تضمن تنظيفاً فعّالاً مع حفاظ على قيمة ومظهر سيارتك.</p>
           </div>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/check-2.png" alt="فحص السيارة بعد البوليش من شركة هافركامب "></div>
-          <div class="box-text">
-            <h3> التزام كامل بالجودة والنظافة </h3>
-            <p>
-              نلتزم بتقديم أعلى معايير الجودة والنظافة في جميع خدمات غسيل السيارات دون استثناء. يتم تنفيذ العمل وفق
-              إجراءات واضحة
-              ومراقبة دقيقة لكل مرحلة، لضمان تسليم السيارة نظيفة بالكامل وبمستوى يلبّي التوقعات ويعكس احترافية الخدمة من
-              البداية حتى
-              التسليم </p>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
           </div>
+          <div class="feature-body">
+            <h3>فريق متخصص ومدرّب</h3>
+            <p>فريقنا يمتلك الخبرة والمعرفة الدقيقة بأساليب الغسيل الصحيحة لمختلف أنواع السيارات — ينفذ كل مراحل التنظيف باحترافية واهتمام بالتفاصيل.</p>
+          </div>
+        </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>سرعة في الإنجاز ونتيجة واضحة</h3>
+            <p>نُنجز العمل بسرعة دون التنازل عن الجودة — تستلم سيارتك نظيفة لامعة من الخارج ومرتبة من الداخل في وقت قياسي.</p>
+          </div>
+        </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>التزام كامل بمعايير النظافة</h3>
+            <p>نتبع إجراءات شفافة ومراقبة بدقة في كل مرحلة — سيارتك تخرج نظيفة 100% وتلبي توقعاتك بالكامل أو نُعيد العمل.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ GALLERY ═══════════════ -->
+    <div id="gallery" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">GALLERY — معرض الأعمال</div>
+        <h2>من أعمالنا في الغسيل والتنظيف</h2>
+        <p>نماذج حقيقية من جلسات الغسيل والتنظيف الداخلي لدى هافركامب في الكويت.</p>
+      </div>
+      <div class="bento-grid">
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-1.png" alt="غسيل سيارة — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-2.png" alt="تنظيف داخلي احترافي" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-3.png" alt="غسيل بدون خدوش" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-4.png" alt="تعقيم وتنظيف المقاعد" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-5.png" alt="وكس وتلميع الكار" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/wash/wash-gal-6.png" alt="نتيجة الغسيل الاحترافي" loading="lazy" />
         </div>
       </div>
     </div>
-    <!-- end specifications -->
 
-    <!-- start why us section -->
-    <section class="section-why-us" id="why-us">
-      <div class="center-text">
-        <span class="subheading"> </span>
-        <h2 class="heading-secondary">
-          لماذا تختار هافركامب </h2>
-      </div>
-      <div class="container">
-        <div class="img"><img src="./img/main_page/haverkamp.png"
-            alt="هافركامب افضل شركة حماية سيارات بالكويت حماية المانية كفالة 10 سنوات - حماية فل بدي - عازل حراري - حماية جام - نانو للمقاعد - نانو للرنقات - بوليش">
-        </div>
-        <ul class="about-list">
-          <li><i class="fa-solid fa-hourglass-half"></i> لا تضيع وقتك في الانتظار نحن نأتي إليك</li>
-
-          <li>
-            <i class="fa-solid fa-spray-can-sparkles"></i> استخدام مواد تنظيف آمنة
-          </li>
-          <li>
-            <i class="fa-solid fa-user-group"></i>فريق عمل مدرب وخبرة عملية
-          </li>
-          <li> <i class="fa-solid fa-user-clock"></i> سرعة في الإنجاز مع نتائج واضحة</li>
-          <li> <i class="fa-solid fa-award"></i> التزام كامل بالجودة والنظافة</li>
-
-        </ul>
-      </div>
-    </section>
-    <!-- end why us section -->
-
-    <!-- Start Pricing -->
-    <div class="pricing" id="pricing">
-      <div class="dots dots-up"></div>
-      <div class="dots dots-down"></div>
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          الاسعار</h2>
-      </div>
-      <div class="container">
-        <div class="box popular">
-          <div class="label">الاكثر مبيعا</div>
-          <div class="title"> VIP</div>
-          <div class="price">
-            <span class="amount">25 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
-          </div>
-          <ul>
-
-            <li>غسيل الكشنات من الاتربة والبقع الصعبة</li>
-            <li>غسيل الارضيات والسقف</li>
-            <li>غسيل فرش الدواسات</li>
-            <li>تلميع الطبلون بمواد المانية</li>
-            <li>تلميع الاطارات بمواد المانية</li>
-            <li>تنظيف فتحات التكيف</li>
-            <li>تنظيف الرنجات</li>
-            <li>وضع واكس علي بدي السيارة</li>
-            <li>تعقيم السيارة</li>
-            <li>تبخير السيارة</li>
-            <li>تعطير السيارة</li>
-            <li>تلبيس الارضيات والكشنات نايلون</li>
-          </ul>
-        </div>
-        <div class="box">
-          <div class="title">ذهبية</div>
-          <div class="price">
-            <span class="amount">15 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
-          </div>
-          <ul>
-            <li>غسيل الكشنات من الاتربة والبقع الصعبة</li>
-            <li>غسيل الارضيات والسقف</li>
-            <li>غسيل فرش الدواسات</li>
-            <li>تنظيف فتحات التكيف</li>
-            <li>تنظيف الرنجات</li>
-            <li>وضع واكس علي بدي السيارة</li>
-            <li>تعقيم السيارة</li>
-            <li>تبخير السيارة</li>
-            <li>تعطير السيارة</li>
-            <li>تلبيس الارضيات والكشنات نايلون</li>
-          </ul>
-        </div>
-        <div class="box">
-          <div class="title">فضية</div>
-          <div class="price">
-            <span class="amount">8 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
-          </div>
-          <ul>
-            <li>غسيل الكشنات من الاتربة والبقع الصعبة</li>
-            <li>غسيل الارضيات والسقف</li>
-            <li>غسيل فرش الدواسات</li>
-            <li>تنظيف فتحات التكيف</li>
-            <li>تنظيف الرنجات</li>
-            <li>تعقيم السيارة</li>
-            <li>تبخير السيارة</li>
-            <li>تعطير السيارة</li>
-            <li>تلبيس الارضيات والكشنات نايلون</li>
-          </ul>
-        </div>
+    <!-- Lightbox -->
+    <div class="lb-overlay" id="lb" onclick="closeLb(event)">
+      <div class="lb-img-wrap">
+        <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
+        <img id="lb-img" src="" alt="" />
       </div>
     </div>
-    <!-- End Pricing -->
-    <!-- start gallery -->
-    <section class="gallery" id="gallery">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          معرض الصور</h2>
-      </div>
-      <div class="carosel">
-        <div class=" list">
-          <div class="item">
-            <img src="./img/gallery/main/ppf-gal-1.png" alt="حماية فل بدي المانية كفالة 10 سنوات">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/main/ppf-gal-2.png" alt=" حماية فل بدي كورية كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="../img/gallery/main/ppf-gal-3.png" alt="حماية فل بدي امريكية كفالة 10 سنوات">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/main/ppf-gal-4.png" alt="افضل شركة حمايةسيارات بالكويت">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/main/ppf-gal-5.png" alt="افضل حماية فل بدي بالكويت">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/main/ppf-gal-6.png" alt="افضل حماية للسيارات وعازل حراري بالكويت">
-          </div>
 
-        </div>
-        <!--button prev and next-->
-        <div class="buttons">
-          <button id="prev">
-            &lt; </button>
-          <button id="next">></button>
-        </div>
-        <!--Dots (if 6 items => 6 dots)-->
-        <ul class="dots">
-          <li class="active"></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
+    <!-- ═══════════════ REVIEWS ═══════════════ -->
+    <div id="reviews" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">REVIEWS — آراء العملاء</div>
+        <h2>ماذا يقول عملاؤنا</h2>
+        <p>آراء حقيقية من عملائنا الكرام في الكويت بعد تجربة خدمة الغسيل الاحترافية.</p>
       </div>
-    </section>
-    <!-- end gallery -->
-    <!-- Start Testimonials -->
-    <div class="testimonials" id="testimonials">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          اراءالعملاء</h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>عمر السعدون</h3>
-          <span class="title">تويوتا لاندكروزر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+      <div class="reviews-grid">
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"خدمة ممتازة واهتمام واضح بالتفاصيل — أول مرة أشوف سيارتي بهالنظافة من الداخل"</p>
+          <div class="review-author">
+            <div class="review-avatar">👨</div>
+            <div>
+              <div class="review-name">عمر السعدون</div>
+              <div class="review-car">تويوتا لاند كروزر</div>
+            </div>
           </div>
-          <p> خدمة ممتازة واهتمام واضح بالتفاصيل، السيارة رجعت نظيفة بشكل ملحوظ </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>لطيقة الياسين</h3>
-          <span class="title">رانج روفر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"الغسيل بدون خدوش فاق توقعاتي — واضح الفرق عن محطات الغسيل العادية"</p>
+          <div class="review-author">
+            <div class="review-avatar">👩</div>
+            <div>
+              <div class="review-name">لطيقة الياسين</div>
+              <div class="review-car">رينج روفر</div>
+            </div>
           </div>
-          <p>غسيل يدوي بدون خدوش ونتيجة أفضل من المتوقع</p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3>خالد الفيلكاوي</h3>
-          <span class="title">بي ام دابليو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"تعامل احترافي وجودة ثابتة في كل مرة — أنصح بيهم بشدة"</p>
+          <div class="review-author">
+            <div class="review-avatar">👨</div>
+            <div>
+              <div class="review-name">خالد الفلكاوي</div>
+              <div class="review-car">BMW</div>
+            </div>
           </div>
-          <p> تعامل احترافي وسرعة في الإنجاز مع جودة ثابتة </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>ابراهيم القحطاني</h3>
-          <span class="title">لكزيس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"تنظيف داخلي دقيق وإزالة كاملة للروائح — سيارتي مثل الجديدة"</p>
+          <div class="review-author">
+            <div class="review-avatar">👨</div>
+            <div>
+              <div class="review-name">إبراهيم القحطاني</div>
+              <div class="review-car">لكزس</div>
+            </div>
           </div>
-          <p>
-            نظافة داخلية دقيقة وإزالة كاملة للروائح </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>مريم الانبعي</h3>
-          <span class="title">جيلى مانجارو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"منتجات عالية الجودة ما تترك أي أثر — فريق منظم ومحترم"</p>
+          <div class="review-author">
+            <div class="review-avatar">👩</div>
+            <div>
+              <div class="review-name">مريم العنبي</div>
+              <div class="review-car">جيلي مونجارو</div>
+            </div>
           </div>
-          <p> مواد تنظيف عالية الجودة ولا تترك أي آثار على السيارة </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>اسامة العميري</h3>
-          <span class="title">دودج رام تي ار اكس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="review-card glass">
+          <div class="review-stars">★★★★★</div>
+          <p class="review-text">"جاوا على الموعد بالضبط وسيارتي طلعت بأفضل حالة — يستاهل الاشتراك الشهري"</p>
+          <div class="review-author">
+            <div class="review-avatar">👨</div>
+            <div>
+              <div class="review-name">فهد السهلي</div>
+              <div class="review-car">مرسيدس</div>
+            </div>
           </div>
-          <p>
-            فريق عمل منظم ويعرف شغله بشكل احترافي </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>ناصر المطيري</h3>
-          <span class="title">جينيسيس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p> التزام كامل بالمواعيد وتسليم السيارة بحالة ممتازة </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>مني الدويسان</h3>
-          <span class="title">ديفندر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            فرق واضح بين هذا الغسيل وأي غسيل عادي جربته سابقًا
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3>فهد السهلي</h3>
-          <span class="title">مرسيدس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            خدمة تستحق التجربة والاعتماد عليها بشكل دائم </p>
-        </div>
+
       </div>
     </div>
-    <!-- End Testimonials -->
+
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <div class="svc-cta glass">
+      <h2>سيارتك تستاهل الأفضل</h2>
+      <p>تواصل معنا الآن لحجز موعد الغسيل — نحضر إليك أينما كنت في الكويت.</p>
+      <div class="svc-cta-btns">
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+        <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+          style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          راسلنا على واتساب
+        </a>
+      </div>
+    </div>
+
+    <footer class="footer" style="padding: 32px 0;">
+      <div class="footer-row">
+        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="links">
+          <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
+          <a href="terms.html">الشروط</a>
+          <a href="index.html">الرئيسية</a>
+        </div>
+      </div>
+    </footer>
+
   </main>
-  <!-- start footer -->
-  <div class="footer" id="contacts-us">
-    <div class="container">
-      <div class="box">
-        <h3>هافركامب</h3>
-        <!-- <ul class="social">
-                <li>
-                  <a href="tel:51111154" class="phone">
-                    <i class="fa-solid fa-mobile-screen-button fa-2x"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="https://wa.me/96551111154" target="_blank" class="whatsapp">
-                    <i class="fab fa-whatsapp fa-2x"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.instagram.com/haverkampkw/" target="_blank" class="instagram">
-                    <i class="fab fa-instagram fa-2x"></i>
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.snapchat.com/add/haverkampkw" target="_blank" class="snapchat">
-                    <i class="fab fa-snapchat fa-2x"></i>
-                  </a>
-                </li>
-              </ul>
-        -->
-        <p class="text"> الوكيل الحصري لحماية هافركامب الالمانية في الشرق الاوسط <br> الوكيل الحصري لحماية كلايف ديزاين
-          الكورية بالكويت</p>
 
-      </div>
+  <script src="js/whatsapp-float.js"></script>
+  <script src="js/lightbox.js"></script>
+</body>
 
-      <div class="box">
-        <div class="line">
-          <i class="fa-solid fa-house fa-2x"></i>
-          <div class="info">الري- قطعة 1- شارع 19</div>
-        </div>
-        <div class="line">
-          <i class="far fa-clock fa-fw"></i>
-          <div class="info">
-            ساعات العمل <br />
-            السبت الى الخميس <br />
-            10 صباحا الى 8 مساء
-          </div>
-        </div>
-      </div>
-      <div class="box map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw"
-          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>
-    <p class="copyright">
-      جميع الحقوق محفوظة لشركة هافركامب &copy; <span class="year">2027</span>
-    </p>
-  </div>
-  <!-- <div class="designer">
-          <p class="copyright">Made With &#10084; By a7med206</p>
-          <ul class="social-a7med">
-            <li>
-              <a href="tel:65811402" class="phone">
-                <i class="fa-solid fa-mobile-screen-button"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://wa.me/96565811402" target="_blank" class="whatsapp">
-                <i class="fab fa-whatsapp fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/a7med206/" target="_blank" class="instagram">
-                <i class="fab fa-instagram fa-2x"></i>
-              </a>
-            </li>
-          </ul>
-
-        </div> -->
-  <!-- End Footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></scrip >
-</body >
-
-</html >
+</html>

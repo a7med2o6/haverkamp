@@ -1,18 +1,8 @@
-# ============================
-# robots.txt for haverkampkw.com
-# إعداد: Ahmad M-Nofal | هافركامب الكويت
-# ============================
-
 User-agent: *
-# السماح لمحركات البحث بفهرسة كل الصفحات العامة
 Allow: /
 
-# منع فهرسة صفحات الإدارة أو الملفات الحساسة إن وجدت
-Disallow: /admin
-Disallow: /dashboard
-Disallow: /api
-Disallow: /temp
-Disallow: /private
+# Block internal/dev pages
+Disallow: /car-color.html
 
-# تحديد رابط خريطة الموقع (sitemap)
+# Sitemap
 Sitemap: https://haverkampkw.com/sitemap.xml

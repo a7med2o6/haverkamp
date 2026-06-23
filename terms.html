@@ -1,300 +1,418 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- seo -->
-  <title>haverkamp | هافركامب</title>
-  <meta name="robots" content="index, follow">
-  <meta name="description" content="افضل واقوي حماية وعازل حراري بالكويت ، منتج الماني 
- ">
-  <meta name="author" content="Ahmad M-Nofal">
-  <!-- Google tag (gtag.js) -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="اقرأ البنود والشروط الخاصة بخدمات هافركامب للسيارات في الكويت. سياسات الضمان والكفالة وشروط استخدام خدمات حماية السيارات." />
+  <meta name="keywords" content="شروط هافركامب، ضمان PPF الكويت، كفالة حماية سيارات" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Haverkamp Kuwait" />
+  <link rel="canonical" href="https://haverkampkw.com/terms.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://haverkampkw.com/terms.html" />
+  <meta property="og:title" content="البنود والشروط — هافركامب الكويت" />
+  <meta property="og:description" content="اقرأ البنود والشروط الخاصة بخدمات هافركامب للسيارات في الكويت. سياسات الضمان والكفالة وشروط استخدام خدمات حماية السيارات." />
+  <meta property="og:image" content="https://haverkampkw.com/assets/main.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_KW" />
+  <meta property="og:site_name" content="هافركامب — Haverkamp Kuwait" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="البنود والشروط — هافركامب الكويت" />
+  <meta name="twitter:description" content="اقرأ البنود والشروط الخاصة بخدمات هافركامب للسيارات في الكويت. سياسات الضمان والكفالة وشروط استخدام خدمات حماية السيارات." />
+  <meta name="twitter:image" content="https://haverkampkw.com/assets/main.webp" />
+<title>البنود والشروط — هافركامب الكويت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<style>
+  .terms-page {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 120px 24px 80px;
+  }
+
+  .terms-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink-1);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 32px;
+    padding: 8px 14px;
+    border-radius: var(--r-pill);
+    background: var(--glass-tint);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border: 1px solid var(--glass-border);
+    transition: all 0.25s;
+  }
+  .terms-back:hover { color: var(--ink-0); transform: translateX(4px); }
+
+  .terms-hero {
+    margin-bottom: 48px;
+  }
+  .terms-hero .tag {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  [data-theme="light"] .terms-hero .tag { color: #00345C; }
+  .terms-hero .tag::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: currentColor;
+  }
+  .terms-hero h1 {
+    font-size: clamp(30px, 4vw, 48px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .terms-hero p {
+    font-size: 16px;
+    color: var(--ink-1);
+    line-height: 1.6;
+  }
+
+  /* Section cards */
+  .terms-section {
+    margin-bottom: 24px;
+  }
+  .terms-card {
+    padding: 36px 40px;
+  }
+  .terms-card-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--glass-border);
+  }
+  .terms-card-num {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    background: linear-gradient(135deg, rgba(94,184,255,0.18), rgba(94,184,255,0.04));
+    border: 1px solid var(--glass-border-bright);
+    border-radius: var(--r-pill);
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+  [data-theme="light"] .terms-card-num { color: #00345C; }
+  .terms-card-head h2 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink-0);
+  }
+
+  /* Bullet list */
+  .terms-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .terms-list li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 15px;
+    color: var(--ink-1);
+    line-height: 1.65;
+  }
+  .terms-list li .bullet {
+    flex-shrink: 0;
+    margin-top: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  [data-theme="light"] .terms-list li .bullet { background: #00345C; }
+
+  /* Post-install subsections */
+  .terms-sub {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .terms-sub-block {
+    padding: 20px 24px;
+    border-radius: var(--r-md);
+    background: var(--glass-tint);
+    border: 1px solid var(--glass-border);
+  }
+  .terms-sub-block .sub-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-0);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .terms-sub-block .sub-label::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  [data-theme="light"] .terms-sub-block .sub-label::before { background: #00345C; }
+  .terms-sub-block p {
+    font-size: 15px;
+    color: var(--ink-1);
+    line-height: 1.65;
+  }
+
+  /* Warranty subsections */
+  .warranty-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 600px) { .warranty-grid { grid-template-columns: 1fr; } }
+
+  .warranty-block {
+    padding: 24px;
+    border-radius: var(--r-md);
+    background: var(--glass-tint);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .warranty-block .w-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-0);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .warranty-block .w-title::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+  [data-theme="light"] .warranty-block .w-title::before { background: #00345C; }
+  .warranty-block ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .warranty-block ul li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 14px;
+    color: var(--ink-1);
+    line-height: 1.6;
+  }
+  .warranty-block ul li .bullet {
+    flex-shrink: 0;
+    margin-top: 7px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.7;
+  }
+  [data-theme="light"] .warranty-block ul li .bullet { background: #00345C; }
+  .warranty-block .note {
+    font-size: 13px;
+    color: var(--ink-2);
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    line-height: 1.55;
+  }
+
+  .footer-note {
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-2);
+    padding: 24px 0 0;
+  }
+
+  @media (max-width: 640px) {
+    .terms-page { padding: 100px 16px 60px; }
+    .terms-card { padding: 28px 24px; }
+  }
+  @media (max-width: 480px) {
+    .terms-page { padding: 88px 12px 48px; }
+    .terms-card { padding: 22px 16px; }
+    .terms-card-head { gap: 12px; margin-bottom: 20px; }
+    .terms-icon { width: 40px; height: 40px; }
+  }
+
+</style>
+  <!-- Google Ads Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16636917037"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'AW-16636917037');
   </script>
-
-  <!-- Event snippet for Contact conversion page -->
-  <script>
-    gtag('event', 'conversion', {
-      'send_to': 'AW-16636851413/56fJCOXMzs0bENXpiP09',
-      'value': 1.0,
-      'currency': 'USD'
-    });
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "البنود والشروط — هافركامب الكويت",
+    "description": "البنود والشروط الخاصة بخدمات هافركامب للسيارات في الكويت. سياسات الضمان والكفالة وشروط استخدام الخدمات.",
+    "url": "https://haverkampkw.com/terms.html",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "هافركامب",
+      "url": "https://haverkampkw.com"
+    }
+  }
   </script>
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ar_AR">
-  <meta property="og:title"
-    content=" هافركامب اقوي حماية سيارات بالكويت حماية المانية كفالة 10 سنوات - حماية فل بدي - عازل حراري - حماية جام - نانو للمقاعد - نانو للرنقات - بوليش  " />
-  <meta property="og:description"
-    content=" هافركامب اقوي حماية سيارات بالكويت حماية المانية كفالة 10 سنوات - حماية فل بدي - عازل حراري - حماية جام - نانو للمقاعد - نانو للرنقات - بوليش  " />
-  <meta property="og:image" content="https://haverkampkw.com/img/contact/cover.jpeg" />
-  <meta property="og:url" content="https://haverkampkw.com/terms.html" />
-  <meta property="og:site_name" content="هافركامب">
-  <meta name="theme-color" content="#00345c">
-  <link rel="canonical" href="https://www.haverkampkw.com/">
-  <!-- favicon -->
-
-  <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./img/favicon_io/android-chrome-512x512.png">
-  <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <!-- font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-  <!-- faq-->
-  <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
-  <!-- css style -->
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- slider-boot -->
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!-- font-awesome  -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
-  <!-- js -->
-  <script defer src="js/script.js"></script>
 </head>
-
 <body>
-  <!-- start header -->
-  <header class="header">
-    <a href="#">
-      <img class="logo" alt="albaraka logo" src="./img/main_page/logo.svg" />
-    </a>
 
-    <nav class="main-nav">
-      <ul class="main-nav-list">
-        <li><a class="main-nav-link" href="#conditions"> البنود والشروط</a></li>
-        <li><a class="main-nav-link" href="#instructions"> ارشادات</a></li>
-        <li><a class="main-nav-link" href="#warranty"> الكفالة </a></li>
-        <li><a class="main-nav-link" href="./contactus.html"> تواصل معنا</a></li>
+<!-- Animated background -->
+<div class="bg-stage" aria-hidden="true">
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+  <div class="orb o4"></div>
+  <div class="orb o5"></div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <nav class="nav glass">
+    <div class="nav-brand">
+      <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+    </div>
+    <div class="nav-links">
+      <a href="#terms-conditions">البنود والشروط</a>
+      <a href="#post-install">إرشادات ما بعد التركيب</a>
+      <a href="#warranty">الكفالة</a>
+    </div>
+    <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+  </nav>
+</div>
+
+<main class="terms-page">
+
+  <a href="index.html" class="terms-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+    العودة للرئيسية
+  </a>
+
+  <div class="terms-hero">
+    <div class="tag">TERMS &amp; CONDITIONS — البنود والشروط</div>
+    <h1>البنود والشروط</h1>
+    <p>يُرجى قراءة هذه البنود بعناية قبل تسليم سيارتك لفريق هافركامب.</p>
+  </div>
+
+  <!-- == القسم 1: البنود والشروط == -->
+  <div class="terms-section" id="terms-conditions">
+    <div class="terms-card glass">
+      <div class="terms-card-head">
+        <span class="terms-card-num">01</span>
+        <h2>البنود والشروط</h2>
+      </div>
+      <ul class="terms-list">
+        <li><span class="bullet"></span><span>عدم ترك أي ممتلكات شخصية داخل السيارة.</span></li>
+        <li><span class="bullet"></span><span>في حالة إرسال السيارة مع السائق أو من ينوب عن مالك السيارة، يُرجى إرسال نوع الخدمة المطلوبة.</span></li>
+        <li><span class="bullet"></span><span>يجب فحص السيارة من الداخل والخارج قبل مغادرة شركة هافركامب، ولن نقبل أي شكوى بعد ذلك.</span></li>
+        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن الإصابات أو الأضرار الناتجة عن ظروف خارجة عن إرادتها (الأمطار، السيول، الزلازل، الحروب، العوامل الجوية وغيرها).</span></li>
+        <li><span class="bullet"></span><span>في حال قدوم السيارة وبها شرخ أو كسر في الزجاج وازداد داخل المحل أو ظهرت شروخ جديدة، فإن شركة هافركامب غير مسؤولة عن ذلك.</span></li>
+        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن تلف البطارية أو أي قطع إلكترونية عند ترك السيارة لتقديم الخدمة.</span></li>
+        <li><span class="bullet"></span><span>شركة هافركامب لا تتحمل أي مسؤولية في حال كانت السيارة مصبوغة.</span></li>
+        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن حالات سوء الاستخدام من قبل العميل.</span></li>
+        <li><span class="bullet"></span><span>يستفيد من الكفالة المالك الأول فقط.</span></li>
       </ul>
-    </nav>
+    </div>
+  </div>
 
-    <button class="btn-mobile-nav">
-
-      <i class="fa-solid fa-bars icon-mobile-nav" name="menu-outline"></i>
-      <i class="fa-solid fa-xmark icon-mobile-nav" name="close-outline"></i>
-    </button>
-  </header>
-  <!-- end header -->
-  <!-- start hero -->
-  <main>
-    <section class="section-hero" id="section-hero">
-      <div class="hero">
-        <div class="hero-text-box">
-          <h1 class="heading-primary">
-            هافركامب
-          </h1>
-          <p class="hero-description">
-
-            معنا لا تحاتي حقك دايما محفوظ وابشر دايما بالخير
-
-          </p>
-
-          <a href="./contactus.html" class="btn btn--outline"> تواصل معنا &darr;</a>
-        </div>
-        <div class="hero-img-box">
-          <picture>
-            <source srcset="./img/main_page/haverkamp.webp" type="image/webp" />
-            <source srcset="./img/main_page/haverkamp.png" type="image/png" />
-
-            <img src="./img/main_page/haverkamp.png" class="hero-img"
-              alt="Woman enjoying food, meals in storage container, and food bowls on a table" />
-          </picture>
-        </div>
+  <!-- == القسم 2: إرشادات ما بعد التركيب == -->
+  <div class="terms-section" id="post-install">
+    <div class="terms-card glass">
+      <div class="terms-card-head">
+        <span class="terms-card-num">02</span>
+        <h2>إرشادات ما بعد التركيب</h2>
       </div>
-    </section>
-    <!-- end hero -->
-    </section>
-    <!-- end hero -->
-    <section>
-      <!-- Start items -->
-      <div class="conditions" id="conditions">
-        <div class="center-text">
-          <h2 class="heading-secondary">
-            البنود و الشروط</h2>
+      <div class="terms-sub">
+        <div class="terms-sub-block">
+          <div class="sub-label">تركيب حماية طلاء السيارة</div>
+          <p>يُرجى عدم غسل السيارة لمدة (3) أيام وتركها قدر الإمكان في الشمس، ومراجعة شركة هافركامب بعدها للفحص النهائي للحماية.</p>
         </div>
-        <div class="container">
-          <ul>
-            <li>عدم ترك اى ممتلكات شخصية داخل السيارة.</li>
-            <li>
-              فى حالة ارسال السيارة مع السائق او من ينوب عن مالك السيارة يرجي
-              ارسال نوع الخدمة المطلوبة
-            </li>
-            <li>
-              يجب فحص السيارة من الداخل و الخارج قبل مغادرة شركة
-              <span>هافركامب</span> ولن نقبل اي شكوي بعد ذلك.
-            </li>
-            <li>
-              شركة <span>هافركامب</span> غير مسؤولة عن الاصابات او الاضرار لظروف
-              خارجية عن ارادتها
-              <br />
-              <span class="red">
-                (الامطار- السيول- الزلازل-الحروب- العوامل الجوية وغيرها)
-              </span>
-            </li>
-            <li>
-              فى حال قدوم السيارة وبها شرخ او كسر فى الزجاج و اذداد داخل المحل او
-              ظهرت شروخ جديدة فان شركة <span>هافركامب</span> غير مسؤولة عن ذلك.
-            </li>
-            <li>
-              شركة <span>هافركامب</span> غير مسؤولةعن تلف البطارية او اي قطع
-              الكترونية عند ترك السيارة لتقديم الخدمة.
-            </li>
-            <li>
-              شركة <span> هافركامب</span> لا تتحمل اي مسؤولية فى حالة اذا كانت
-              السيارة مصبوغة حديثا
-            </li>
-            <li>
-              شركة <span>هافركامب</span> غير مسؤولة عن حالات سوء الاستخدام من قبل
-              العميل
-            </li>
-            <li>يستفيد من الكفالة <span class="red">المالك الاول</span> فقط</li>
-          </ul>
+        <div class="terms-sub-block">
+          <div class="sub-label">تركيب العزل الحراري أو حماية الجام الأمامي</div>
+          <p>يُرجى عدم إنزال أو غسل الزجاج لمدة لا تقل عن 48 ساعة.</p>
         </div>
-      </div>
-      <!-- End items -->
-      <!-- Start instructions -->
-      <div class="instructions" id="instructions">
-        <div class="center-text">
-          <h2 class="heading-secondary">ارشادات ما بعد التركيب</h2>
-        </div>
-        <div class="container">
-          <dl>
-            <dt>فى حالة تركيب حماية طلاء السيارة:</dt>
-            <dd>
-              يرجي عدم غسل السيارة لمدة <span class="red">(3)ايام</span> وتركها
-              قدر الامكان فى الشمس ومراجعة شركة <span>هافركامب</span> بعدها للفحص
-              النهائي للحماية
-            </dd>
-            <dt>فى حالة تركيب العزل الحراري او حماية الجام الامامي</dt>
-            <dd>
-              يرجي عدم انزال او غسل الزجاج لمدة لا تقل عن
-              <span class="red">48 ساعة</span>
-            </dd>
-          </dl>
-        </div>
-      </div>
-      <!-- End instructions -->
-      <!-- Start warranty -->
-      <div class="warranty" id="warranty">
-        <div class="center-text">
-          <h2 class="heading-secondary"> الكفالة </h2>
-        </div>
-        <div class="container">
-          <div class="body">
-            <h2>كفالة حماية البدي</h2>
-            <ul>
-              <li>
-                كفالة <span>(10) سنوات </span>ضد عيوب التركيب مع التقيد بالسرفيس كل
-                <span>(6) ستة شهور</span>
-              </li>
-              <li>الكفالة لا تشمل الحوادث والزلقات والحكات</li>
-              <p>(ملاحظة : تسقط الكفالة فى حالة عدم التقيد بالسرفيس الدوري)</p>
-            </ul>
-          </div>
-          <div class="tint">
-            <h2>كفالة العازل الحراي</h2>
-            <ul>
-              <li>كفالة <span>(5) خمس سنوات</span> ضد عيوب الركيب</li>
-              <li>حماية الجام الامامي بدون كفالة</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <!-- End warranty -->
-  </main>
-  <!-- start footer -->
-  <div class="footer" id="contacts-us">
-    <div class="container">
-      <div class="box">
-        <h3>هافركامب</h3>
-        <!-- <ul class="social">
-            <li>
-              <a href="tel:51111154" class="phone">
-                <i class="fa-solid fa-mobile-screen-button fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://wa.me/96551111154" target="_blank" class="whatsapp">
-                <i class="fab fa-whatsapp fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/haverkampkw/" target="_blank" class="instagram">
-                <i class="fab fa-instagram fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.snapchat.com/add/haverkampkw" target="_blank" class="snapchat">
-                <i class="fab fa-snapchat fa-2x"></i>
-              </a>
-            </li>
-          </ul>
-          -->
-        <p class="text"> الوكيل الحصري لحماية هافركامب الالمانية في الشرق الاوسط <br> الوكيل الحصري لحماية كلايف ديزاين
-          الكورية</p>
-
-      </div>
-
-      <div class="box">
-        <div class="line">
-          <i class="fa-solid fa-house fa-2x"></i>
-          <div class="info">الري- قطعة 1- شارع 19</div>
-        </div>
-        <div class="line">
-          <i class="far fa-clock fa-fw"></i>
-          <div class="info">
-            ساعات العمل <br />
-            السبت الى الخميس <br />
-            10 صباحا الى 8 مساء
-          </div>
-        </div>
-      </div>
-      <div class="box map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw"
-          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
     </div>
-    <p class="copyright">
-      جميع الحقوق محفوظة لشركة هافركامب &copy; <span class="year">2027</span>
-    </p>
   </div>
-  <!-- <div class="designer">
-      <p class="copyright">Made With &#10084; By a7med206</p>
-      <ul class="social-a7med">
-        <li>
-          <a href="tel:65811402" class="phone">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://wa.me/96565811402" target="_blank" class="whatsapp">
-            <i class="fab fa-whatsapp fa-2x"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.instagram.com/a7med206/" target="_blank" class="instagram">
-            <i class="fab fa-instagram fa-2x"></i>
-          </a>
-        </li>
-      </ul>
-  
-    </div> -->
-  <!-- End Footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
-  <script src="./js/slider.js"></script>
-</body>
 
+  <!-- == القسم 3: الكفالة == -->
+  <div class="terms-section" id="warranty">
+    <div class="terms-card glass">
+      <div class="terms-card-head">
+        <span class="terms-card-num">03</span>
+        <h2>الكفالة</h2>
+      </div>
+      <div class="warranty-grid">
+        <div class="warranty-block">
+          <div class="w-title">كفالة حماية البدي</div>
+          <ul>
+            <li><span class="bullet"></span><span>كفالة (10) سنوات ضد عيوب التركيب مع التقيّد بالسيرفيس كل (3) أشهر.</span></li>
+            <li><span class="bullet"></span><span>الكفالة لا تشمل الحوادث والزلقات والحكّات.</span></li>
+          </ul>
+          <div class="note">تسقط الكفالة في حالة عدم التقيّد بالسيرفيس الدوري.</div>
+        </div>
+        <div class="warranty-block">
+          <div class="w-title">كفالة العازل الحراري</div>
+          <ul>
+            <li><span class="bullet"></span><span>كفالة (5) سنوات ضد عيوب التركيب.</span></li>
+            <li><span class="bullet"></span><span>حماية الجام الأمامي بدون كفالة.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+
+</main>
+
+<script src="js/whatsapp-float.js"></script>
+</body>
 </html>

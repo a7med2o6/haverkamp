@@ -1,597 +1,756 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- seo -->
-  <title>هافركامب | صبغ سيارات - اصلاح دعمات </title>
-  <meta name="robots" content="index, follow">
-  <meta name="msvalidate.01" content="6198358A4D794604238ACB9F4AEF9BFA" />
-  <meta name="description"
-    content="  هافركامب |صبغ سيارات - اصلاح خدوش - اصلاح دعمات - احدث تقنيات لتركيب الالوان - رد علي البارد بدون صبغ " />
-  <meta name="author" content="Ahmad M-Nofal">
-  <!-- Google tag (gtag.js) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="خدمة صبغ سيارات احترافية في الكويت بأعلى معايير الجودة. استعادة لون سيارتك الأصلي أو تغييره بالكامل على يد فنيين متخصصين في مركز هافركامب بالري." />
+  <meta name="keywords" content="صبغ سيارات الكويت، دهان سيارات، car painting Kuwait، صبغ احترافي، هافركامب الري" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Haverkamp Kuwait" />
+  <link rel="canonical" href="https://haverkampkw.com/paint.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://haverkampkw.com/paint.html" />
+  <meta property="og:title" content="صبغ السيارات الاحترافي في الكويت — هافركامب" />
+  <meta property="og:description" content="خدمة صبغ سيارات احترافية في الكويت بأعلى معايير الجودة. استعادة لون سيارتك الأصلي أو تغييره بالكامل على يد فنيين متخصصين في مركز هافركامب بالري." />
+  <meta property="og:image" content="https://haverkampkw.com/assets/main.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_KW" />
+  <meta property="og:site_name" content="هافركامب — Haverkamp Kuwait" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="صبغ السيارات الاحترافي في الكويت — هافركامب" />
+  <meta name="twitter:description" content="خدمة صبغ سيارات احترافية في الكويت بأعلى معايير الجودة. استعادة لون سيارتك الأصلي أو تغييره بالكامل على يد فنيين متخصصين في مركز هافركامب بالري." />
+  <meta name="twitter:image" content="https://haverkampkw.com/assets/main.webp" />
+  <title>صبغ السيارات الاحترافي في الكويت — هافركامب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <style>
+    .svc-page {
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 32px;
+      padding-top: 80px;
+    }
+
+    .svc-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-1);
+      text-decoration: none;
+      font-size: 14px;
+      margin: 28px 0 0;
+      padding: 8px 14px;
+      border-radius: var(--r-pill);
+      background: var(--glass-tint);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--glass-border);
+      transition: all .25s;
+    }
+
+    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
+
+    /* ── Hero ── */
+    .svc-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      padding: 56px 0 72px;
+      position: relative;
+    }
+
+    .svc-hero::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -80px;
+      width: 70%;
+      height: calc(100% + 80px);
+      background: radial-gradient(ellipse 60% 70% at 65% 50%, rgba(94,184,255,.07), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .svc-hero-text { position: relative; z-index: 1; }
+
+    .svc-hero-text .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    [data-theme="light"] .svc-hero-text .tag { color: #00345C; }
+
+    .svc-hero-text .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-hero-text h1 {
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .svc-hero-text h1 .em { color: #00345C; }
+    [data-theme="dark"] .svc-hero-text h1 .em { color: var(--accent); }
+
+    .svc-hero-text .subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-0);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .svc-hero-text p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 560px;
+      text-wrap: pretty;
+      margin-bottom: 32px;
+    }
+
+    .svc-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .svc-hero-img {
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      position: relative;
+    }
+
+    .svc-hero-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .trust-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+    }
+
+    .trust-badge .tb-icon { font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .svc-hero { grid-template-columns: 1fr; padding: 36px 0 56px; }
+      .svc-hero::after { display: none; }
+      .svc-hero-img { order: -1; }
+    }
+
+    /* ── Sections ── */
+    .svc-sec { padding: 64px 0; }
+    .svc-sec-head { margin-bottom: 40px; }
+
+    .svc-sec-head .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    [data-theme="light"] .svc-sec-head .tag { color: #00345C; }
+
+    .svc-sec-head .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-sec-head h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-sec-head p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-top: 12px;
+      text-wrap: pretty;
+    }
+
+    /* ── Process steps ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) { .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
+
+    .step-card {
+      padding: 28px 24px 30px;
+      border-radius: var(--r-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .step-card:hover { transform: translateY(-5px); }
+
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      color: var(--ink-2);
+    }
+
+    .step-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,52,92,.12), rgba(0,52,92,.04));
+      border: 1px solid var(--glass-border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    [data-theme="dark"] .step-icon {
+      background: linear-gradient(135deg, rgba(94,184,255,.15), rgba(94,184,255,.04));
+    }
+
+    .step-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      margin: 0;
+    }
+
+    .step-card p {
+      font-size: 13px;
+      color: var(--ink-1);
+      line-height: 1.6;
+      text-wrap: pretty;
+      margin: 0;
+    }
+
+    /* connector line between steps */
+    .steps-connector {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 24px;
+    }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 760px) { .features-grid { grid-template-columns: 1fr; } }
+
+    .feature-card {
+      padding: 32px 28px;
+      border-radius: var(--r-lg);
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .feature-card:hover { transform: translateY(-4px); }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(0,52,92,.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00345C;
+    }
+
+    [data-theme="dark"] .feature-icon {
+      background: rgba(94,184,255,.12);
+      color: var(--accent);
+    }
+
+    .feature-body h3 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+    .feature-body p { font-size: 14px; color: var(--ink-1); line-height: 1.65; text-wrap: pretty; }
+
+    /* ── Bento gallery ── */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 220px 220px 300px;
+      gap: 12px;
+    }
+
+    .bento-item {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform .4s cubic-bezier(.2,.7,.3,1), box-shadow .3s;
+    }
+
+    .bento-item:hover {
+      transform: scale(1.025);
+      box-shadow: 0 0 0 1px rgba(94,184,255,.35), 0 0 32px rgba(94,184,255,.14), var(--glass-shadow);
+      z-index: 2;
+    }
+
+    .bento-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2,.7,.3,1); }
+    .bento-item:hover img { transform: scale(1.04); }
+
+    .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1 / 3; }
+    .bento-item:nth-child(2) { grid-column: 1 / 3; grid-row: 3 / 4; }
+    .bento-item:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 3; }
+    .bento-item:nth-child(4) { grid-column: 4 / 5; grid-row: 1 / 2; }
+    .bento-item:nth-child(5) { grid-column: 4 / 5; grid-row: 2 / 3; }
+    .bento-item:nth-child(6) { grid-column: 3 / 5; grid-row: 3 / 4; }
+
+    @media (max-width: 900px) {
+      .bento-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 200px; }
+      .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: auto; }
+      .bento-item:nth-child(2),
+      .bento-item:nth-child(3),
+      .bento-item:nth-child(4),
+      .bento-item:nth-child(5),
+      .bento-item:nth-child(6) { grid-column: auto; grid-row: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .bento-grid { grid-template-columns: 1fr; grid-auto-rows: 220px; }
+      .bento-item:nth-child(1) { grid-column: 1; }
+    }
+
+    /* ── FAQ ── */
+    .svc-faq { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── CTA ── */
+    .svc-cta {
+      margin: 64px 0 80px;
+      padding: 56px 48px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      border-radius: var(--r-xl);
+    }
+
+    .svc-cta h2 {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-cta p { font-size: 16px; color: var(--ink-1); max-width: 480px; line-height: 1.6; text-wrap: pretty; }
+    .svc-cta-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+    @media (max-width: 640px) {
+      .svc-page { padding: 0 16px; padding-top: 80px; }
+      .svc-cta { padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .svc-page { padding: 0 12px; padding-top: 72px; }
+      .svc-hero { gap: 28px; padding: 28px 0 44px; }
+      .svc-hero-actions { flex-direction: column; }
+      .svc-hero-actions .btn { width: 100%; justify-content: center; text-align: center; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .bento-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+      .svc-cta { padding: 32px 16px; }
+    }
+  </style>
+  <!-- Google Ads Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16636917037"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'AW-16636917037');
   </script>
-
-  <!-- Event snippet for Contact conversion page -->
-  <script>
-    gtag('event', 'conversion', {
-      'send_to': 'AW-16636851413/56fJCOXMzs0bENXpiP09',
-      'value': 1.0,
-      'currency': 'USD'
-    });
-  </script>
-  <!-- Open Graph -->
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ar_AR">
-  <meta property="og:title"
-    content=" هافركامب |صبغ سيارات - اصلاح خدوش - اصلاح دعمات - احدث تقنيات لتركيب الالوان - رد علي البارد بدون صبغ  " />
-  <meta property="og:description"
-    content="  هافركامب |صبغ سيارات - اصلاح خدوش - اصلاح دعمات - احدث تقنيات لتركيب الالوان - رد علي البارد بدون صبغ " />
-  <meta property="og:image" content="https://haverkampkw.com/img/contact/cover.jpeg" />
-  <meta property="og:url" content="https://haverkampkw.com/paint.html" />
-  <meta property="og:site_name" content="هافركامب">
-  <meta name="theme-color" content="#00345c">
-  <link rel="canonical" href="https://www.haverkampkw.com/paint.html">
-  <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "صبغ سيارات",
+    "name": "صبغ السيارات الاحترافي",
+    "description": "خدمة صبغ سيارات احترافية في الكويت بأعلى معايير الجودة. استعادة لون سيارتك الأصلي أو تغييره بالكامل في مركز هافركامب بالري.",
+    "url": "https://haverkampkw.com/paint.html",
+    "image": "https://haverkampkw.com/assets/main.webp",
+    "areaServed": "الكويت",
+    "serviceType": "خدمات السيارات",
     "provider": {
       "@type": "LocalBusiness",
-      "name": "هافركامب الكويت",
-      "image": "https://haverkampkw.com/img/contact/cover.jpeg",
-      "telephone": "+965651111154",
+      "name": "هافركامب",
+      "url": "https://haverkampkw.com",
+      "telephone": "+96551111154",
       "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "الري - قطعة 3- شارع 19",
-              "addressLocality": "الكويت",
-              "addressCountry": "KW"
-       }
-    },
-    "description": "خدمة الصبغ من شركة هافركامب باستخدام مواد عالية الجودة",
-    "url": "https://haverkampkw.com/paint.html"
+        "@type": "PostalAddress",
+        "streetAddress": "قطعة 1، شارع 19",
+        "addressLocality": "الري",
+        "addressCountry": "KW"
+      }
+    }
   }
   </script>
-  <!-- favicon -->
-  <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./img/favicon_io/android-chrome-512x512.png">
-  <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <!-- font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-  <!-- faq-->
-  <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
-  <!-- css style -->
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- slider-boot -->
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!-- font-awesome  -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
-  <!-- js -->
-  <script defer src="js/script.js"></script>
 </head>
 
 <body>
-  <!-- start header -->
-  <header class="header">
-    <a href="#">
-      <img class="logo" alt="albaraka logo" src="./img/main_page/logo.svg" />
+
+  <div class="bg-stage" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="orb o4"></div>
+    <div class="orb o5"></div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav glass">
+      <div class="nav-brand">
+        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      </div>
+      <div class="nav-links">
+        <a href="#steps">خطوات العمل</a>
+        <a href="#features">لماذا نحن</a>
+        <a href="#gallery">معرض الصور</a>
+        <a href="#faq">الأسئلة الشائعة</a>
+        <a href="terms.html">البنود والشروط</a>
+      </div>
+      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+    </nav>
+  </div>
+
+  <main class="svc-page">
+
+    <a href="index.html" class="svc-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+      الرئيسية
     </a>
 
-    <nav class="main-nav">
-      <ul class="main-nav-list">
-        <li><a class="main-nav-link" href="#specifications"> خطوات العمل</a></li>
-        <li><a class="main-nav-link" href="#gallery"> معرض الصور</a></li>
-        <li><a class="main-nav-link" href="#testimonials"> اراءالعملاء</a></li>
-        <li><a class="main-nav-link" href="./terms.html"> البنود والشروط</a></li>
-        <li><a class="main-nav-link" href="./contactus.html"> تواصل معنا</a></li>
-      </ul>
-    </nav>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <div class="svc-hero">
+      <div class="svc-hero-text">
+        <div class="tag">PAINT — صبغ السيارات</div>
+        <h1>أعد لسيارتك <span class="em">بريقها من جديد</span></h1>
+        <p class="subtitle">صبغ احترافي وجودة مضمونة مع هافركامب</p>
+        <p>نقدم خدمة صبغ سيارات احترافية بمواد ألمانية معتمدة 100%، مع فريق متخصص وبيئة عمل مُعقّمة تضمن لك نتيجة مثالية تعيد لسيارتك لمعتها وبريقها الأصلي.</p>
 
-    <button class="btn-mobile-nav">
+        <div class="trust-badges">
+          <span class="trust-badge"><span class="tb-icon">🎨</span> دهان ألماني Glasurit</span>
+          <span class="trust-badge"><span class="tb-icon">🛡️</span> جودة مضمونة</span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> فنيون متخصصون</span>
+        </div>
 
-      <i class="fa-solid fa-bars icon-mobile-nav" name="menu-outline"></i>
-      <i class="fa-solid fa-xmark icon-mobile-nav" name="close-outline"></i>
-    </button>
-  </header>
-  <!-- end header -->
-  <!-- start hero -->
-  <main>
-    <section class="section-hero" id="section-hero">
-      <div class="protication">
-        <img src=".//img/paint/paint-main.png" alt="protication">
-        <div class="container">
-          <div class="protication-text">
-            <h1> اعد لسيارتك بريقها من جديد صبغ احترافي وجودة مضمونة مع هافركامب </h1>
-          </div>
+        <div class="svc-hero-actions" style="margin-top:28px;">
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+            style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            واتساب
+          </a>
         </div>
       </div>
-    </section>
-    <!-- end hero -->
-    <!-- start specifications -->
-    <div class="specifications" id="specifications">
-      <div class="center-text">
-        <h2 class="heading-secondary"> مراحل الصبغ</h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <div class="img"><img src="./img/paint/check.png" alt="فحص اجزاء الصبغ المتضررة لعمل صبغ جديد "></div>
-          <div class="box-text">
-            <h3> فحص السيارة</h3>
-            <p>
-              معاينة السيارة وتحديد الأجزاء المتضررة و التي تحتاج إعادة صبغ
-          </div>
-        </div>
-        <div class="box">
-          <div class="img"><img src="./img/paint/cover.png" alt="تغطية الاجزاء البلاستيكية لعمل الصبغ"></div>
-          <div class="box-text">
-            <h3> حماية بدي السيارة </h3>
-            <p>
-              تغطية الأجزاء التي لا يجب أن يصل إليها الطلاء (الزجاج، الكشافات، الإطارات)
-            </p>
-          </div>
-        </div>
-        <div class="box">
-          <div class="img"><img src="./img/paint/Sandpapering.png"
-              alt="ارالة الصبغ القديم لتركيب الصبغ الجديد مع شركة هافركامب"></div>
-          <div class="box-text">
-            <h3> الصنفرة</h3>
-            <p>
-              اإزالة طبقة الصبغ القديمة
-              تنعيم السطح ليصبح جاهزًا لاستقبال المعجون أو الطلاء الجديدالتركيب
-            </p>
-          </div>
-        </div>
-        <div class="box">
-          <div class="img"><img src="./img/paint/mix.png" alt="خلط الالوان لعمل نفس الصبغ شركة هافركامب"></div>
-          <div class="box-text">
-            <h3> خلط لون الصبغ </h3>
-            <p>
-              يقوم الفني بخلط الالوان للحصول علي نفس درجة الصبغ
-            </p>
-          </div>
-        </div>
-        <div class="box">
-          <div class="img"><img src="./img/paint/painting.png" alt="افضل خدمة صبغ سيارات بالكويت شركة هافركامب"></div>
-          <div class="box-text">
-            <h3> الصبغ </h3>
-            <p>
-              يقوم الفني بصبغ الاجزاء التالفة </p>
-          </div>
-        </div>
+
+      <div class="svc-hero-img glass">
+        <img src="assets/services/paint/paint-hero.png" alt="صبغ السيارات — هافركامب" />
       </div>
     </div>
-    <!-- end specifications -->
-    <section class="section-why-us" id="why-us">
-      <div class="center-text">
-        <span class="subheading"> </span>
-        <h2 class="heading-secondary">
-          لماذا تختار هافركامب </h2>
-      </div>
-      <div class="container">
-        <div class="img"><img src="./img/main_page/haverkamp.png" alt="افضل خدمة صبغ سيارات بالكويت مع شركة هافركامب">
-        </div>
-        <ul class="about-list">
-          <li><i class="fa-solid fa-fill-drip"></i> جودة دهان فائقة باستخدام مواد معتمدة.</li>
-          <li>
-            <i class="fa-solid fa-screwdriver-wrench"></i>إصلاح احترافي للخدوش.
-          </li>
-          <li>
-            <i class="fa-solid fa-award"></i></i> فنيون مدربون علي اعلي مستوي
-          </li>
-          <li> <i class="fa-solid fa-circle-info"></i> نهتم بادق التفاصيل</li>
 
-        </ul>
+    <!-- ═══════════════ STEPS ═══════════════ -->
+    <div id="steps" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">PROCESS — خطوات العمل</div>
+        <h2>خمس خطوات لنتيجة مثالية</h2>
+        <p>عملية صبغ احترافية بمراحل دقيقة تضمن جودة ولمعة تدوم لسنوات.</p>
       </div>
-    </section>
-    <!-- end why us section -->
-    <!-- start gallery -->
-    <section class="gallery" id="gallery">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          معرض الصور</h2>
-      </div>
-      <div class="carosel">
-        <div class=" list">
-          <div class="item">
-            <img src="./img/gallery/paint/paint-1.png" alt="افضل خدمة صبغ سيارات بالكويت">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/paint/paint-2.png" alt=" صبغ سيارات بمواد المانية شركة هافركامب ">
-          </div>
-          <div class="item">
-            <img src="../img/gallery/paint/paint-3.png" alt="اجود انواع صبغ السيارات بالكويت">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/paint/paint-4.png" alt="شركة هافركامب توفر افضل انواع صبغ السيارات بالكويت">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/paint/paint-5.png" alt="صبغ سيارات بالكويت شركة هافركامب">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/paint/paint-6.png" alt="اصبغ سيارتك مع شركة هافركامب">
-          </div>
+      <div class="steps-grid">
 
+        <div class="step-card glass">
+          <div class="step-num">01</div>
+          <div class="step-icon">🔍</div>
+          <h3>معاينة السيارة</h3>
+          <p>فحص السيارة وتحديد الأجزاء المتضررة التي تحتاج إلى إعادة صبغ بدقة.</p>
         </div>
-        <!--button prev and next-->
-        <div class="buttons">
-          <button id="prev">
-            &lt; </button>
-          <button id="next">></button>
+
+        <div class="step-card glass">
+          <div class="step-num">02</div>
+          <div class="step-icon">🛡️</div>
+          <h3>تغطية وتحضير</h3>
+          <p>تغطية الزجاج والكشافات والإطارات لحمايتها من الدهان أثناء العمل.</p>
         </div>
-        <!--Dots (if 6 items => 6 dots)-->
-        <ul class="dots">
-          <li class="active"></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-      </div>
-    </section>
-    <!-- end gallery -->
-    <!-- Start Testimonials -->
-    <div class="testimonials" id="testimonials">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          اراءالعملاء</h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> خلف العنزي</h3>
-          <span class="title"> نيسان باترول</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p> تجربة مميزة بكل المقاييس جودة الصبغ عالية واللون مطابق تماما لما تم الاتفاق عليه مع عناية واضحة بأدق
-            التفاصيل</p>
+
+        <div class="step-card glass">
+          <div class="step-num">03</div>
+          <div class="step-icon">🪄</div>
+          <h3>شغل الورق</h3>
+          <p>إزالة طبقات الدهان القديمة وتنعيم السطح تمهيداً لوضع المعجون والدهان الجديد.</p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3> منيرة الحردان</h3>
-          <span class="title"> انفنتي</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p> تعاملهم راقـي وشغلهم دقيق، سلموني السيارة بالوقت المتفق عليه بدون تاخير</p>
+
+        <div class="step-card glass">
+          <div class="step-num">04</div>
+          <div class="step-icon">🎨</div>
+          <h3>مزج الألوان</h3>
+          <p>يقوم الفنيون بمزج الألوان للحصول على نفس درجة صبغة السيارة الأصلية بدقة.</p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3> مشعل المطيري</h3>
-          <span class="title"> لكزس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p> أنصح بالخدمة دقة في الأداءالتزام بالمواعيد ونتيجة تعكس احترافية حقيقية في صبغ السيارات</p>
+
+        <div class="step-card glass">
+          <div class="step-num">05</div>
+          <div class="step-icon">✨</div>
+          <h3>الصبغ والتشطيب</h3>
+          <p>تطبيق الدهان على الأجزاء المحددة بيد فنيين متخصصين للحصول على نتيجة مثالية.</p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> علي البلوشي</h3>
-          <span class="title">جي ام سي يوكن</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            شفريق عمل محترف شرح واضح قبل البدء والتزام كامل بالمواصفات المتفق عليها دون أي ملاحظات
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>معالي المطيري</h3>
-          <span class="title">جيلى مانجارو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>شغل مرتب وممتاز والحلو ان المحل كبير وفية استراحة منفصلة للعوائل</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> خالد العجمي</h3>
-          <span class="title">بوشه كايين</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            اهتمام واضح بالجودة استخدام مواد صبغ ممتازة مع عزل دقيق وحماية كاملة لأجزاء السيارة
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> عبدالرحمن السلم</h3>
-          <span class="title">اسكاليد</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>صبغ احترافي وما في أي تموجات أو اختلاف لون، واضح إنهم فاهمين شغلهم عدل</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3> روان حسين</h3>
-          <span class="title">ديفندر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            سعرهم مناسب وجودة الشغل ممتازة والأهم الصدق في التعامل
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3> احمد العدواني</h3>
-          <span class="title">لاندكروزر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            جربت ورش قبل بس هالمكان غير جودة عالية واهتمام بالتفاصيل
-          </p>
-        </div>
+
       </div>
     </div>
-    <!-- End Testimonials -->
 
-    <!-- start faq -->
-    <div class="faq" id="faq">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          الاسئلةالشائعة</h2>
+    <!-- ═══════════════ FEATURES ═══════════════ -->
+    <div id="features" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">WHY US — لماذا تختار هافركامب</div>
+        <h2>جودة دهان فائقة بمواد ألمانية</h2>
+        <p>نستخدم أفضل مواد الدهان الألمانية المعتمدة لنضمن لك نتيجة احترافية وتدوم طويلاً.</p>
       </div>
-      <div class="container">
-        <section class="working-process my-5">
-          <div class="container">
-            <div class="row">
-              <div class="row d-flex flex-nowrap flex-row">
-              </div>
-            </div>
-            <div class="row">
-              <div class="accordion mt-5" id="accordionExample">
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      <span class="accordian-numbers">01</span>كم يوم تحتاج السيارة لعمل الصبغ ؟
-                    </button>
-                  </h2>
-                  <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      تختلف المدة من سيارة الي اخري حسب الاجزاء التي تحتاج الي صبغ </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      <span class="accordian-numbers">02</span>ماهي المواد المستخدمة لديكم ؟
-                    </button>
-                  </h2>
-                  <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      نقوم باستخدام صبغ جلاسو هو منتج الماني 100٪ </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingThree">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                      <span class="accordian-numbers">03</span> هل الصبغ الكامل أفضل أم الجزئي؟
-                    </button>
-                  </h2>
-                  <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      يعتمد على حالة السيارة. الصبغ الجزئي مناسب للأضرار المحدودة، أما الصبغ الكامل فيُفضل عند تلف
-                      الطلاء بشكل واسع أو لتوحيد
-                      اللون أو تغييره. </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFour">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                      <span class="accordian-numbers">04</span> هل استطيع تغير لون السيارة بالكامل ؟
-                    </button>
-                  </h2>
-                  <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      نعم تسطيع تغير لون سيارتك بالكامل بعد اخد الموافقة من الادارة العامة للمرور </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFive">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                      <span class="accordian-numbers">05</span> ما هي تكلفة الصبغ لديكم ؟
-                    </button>
-                  </h2>
-                  <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      التكلفة تختلف من سيارة الي اخري وتحدد بناء علي الخدمة المقدمة هل هي صبغ اجزاء ام صبغ كامل
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div class="features-grid">
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
           </div>
-        </section>
+          <div class="feature-body">
+            <h3>دهان Glasurit الألماني</h3>
+            <p>نستخدم دهان Glasurit الألماني المعتمد 100% — من أفضل وأجود أنواع دهانات السيارات في العالم، يضمن لك لوناً ثابتاً ولمعة استثنائية.</p>
+          </div>
+        </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>إصلاح الخدوش والدعمات</h3>
+            <p>نعالج الخدوش والدعمات الطفيفة بخبرة عالية — سواء كانت خدشاً صغيراً أو ضربة دعم، نعيد السيارة لحالتها الأصلية.</p>
+          </div>
+        </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>فنيون متخصصون</h3>
+            <p>فريقنا من الفنيين المدرّبين على أعلى مستوى يحرصون على أدق التفاصيل لضمان نتيجة خالية من أي عيوب أو فقاعات.</p>
+          </div>
+        </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>بيئة عمل مُعقّمة</h3>
+            <p>نعمل في بيئة خالية من الغبار والملوثات لضمان التصاق الدهان بشكل مثالي ونتيجة نهائية ناعمة ومشرقة.</p>
+          </div>
+        </div>
+
       </div>
     </div>
-    <!-- end faq -->
-    <section class="section-cta" id="cta">
-      <div class="container">
-        <div class="cta">
-          <div class="cta-text-box">
-            <h2 class="heading-secondary">اصبغ سيارتك الان
-            </h2>
-            <p class="cta-text">
-              نقدم لكم أفضل صبغ للسيارات باستخدام أحدث التقنيات والمواد عالية الجودة</p>
 
-            <form class="cta-form" name="sign-up" action="https://formsubmit.co/ef7d656274c363dc9eb3ce5c5ff03525"
-              method="post">
-              <div>
-                <label for="full-name">الاسم بالكامل </label>
-                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required
-                  autocomplete="given-name" />
-              </div>
+    <!-- ═══════════════ GALLERY ═══════════════ -->
+    <div id="gallery" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">GALLERY — معرض الأعمال</div>
+        <h2>من أعمالنا في صبغ السيارات</h2>
+        <p>نماذج حقيقية من تركيبات صبغ السيارات لدى هافركامب في الكويت.</p>
+      </div>
+      <div class="bento-grid">
 
-              <div>
-                <label for="email">البريد الالكتروني </label>
-                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required
-                  autocomplete="off" />
-              </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-1.png" alt="صبغ سيارة — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-2.png" alt="إصلاح خدوش — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-3.png" alt="صبغ جزئي — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-4.png" alt="صبغ كامل — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-5.png" alt="نتيجة الصبغ — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/paint/paint-gal-6.png" alt="لمعة الدهان — هافركامب" loading="lazy" />
+        </div>
 
-              <div>
-                <label for="message">اترك رسالتك</label>
-                <textarea name="message" id="message" placeholder="اترك رسالتك هنا " autocomplete="off"></textarea>
-                </select>
-              </div>
+      </div>
+    </div>
 
-              <button class="btn btn--form">ارسل الان </button>
-            </form>
-          </div>
-          <div class="cta-img-box cta-img-box-paint" role="img" aria-label="child win"></div>
+    <!-- Lightbox -->
+    <div class="lb-overlay" id="lb" onclick="closeLb(event)">
+      <div class="lb-img-wrap">
+        <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
+        <img id="lb-img" src="" alt="" />
+      </div>
+    </div>
+
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <div id="faq" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">FAQ — أسئلة شائعة</div>
+        <h2>كل ما تحتاج معرفته عن خدمة الصبغ</h2>
+      </div>
+      <div class="svc-faq">
+
+        <details class="faq-item glass">
+          <summary>
+            كم يوم تحتاج السيارة لعمل الصبغ؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">تختلف مدة الصبغ حسب حجم السيارة وطبيعة الأضرار — الصبغ الجزئي يستغرق يوماً واحداً إلى يومين، أما الصبغ الكامل فقد يصل إلى 3-5 أيام لضمان الجودة المطلوبة.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما هي المواد المستخدمة في الصبغ؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">نستخدم دهان Glasurit الألماني المعتمد 100% — وهو من أفضل وأجود أنواع دهانات السيارات في العالم، يُستخدم في أكبر ورش السيارات الاحترافية عالمياً ويضمن لوناً ثابتاً ولمعة استثنائية.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            هل الصبغ الكامل أفضل أم الجزئي؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">يعتمد القرار على حالة السيارة — إذا كان الضرر محدوداً في جزء واحد أو اثنين فالصبغ الجزئي هو الخيار الأمثل اقتصادياً، أما إذا كانت السيارة قديمة الصبغ أو تعرضت لأضرار واسعة فالصبغ الكامل يعطي نتيجة أفضل وأكثر تجانساً.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            هل أستطيع تغيير لون السيارة بالكامل؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">نعم، يمكن تغيير لون السيارة بالكامل بشرط استيفاء المتطلبات النظامية والحصول على موافقة الجهات المختصة (إدارة المرور العامة) لتغيير البيانات في الاستمارة. فريقنا يرشدك في كامل الإجراءات.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما هي تكلفة خدمة الصبغ؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">التكلفة تختلف من سيارة لأخرى حسب نوع السيارة وحجم الأضرار ونوع الخدمة (جزئي أو كامل). تواصل معنا للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</div>
+        </details>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <div class="svc-cta glass">
+      <h2>اطلب كشف مجاني لسيارتك</h2>
+      <p>تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح لخدمة الصبغ بدون أي التزام.</p>
+      <div class="svc-cta-btns">
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">تواصل معنا</a>
+        <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+          style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          راسلنا على واتساب
+        </a>
+      </div>
+    </div>
+
+    <footer class="footer" style="padding: 32px 0;">
+      <div class="footer-row">
+        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="links">
+          <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
+          <a href="terms.html">الشروط</a>
+          <a href="index.html">الرئيسية</a>
         </div>
       </div>
-    </section>
+    </footer>
+
   </main>
-  <!-- start footer -->
-  <div class="footer" id="contacts-us">
-    <div class="container">
-      <div class="box">
-        <h3>هافركامب</h3>
-        <!-- <ul class="social">
-            <li>
-              <a href="tel:51111154" class="phone">
-                <i class="fa-solid fa-mobile-screen-button fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://wa.me/96551111154" target="_blank" class="whatsapp">
-                <i class="fab fa-whatsapp fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/haverkampkw/" target="_blank" class="instagram">
-                <i class="fab fa-instagram fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.snapchat.com/add/haverkampkw" target="_blank" class="snapchat">
-                <i class="fab fa-snapchat fa-2x"></i>
-              </a>
-            </li>
-          </ul>
-          -->
-        <p class="text"> الوكيل الحصري لحماية هافركامب الالمانية في الشرق الاوسط <br> الوكيل الحصري لحماية كلايف ديزاين
-          الكورية</p>
 
-      </div>
-
-      <div class="box">
-        <div class="line">
-          <i class="fa-solid fa-house fa-2x"></i>
-          <div class="info">الري- قطعة 1- شارع 19</div>
-        </div>
-        <div class="line">
-          <i class="far fa-clock fa-fw"></i>
-          <div class="info">
-            ساعات العمل <br />
-            السبت الى الخميس <br />
-            10 صباحا الى 8 مساء
-          </div>
-        </div>
-      </div>
-      <div class="box map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw"
-          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>
-    <p class="copyright">
-      جميع الحقوق محفوظة لشركة هافركامب &copy; <span class="year">2027</span>
-    </p>
-  </div>
-  <!-- <div class="designer">
-      <p class="copyright">Made With &#10084; By a7med206</p>
-      <ul class="social-a7med">
-        <li>
-          <a href="tel:65811402" class="phone">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://wa.me/96565811402" target="_blank" class="whatsapp">
-            <i class="fab fa-whatsapp fa-2x"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.instagram.com/a7med206/" target="_blank" class="instagram">
-            <i class="fab fa-instagram fa-2x"></i>
-          </a>
-        </li>
-      </ul>
-  
-    </div> -->
-  <!-- End Footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
-  <script src="./js/slider.js"></script>
+  <script src="js/whatsapp-float.js"></script>
+  <script src="js/lightbox.js"></script>
 </body>
 
 </html>

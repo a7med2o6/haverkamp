@@ -1,556 +1,785 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- seo -->
-  <title>هافركامب | بوليش وتلميع خارجي </title>
-  <meta name="robots" content="index, follow">
-  <meta name="msvalidate.01" content="6198358A4D794604238ACB9F4AEF9BFA" />
-  <meta name="description"
-    content="  هافركامب بوليش وتلميع خارجي مواد المانية - اقوي بوليش في الكويت - افضل بوليش في الكويت " />
-  <meta name="author" content="Ahmad M-Nofal">
-  <!-- Google tag (gtag.js) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="خدمة بوليش وتلميع احترافية بمواد ألمانية Menzerna وSonax. إزالة الخدوش السطحية واستعادة لمعة الطلاء الأصلية في مركز هافركامب الكويت." />
+  <meta name="keywords" content="بوليش سيارات الكويت، تلميع سيارات، car polish Kuwait، إزالة خدوش، Menzerna، Sonax، هافركامب" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Haverkamp Kuwait" />
+  <link rel="canonical" href="https://haverkampkw.com/polish.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://haverkampkw.com/polish.html" />
+  <meta property="og:title" content="بوليش وتلميع السيارات الاحترافي — هافركامب الكويت" />
+  <meta property="og:description" content="خدمة بوليش وتلميع احترافية بمواد ألمانية Menzerna وSonax. إزالة الخدوش السطحية واستعادة لمعة الطلاء الأصلية في مركز هافركامب الكويت." />
+  <meta property="og:image" content="https://haverkampkw.com/assets/main.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_KW" />
+  <meta property="og:site_name" content="هافركامب — Haverkamp Kuwait" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="بوليش وتلميع السيارات الاحترافي — هافركامب الكويت" />
+  <meta name="twitter:description" content="خدمة بوليش وتلميع احترافية بمواد ألمانية Menzerna وSonax. إزالة الخدوش السطحية واستعادة لمعة الطلاء الأصلية في مركز هافركامب الكويت." />
+  <meta name="twitter:image" content="https://haverkampkw.com/assets/main.webp" />
+  <title>بوليش وتلميع السيارات الاحترافي — هافركامب الكويت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <style>
+    .svc-page {
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 32px;
+      padding-top: 80px;
+    }
+
+    .svc-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-1);
+      text-decoration: none;
+      font-size: 14px;
+      margin: 28px 0 0;
+      padding: 8px 14px;
+      border-radius: var(--r-pill);
+      background: var(--glass-tint);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--glass-border);
+      transition: all .25s;
+    }
+
+    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
+
+    /* ── Hero ── */
+    .svc-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      padding: 56px 0 72px;
+      position: relative;
+    }
+
+    .svc-hero::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -80px;
+      width: 70%;
+      height: calc(100% + 80px);
+      background: radial-gradient(ellipse 60% 70% at 65% 50%, rgba(94,184,255,.07), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .svc-hero-text { position: relative; z-index: 1; }
+
+    .svc-hero-text .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    [data-theme="light"] .svc-hero-text .tag { color: #00345C; }
+
+    .svc-hero-text .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-hero-text h1 {
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .svc-hero-text h1 .em { color: #00345C; }
+    [data-theme="dark"] .svc-hero-text h1 .em { color: var(--accent); }
+
+    .svc-hero-text .subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-0);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .svc-hero-text p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 560px;
+      text-wrap: pretty;
+      margin-bottom: 32px;
+    }
+
+    .svc-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .svc-hero-img {
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      position: relative;
+    }
+
+    .svc-hero-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .trust-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+    }
+
+    .trust-badge .tb-icon { font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .svc-hero { grid-template-columns: 1fr; padding: 36px 0 56px; }
+      .svc-hero::after { display: none; }
+      .svc-hero-img { order: -1; }
+    }
+
+    /* ── Sections ── */
+    .svc-sec { padding: 64px 0; }
+    .svc-sec-head { margin-bottom: 40px; }
+
+    .svc-sec-head .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    [data-theme="light"] .svc-sec-head .tag { color: #00345C; }
+
+    .svc-sec-head .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-sec-head h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-sec-head p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-top: 12px;
+      text-wrap: pretty;
+    }
+
+    /* ── Process steps ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) { .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .steps-grid { grid-template-columns: 1fr; } }
+
+    .step-card {
+      padding: 28px 24px 30px;
+      border-radius: var(--r-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .step-card:hover { transform: translateY(-5px); }
+
+    .step-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      color: var(--ink-2);
+    }
+
+    .step-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,52,92,.12), rgba(0,52,92,.04));
+      border: 1px solid var(--glass-border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+
+    [data-theme="dark"] .step-icon {
+      background: linear-gradient(135deg, rgba(94,184,255,.15), rgba(94,184,255,.04));
+    }
+
+    .step-card h3 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; margin: 0; }
+    .step-card p { font-size: 13px; color: var(--ink-1); line-height: 1.6; text-wrap: pretty; margin: 0; }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 760px) { .features-grid { grid-template-columns: 1fr; } }
+
+    .feature-card {
+      padding: 32px 28px;
+      border-radius: var(--r-lg);
+      display: flex;
+      gap: 22px;
+      align-items: flex-start;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .feature-card:hover { transform: translateY(-4px); }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: rgba(0,52,92,.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00345C;
+    }
+
+    [data-theme="dark"] .feature-icon { background: rgba(94,184,255,.12); color: var(--accent); }
+
+    .feature-body h3 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+    .feature-body p { font-size: 14px; color: var(--ink-1); line-height: 1.65; text-wrap: pretty; }
+
+    /* ── Bento gallery ── */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 220px 220px 300px;
+      gap: 12px;
+    }
+
+    .bento-item {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform .4s cubic-bezier(.2,.7,.3,1), box-shadow .3s;
+    }
+
+    .bento-item:hover {
+      transform: scale(1.025);
+      box-shadow: 0 0 0 1px rgba(94,184,255,.35), 0 0 32px rgba(94,184,255,.14), var(--glass-shadow);
+      z-index: 2;
+    }
+
+    .bento-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2,.7,.3,1); }
+    .bento-item:hover img { transform: scale(1.04); }
+
+    .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1 / 3; }
+    .bento-item:nth-child(2) { grid-column: 1 / 3; grid-row: 3 / 4; }
+    .bento-item:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 3; }
+    .bento-item:nth-child(4) { grid-column: 4 / 5; grid-row: 1 / 2; }
+    .bento-item:nth-child(5) { grid-column: 4 / 5; grid-row: 2 / 3; }
+    .bento-item:nth-child(6) { grid-column: 3 / 5; grid-row: 3 / 4; }
+
+    @media (max-width: 900px) {
+      .bento-grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 200px; }
+      .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: auto; }
+      .bento-item:nth-child(2),
+      .bento-item:nth-child(3),
+      .bento-item:nth-child(4),
+      .bento-item:nth-child(5),
+      .bento-item:nth-child(6) { grid-column: auto; grid-row: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .bento-grid { grid-template-columns: 1fr; grid-auto-rows: 220px; }
+      .bento-item:nth-child(1) { grid-column: 1; }
+    }
+
+    /* ── FAQ ── */
+    .svc-faq { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Materials strip ── */
+    .materials-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      padding: 28px 36px;
+      border-radius: var(--r-xl);
+      flex-wrap: wrap;
+      margin-top: 40px;
+    }
+
+    .mat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .mat-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      color: var(--ink-0);
+    }
+
+    .mat-desc {
+      font-size: 12px;
+      color: var(--ink-2);
+      letter-spacing: .04em;
+    }
+
+    .mat-divider {
+      width: 1px;
+      height: 48px;
+      background: var(--glass-border);
+    }
+
+    @media (max-width: 560px) { .mat-divider { display: none; } .materials-strip { gap: 20px; } }
+
+    /* ── CTA ── */
+    .svc-cta {
+      margin: 64px 0 80px;
+      padding: 56px 48px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      border-radius: var(--r-xl);
+    }
+
+    .svc-cta h2 {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-cta p { font-size: 16px; color: var(--ink-1); max-width: 480px; line-height: 1.6; text-wrap: pretty; }
+    .svc-cta-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+
+    @media (max-width: 640px) {
+      .svc-page { padding: 0 16px; padding-top: 80px; }
+      .svc-cta { padding: 40px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .svc-page { padding: 0 12px; padding-top: 72px; }
+      .svc-hero { gap: 28px; padding: 28px 0 44px; }
+      .svc-hero-actions { flex-direction: column; }
+      .svc-hero-actions .btn { width: 100%; justify-content: center; text-align: center; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .bento-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+      .svc-cta { padding: 32px 16px; }
+    }
+  </style>
+  <!-- Google Ads Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16636917037"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'AW-16636917037');
   </script>
-
-  <!-- Event snippet for Contact conversion page -->
-  <script>
-    gtag('event', 'conversion', {
-      'send_to': 'AW-16636851413/56fJCOXMzs0bENXpiP09',
-      'value': 1.0,
-      'currency': 'USD'
-    });
-  </script>
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ar_AR">
-  <meta property="og:title"
-    content="  هافركامب بوليش وتلميع خارجي مواد المانية - اقوي بوليش في الكويت - افضل بوليش في الكويت  " />
-  <meta property="og:description"
-    content="  هافركامب بوليش وتلميع خارجي مواد المانية - اقوي بوليش في الكويت - افضل بوليش في الكويت " />
-  <meta property="og:image" content="https://haverkampkw.com/img/contact/cover.jpeg" />
-  <meta property="og:url" content="https://haverkampkw.com/polish.html" />
-  <meta property="og:site_name" content="هافركامب">
-  <meta name="theme-color" content="#00345c">
-  <link rel="canonical" href="https://www.haverkampkw.com/paint.html">
-
-  <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "خدمة البوليش",
+    "name": "بوليش وتلميع السيارات الاحترافي",
+    "description": "خدمة بوليش وتلميع احترافية بمواد ألمانية Menzerna وSonax. إزالة الخدوش السطحية واستعادة لمعة الطلاء الأصلية في مركز هافركامب.",
+    "url": "https://haverkampkw.com/polish.html",
+    "image": "https://haverkampkw.com/assets/main.webp",
+    "areaServed": "الكويت",
+    "serviceType": "خدمات السيارات",
     "provider": {
       "@type": "LocalBusiness",
-      "name": "هافركامب الكويت",
-      "image": "https://haverkampkw.com/img/contact/cover.jpeg",
-      "telephone": "+965651111154",
+      "name": "هافركامب",
+      "url": "https://haverkampkw.com",
+      "telephone": "+96551111154",
       "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "الري - قطعة 3- شارع 19",
-              "addressLocality": "الكويت",
-              "addressCountry": "KW"
-       }
-    },
-    "description": "خدمة البوليش للسيارات من شركة هافركامب باستخدام مواد المانية عالية الجودة",
-    "url": "https://haverkampkw.com/tint.html"
+        "@type": "PostalAddress",
+        "streetAddress": "قطعة 1، شارع 19",
+        "addressLocality": "الري",
+        "addressCountry": "KW"
+      }
+    }
   }
   </script>
-  <!-- favicon -->
-  <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./img/favicon_io/android-chrome-512x512.png">
-  <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <!-- font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-  <!-- faq-->
-  <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
-  <!-- css style -->
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- slider-boot -->
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!-- font-awesome  -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
-  <!-- js -->
-  <script defer src="js/script.js"></script>
 </head>
 
 <body>
-  <!-- start header -->
-  <header class="header">
-    <a href="#">
-      <img class="logo" alt="هافركامب افضل بوليش في الكويت" src="./img/main_page/logo.svg" />
+
+  <div class="bg-stage" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="orb o4"></div>
+    <div class="orb o5"></div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav glass">
+      <div class="nav-brand">
+        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      </div>
+      <div class="nav-links">
+        <a href="#steps">خطوات العمل</a>
+        <a href="#features">لماذا نحن</a>
+        <a href="#gallery">معرض الصور</a>
+        <a href="#faq">الأسئلة الشائعة</a>
+        <a href="terms.html">البنود والشروط</a>
+      </div>
+      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+    </nav>
+  </div>
+
+  <main class="svc-page">
+
+    <a href="index.html" class="svc-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+      الرئيسية
     </a>
 
-    <nav class="main-nav">
-      <ul class="main-nav-list">
-        <li><a class="main-nav-link" href="#specifications"> خطوات العمل</a></li>
-        <li><a class="main-nav-link" href="#gallery"> معرض الصور</a></li>
-        <li><a class="main-nav-link" href="#testimonials"> اراءالعملاء</a></li>
-        <li><a class="main-nav-link" href="./terms.html"> البنود والشروط</a></li>
-        <li><a class="main-nav-link" href="./contactus.html"> تواصل معنا</a></li>
-      </ul>
-    </nav>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <div class="svc-hero">
+      <div class="svc-hero-text">
+        <div class="tag">POLISH — بوليش وتلميع</div>
+        <h1>أعد لسيارتك <span class="em">بريقها الأصلي</span></h1>
+        <p class="subtitle">بوليش وتلميع احترافي يعيد سيارتك كأنها جديدة</p>
+        <p>نقدم خدمة بوليش وتلميع احترافية بمواد ألمانية معتمدة تزيل الخدوش السطحية، العلامات الدوامية، وبهتان اللون — لتعيد لسيارتك لمعتها وبريقها الذي كان.</p>
 
-    <button class="btn-mobile-nav">
+        <div class="trust-badges">
+          <span class="trust-badge"><span class="tb-icon">✨</span> Menzerna & Sonax ألمانية</span>
+          <span class="trust-badge"><span class="tb-icon">🔍</span> 4 مراحل دقيقة</span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> فنيون متخصصون</span>
+        </div>
 
-      <i class="fa-solid fa-bars icon-mobile-nav" name="menu-outline"></i>
-      <i class="fa-solid fa-xmark icon-mobile-nav" name="close-outline"></i>
-    </button>
-  </header>
-  <!-- end header -->
-  <!-- start hero -->
-  <main>
-    <section class="section-hero" id="section-hero">
-      <div class="protication">
-        <img src=".//img/polish/main.png" alt="افضل خدمة بوليش وتلميع خارجي من شركة هافركامب">
-        <div class="container">
-          <div class="protication-text">
-            <h1> بوليش وتلميع احترافي يعيد سيارتك كأنها جديدة مع خدمة البوليش من هافركامب
-            </h1>
-          </div>
+        <div class="svc-hero-actions" style="margin-top:28px;">
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+            style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            واتساب
+          </a>
         </div>
       </div>
-    </section>
-    <!-- end hero -->
-    <!-- start specifications -->
-    <div class="specifications" id="specifications">
-      <div class="center-text">
-        <h2 class="heading-secondary"> مراحل البوليش</h2>
-      </div>
-      <div class="container">
 
-        <div class="box">
-          <div class="img"><img src="./img/polish/wash.png" alt="خدمة غسيل السيارة لفحص البوليش من هافركامب"></div>
-          <div class="box-text">
-            <h3> الغسيل والتنظيف </h3>
-            <p>
-              غسيل كامل السيارة لازالة الاتربة تمهيدا لمرحلة فح السيارة في الخطوة التالية
-            </p>
-          </div>
+      <div class="svc-hero-img glass">
+        <img src="assets/services/polish/polish-hero.png" alt="بوليش وتلميع السيارات — هافركامب" />
+      </div>
+    </div>
+
+    <!-- ═══════════════ STEPS ═══════════════ -->
+    <div id="steps" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">PROCESS — خطوات العمل</div>
+        <h2>أربع مراحل لنتيجة مثالية</h2>
+        <p>عملية بوليش دقيقة ومنهجية تضمن إزالة كل الخدوش السطحية واستعادة لمعة الطلاء الأصلية.</p>
+      </div>
+      <div class="steps-grid">
+
+        <div class="step-card glass">
+          <div class="step-num">01</div>
+          <div class="step-icon">🚿</div>
+          <h3>الغسيل والتنظيف</h3>
+          <p>غسيل كامل للسيارة لإزالة الغبار والأوساخ تمهيداً للفحص الدقيق قبل بدء عملية البوليش.</p>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/check.png" alt="فحص السيارة في شركه هافركامب لعمل البوليش"></div>
-          <div class="box-text">
-            <h3> فحص السيارة</h3>
-            <p>
-              يتم تقييم حالة الطلاء بدقة وتحديد نوع الخدوش ودرجة بهتان اللون، ثم اختيار طريقة التلميع المناسبة
-          </div>
+
+        <div class="step-card glass">
+          <div class="step-num">02</div>
+          <div class="step-icon">🔍</div>
+          <h3>فحص السيارة</h3>
+          <p>تقييم حالة الطلاء وتحديد الخدوش وعلامات الغسيل الخاطئ وبهتان اللون لتحديد المعالجة المناسبة.</p>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/polish.png" alt="افضل خدمة بوليش بالكويت شركه هافركامب"></div>
-          <div class="box-text">
-            <h3> البوليش</h3>
-            <p>
-              استخدام مركبات بوليش قوية لمعالجة الخدوش السطحية والعلامات الدائرية واستعادة الطبقة الشفافة
-            </p>
-          </div>
+
+        <div class="step-card glass">
+          <div class="step-num">03</div>
+          <div class="step-icon">✨</div>
+          <h3>البوليش والتلميع</h3>
+          <p>تطبيق مركبات البوليش القوية لإزالة الخدوش السطحية وعلامات الدوامة واستعادة بريق الطلاء الأصلي.</p>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/polish/check-2.png" alt="فحص السيارة بعد البوليش من شركة هافركامب "></div>
-          <div class="box-text">
-            <h3>الفحص مرة اخري </h3>
-            <p>
-              مراجعة السيارة تحت إضاءة خاصة للتأكد من جودة اللمعة وخلو السطح من أي آثار </p>
-          </div>
+
+        <div class="step-card glass">
+          <div class="step-num">04</div>
+          <div class="step-icon">💡</div>
+          <h3>الفحص النهائي</h3>
+          <p>فحص دقيق تحت إضاءة خاصة للتأكد من جودة النتيجة وخلوّ السطح من أي عيوب قبل التسليم.</p>
+        </div>
+
+      </div>
+
+      <!-- Materials strip -->
+      <div class="materials-strip glass">
+        <div class="mat-item">
+          <div class="mat-name">Menzerna</div>
+          <div class="mat-desc">مواد بوليش ألمانية</div>
+        </div>
+        <div class="mat-divider"></div>
+        <div class="mat-item">
+          <div class="mat-name">Sonax</div>
+          <div class="mat-desc">منتجات عناية ألمانية</div>
+        </div>
+        <div class="mat-divider"></div>
+        <div class="mat-item">
+          <div class="mat-name">🇩🇪</div>
+          <div class="mat-desc">جودة ألمانية معتمدة 100%</div>
         </div>
       </div>
     </div>
-    <!-- end specifications -->
-    <section class="section-why-us" id="why-us">
-      <div class="center-text">
-        <span class="subheading"> </span>
-        <h2 class="heading-secondary">
-          لماذا تختار هافركامب </h2>
-      </div>
-      <div class="container">
-        <div class="img"><img src="./img/main_page/haverkamp.png" alt=""></div>
-        <ul class="about-list">
-          <li><i class="fa-solid fa-fill-drip"></i> جودة بوليش فائقة باستخدام مواد المانية معتمدة</li>
-          <li>
-            <i class="fa-solid fa-screwdriver-wrench"></i>إصلاح احترافي للخدوش
-          </li>
-          <li>
-            <i class="fa-solid fa-award"></i></i> فنيون مدربون علي اعلي مستوي
-          </li>
-          <li> <i class="fa-solid fa-circle-info"></i> نهتم بادق التفاصيل</li>
 
-        </ul>
+    <!-- ═══════════════ FEATURES ═══════════════ -->
+    <div id="features" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">WHY US — لماذا تختار هافركامب</div>
+        <h2>جودة بوليش فائقة بمواد ألمانية</h2>
+        <p>نستخدم أفضل مواد البوليش الألمانية المعتمدة لنضمن لك نتيجة استثنائية وطويلة الأمد.</p>
       </div>
-    </section>
-    <!-- end why us section -->
-    <!-- start gallery -->
-    <section class="gallery" id="gallery">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          معرض الصور</h2>
-      </div>
-      <div class="carosel">
-        <div class=" list">
-          <div class="item">
-            <img src="./img/gallery/polish/polish-1.png" alt="افضل خدمة بوليش بالكويت من شركة هافركامب">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/polish/polish-2.png" alt=" اقوي خدمة بوليش بالكويت من شركة هافركامب ">
-          </div>
-          <div class="item">
-            <img src="../img/gallery/polish/polish-3.png"
-              alt="خدمة بوليش بالكويت من شركة هافركامب باستخدام مواد المانية">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/polish/polish-4.png"
-              alt="افضل خدمة بوليش بالكويت من شركه هافركامب باستخدام مواد المانية">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/polish/polish-5.png"
-              alt="اقوي خدمة بوليش بالكويت من شركه هافركامب باستخدام مواد المانية">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/polish/polish-6.png"
-              alt=" خدمة بوليش بالكويت من شركه هافركامب باستخدام مواد المانية">
-          </div>
+      <div class="features-grid">
 
-        </div>
-        <!--button prev and next-->
-        <div class="buttons">
-          <button id="prev">
-            &lt; </button>
-          <button id="next">></button>
-        </div>
-        <!--Dots (if 6 items => 6 dots)-->
-        <ul class="dots">
-          <li class="active"></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
-      </div>
-    </section>
-    <!-- end gallery -->
-    <!-- Start Testimonials -->
-    <div class="testimonials" id="testimonials">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          اراءالعملاء</h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> أبو ناصر العجمي</h3>
-          <span class="title"> تويوتا كامري</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
           </div>
-          <p>خدمة بوليش احترافية أعادت لسيارتي لمعانها الأصلي. الاهتمام بالتفاصيل واضح، والنتيجة فاقت توقعاتي من أول
-            مرة</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3> بندر الشمري</h3>
-          <span class="title"> مرسيدس </span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+          <div class="feature-body">
+            <h3>مواد ألمانية Menzerna & Sonax</h3>
+            <p>نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — من أفضل وأقوى مواد البوليش في العالم، تضمن إزالة الخدوش بفعالية قصوى ولمعة تدوم.</p>
           </div>
-          <p> السيارة بعد البوليش بدت كأنها جديدة تمامًا. إزالة الخدوش الخفيفة تمت بدقة عالية، والعمل منظم واحترافي</p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> عبدالعزيز الهاجري</h3>
-          <span class="title">باترول</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
           </div>
-          <p>
-            تعامل راقٍ وجودة ممتازة في التنفيذ. استخدموا مواد واضحة الجودة، والفرق قبل وبعد ملحوظ جدًا </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> محمد العنزي</h3>
-          <span class="title"> وانيت سيرا</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+          <div class="feature-body">
+            <h3>إزالة الخدوش السطحية</h3>
+            <p>البوليش يزيل الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، والعلامات الدوامية التي تُشوّه مظهر سيارتك — ويعيد لها بريقها الأصلي.</p>
           </div>
-          <p>
-            الدقة في العمل والالتزام بالوقت من أبرز ما يميزهم. أنصح بالخدمة لكل من يهتم بمظهر سيارته </p>
         </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3> علي بوجبارة</h3>
-          <span class="title">تاهو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
           </div>
-          <p> خدمة البوليش كانت على مستوى عالٍ من الاحترافية، أعادت لمعان السيارة وكأنها جديدة تمامًا، مع اهتمام واضح
-            بأدق التفاصيل</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3> علي العنزي</h3>
-          <span class="title">جاكوار</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
+          <div class="feature-body">
+            <h3>فنيون متخصصون</h3>
+            <p>فريقنا مدرّب على أعلى مستوى في تقنيات البوليش والتلميع — يحرص كل فني على أدق التفاصيل لضمان نتيجة خالية من أي عيوب.</p>
           </div>
-          <p>
-            تجربة ناجحة بكل المقاييس، فرق واضح قبل وبعد، وأنصح بالخدمة لمن يهتم بمظهر سيارته </p>
         </div>
+
+        <div class="feature-card glass">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="feature-body">
+            <h3>فحص تحت إضاءة خاصة</h3>
+            <p>بعد البوليش، نفحص كل سطح تحت إضاءة متخصصة تكشف أي خدش أو عيب غير مرئي بالعين المجردة — لنضمن لك نتيجة مثالية 100%.</p>
+          </div>
+        </div>
+
       </div>
     </div>
-    <!-- End Testimonials -->
 
-    <!-- start faq -->
-    <div class="faq" id="faq">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          الاسئلةالشائعة</h2>
+    <!-- ═══════════════ GALLERY ═══════════════ -->
+    <div id="gallery" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">GALLERY — معرض الأعمال</div>
+        <h2>من أعمالنا في البوليش والتلميع</h2>
+        <p>نماذج حقيقية من جلسات البوليش والتلميع لدى هافركامب في الكويت.</p>
       </div>
-      <div class="container">
-        <section class="working-process my-5">
-          <div class="container">
-            <div class="row">
-              <div class="row d-flex flex-nowrap flex-row">
-              </div>
-            </div>
-            <div class="row">
-              <div class="accordion mt-5" id="accordionExample">
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      <span class="accordian-numbers">01</span> ما هو البوليش ؟
-                    </button>
-                  </h2>
-                  <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      البوليش هو عملية معالجة سطح طلاء السيارة لإزالة الخدوش السطحية، بهتان اللون، وآثار
-                      الغسيل الخاطئ، بهدف
-                      استعادة اللمعان الأصلي للدهان </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      <span class="accordian-numbers">02</span> كم يوم تحتاج السيارة ؟
-                    </button>
-                  </h2>
-                  <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      من يوم الي يومين حسب درجة تضرر بدي السيارة
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFour">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                      <span class="accordian-numbers">04</span> ما هي المواد المستخدمة ؟
-                    </button>
-                  </h2>
-                  <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      نستخدم منزيرنا و سوناكس مواد المانية </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFive">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                      <span class="accordian-numbers">05</span> هل البوليش يزيل الخدوش بالكامل؟
-                    </button>
-                  </h2>
-                  <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      يعتمد ذلك على عمق الخدش
-                      <br>
-                      الخدوش السطحية: تزال بنسبة كبيرة أو كليا
-                      <br>
-                      الخدوش العميقة التي وصلت لطبقة الأساس أو المعدن: لا يزيلها البوليش، ويحتاج الأمر إلى إصلاح دهان
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingSix">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                      <span class="accordian-numbers">06</span> ما الفرق بين البوليش العادي وبوليش المراحل؟
-                    </button>
-                  </h2>
-                  <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      البوليش العادي: مرحلة واحدة، تحسين شكلي سريع
-                      <br>
-                      بوليش المراحل (2 أو 3 مراحل): معالجة أدق، إزالة عيوب أعمق، ونتيجة تدوم أطول
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div class="bento-grid">
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-1.png" alt="بوليش سيارة — هافركامب" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-2.png" alt="تلميع طلاء السيارة" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-3.png" alt="إزالة خدوش السيارة" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-4.png" alt="بوليش مراحل متعددة" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-5.png" alt="نتيجة البوليش الاحترافي" loading="lazy" />
+        </div>
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/polish/polish-gal-6.png" alt="لمعة الطلاء بعد البوليش" loading="lazy" />
+        </div>
+
       </div>
     </div>
-    <!-- end faq -->
-    <section class="section-cta" id="cta">
-      <div class="container">
-        <div class="cta">
-          <div class="cta-text-box">
-            <h2 class="heading-secondary">احمي سيارتك الان
-            </h2>
-            <p class="cta-text">
-              نقدم لكم أفضل حماية للسيارات باستخدام أحدث التقنيات والمواد عالية الجودة</p>
 
-            <form class="cta-form" name="sign-up" action="https://formsubmit.co/ef7d656274c363dc9eb3ce5c5ff03525"
-              method="post">
-              <div>
-                <label for="full-name">الاسم بالكامل </label>
-                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required
-                  autocomplete="given-name" />
-              </div>
+    <!-- Lightbox -->
+    <div class="lb-overlay" id="lb" onclick="closeLb(event)">
+      <div class="lb-img-wrap">
+        <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
+        <img id="lb-img" src="" alt="" />
+      </div>
+    </div>
 
-              <div>
-                <label for="email">البريد الالكتروني </label>
-                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required
-                  autocomplete="off" />
-              </div>
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <div id="faq" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">FAQ — أسئلة شائعة</div>
+        <h2>كل ما تحتاج معرفته عن البوليش</h2>
+      </div>
+      <div class="svc-faq">
 
-              <div>
-                <label for="message">اترك رسالتك</label>
-                <textarea name="message" id="message" placeholder="اترك رسالتك هنا " autocomplete="off"></textarea>
-                </select>
-              </div>
+        <details class="faq-item glass">
+          <summary>
+            ما هو البوليش؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">البوليش هو عملية معالجة سطح طلاء السيارة لإزالة الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، العلامات الدوامية (Swirl Marks)، وبهتان اللون — بهدف استعادة لمعة الطلاء الأصلية وتحسين مظهر السيارة.</div>
+        </details>
 
-              <button class="btn btn--form">ارسل الان </button>
-            </form>
-          </div>
-          <div class="cta-img-box cta-img-box-polish" role="img" aria-label="child win"></div>
+        <details class="faq-item glass">
+          <summary>
+            كم يوم تحتاج السيارة للبوليش؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">تستغرق جلسة البوليش من يوم إلى يومين حسب درجة تضرر بدي السيارة وحجمها — البوليش الأساسي يستغرق يوماً واحداً، أما البوليش متعدد المراحل (2-3 مراحل) فقد يصل إلى يومين.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما هي المواد المستخدمة في البوليش؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — وهي من أفضل وأجود مواد البوليش والتلميع في العالم، تُستخدم في أكبر ورش السيارات الاحترافية عالمياً.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            هل البوليش يزيل الخدوش بالكامل؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">البوليش يزيل الخدوش السطحية الدقيقة إلى حد كبير أو بشكل كامل. أما الخدوش العميقة التي تخترق طبقة الطلاء وتصل للمعدن، فهذه تحتاج إلى إصلاح وصبغ ولا يمكن للبوليش إزالتها.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما الفرق بين البوليش العادي والبوليش متعدد المراحل؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">البوليش العادي (مرحلة واحدة) يحسّن مظهر السيارة بشكل سريع ومناسب للخدوش الخفيفة. أما البوليش متعدد المراحل (2-3 مراحل) فيوفر تصحيحاً أعمق للطلاء ونتيجة أطول أمداً وأكثر احترافية — وهو الخيار الأمثل للسيارات ذات الأضرار المتوسطة إلى الشديدة.</div>
+        </details>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <div class="svc-cta glass">
+      <h2>أعد لسيارتك بريقها اليوم</h2>
+      <p>تواصل معنا للحصول على كشف مجاني وعرض سعر واضح لخدمة البوليش بدون أي التزام.</p>
+      <div class="svc-cta-btns">
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز جلستك الآن</a>
+        <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+          style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          راسلنا على واتساب
+        </a>
+      </div>
+    </div>
+
+    <footer class="footer" style="padding: 32px 0;">
+      <div class="footer-row">
+        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="links">
+          <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
+          <a href="terms.html">الشروط</a>
+          <a href="index.html">الرئيسية</a>
         </div>
       </div>
-    </section>
+    </footer>
+
   </main>
-  <!-- start footer -->
-  <div class="footer" id="contacts-us">
-    <div class="container">
-      <div class="box">
-        <h3>هافركامب</h3>
-        <!-- <ul class="social">
-            <li>
-              <a href="tel:51111154" class="phone">
-                <i class="fa-solid fa-mobile-screen-button fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://wa.me/96551111154" target="_blank" class="whatsapp">
-                <i class="fab fa-whatsapp fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/haverkampkw/" target="_blank" class="instagram">
-                <i class="fab fa-instagram fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.snapchat.com/add/haverkampkw" target="_blank" class="snapchat">
-                <i class="fab fa-snapchat fa-2x"></i>
-              </a>
-            </li>
-          </ul>
-          -->
-        <p class="text"> الوكيل الحصري لحماية هافركامب الالمانية في الشرق الاوسط <br> الوكيل الحصري لحماية كلايف ديزاين
-          الكورية</p>
 
-      </div>
-
-      <div class="box">
-        <div class="line">
-          <i class="fa-solid fa-house fa-2x"></i>
-          <div class="info">الري- قطعة 1- شارع 19</div>
-        </div>
-        <div class="line">
-          <i class="far fa-clock fa-fw"></i>
-          <div class="info">
-            ساعات العمل <br />
-            السبت الى الخميس <br />
-            10 صباحا الى 8 مساء
-          </div>
-        </div>
-      </div>
-      <div class="box map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw"
-          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>
-    <p class="copyright">
-      جميع الحقوق محفوظة لشركة هافركامب &copy; <span class="year">2027</span>
-    </p>
-  </div>
-  <!-- <div class="designer">
-      <p class="copyright">Made With &#10084; By a7med206</p>
-      <ul class="social-a7med">
-        <li>
-          <a href="tel:65811402" class="phone">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://wa.me/96565811402" target="_blank" class="whatsapp">
-            <i class="fab fa-whatsapp fa-2x"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.instagram.com/a7med206/" target="_blank" class="instagram">
-            <i class="fab fa-instagram fa-2x"></i>
-          </a>
-        </li>
-      </ul>
-  
-    </div> -->
-  <!-- End Footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
-  <script src="./js/slider.js"></script>
+  <script src="js/whatsapp-float.js"></script>
+  <script src="js/lightbox.js"></script>
 </body>
 
 </html>

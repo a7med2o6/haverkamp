@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>مُكوّن اللون — هافركامب</title>
+  <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:     #5eb8ff;
+      --accent-dim: rgba(94,184,255,.18);
+      --bg-0:       #0d1525;
+      --bg-1:       #132033;
+      --ink-0:      #f4f8ff;
+      --ink-1:      #b8c8de;
+      --ink-2:      #6c7e9a;
+      --glass-bg:   rgba(13,21,37,.88);
+      --glass-bd:   rgba(255,255,255,.10);
+      --glass-bd-bright: rgba(255,255,255,.22);
+      --blur:       blur(32px) saturate(220%);
+      --font:       'IBM Plex Sans Arabic', 'Plus Jakarta Sans', sans-serif;
+      --r-pill:     999px;
+      --topbar-h:   72px;
+      --ctrl-h:     80px;
+      --sb-w:       220px;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg-0);
+      font-family: var(--font);
+      color: var(--ink-0);
+    }
+
+    /* ─── Viewer ──────────────────────────────────── */
+    #viewer-wrap {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse at 60% 30%, rgba(94,184,255,.13), transparent 52%),
+        radial-gradient(ellipse at 15% 75%, rgba(94,184,255,.08), transparent 45%),
+        radial-gradient(ellipse at 85% 80%, rgba(94,184,255,.05), transparent 40%),
+        var(--bg-0);
+    }
+    #sf-iframe {
+      width: 100%; height: 100%;
+      border: none; display: block;
+      opacity: 0; transition: opacity .5s ease;
+    }
+    #sf-iframe.ready { opacity: 1; }
+
+    #viewer-ph {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      pointer-events: none;
+    }
+    #viewer-ph.hidden { display: none; }
+    .ph-icon { font-size: 66px; opacity: .14; animation: float 3.5s ease-in-out infinite; }
+    .ph-txt  { font-size: 13px; color: var(--ink-2); }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-13px)} }
+
+    /* ─── Page loader ─────────────────────────────── */
+    #page-loader {
+      position: fixed; inset: 0; z-index: 300;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: var(--bg-0);
+      transition: opacity .45s ease, visibility .45s ease;
+    }
+    #page-loader.out { opacity: 0; visibility: hidden; }
+    .ld-logo { font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); opacity: .65; }
+    .ld-logo img { height: 22px; width: auto; filter: invert(1) brightness(1.4) hue-rotate(180deg); display: block; }
+    .ld-ring { width: 42px; height: 42px; border: 2.5px solid rgba(94,184,255,.16); border-top-color: var(--accent); border-radius: 50%; animation: spin .85s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .ld-txt  { font-size: 13px; color: var(--ink-2); }
+
+    /* ─── Model loader ────────────────────────────── */
+    #model-loader {
+      position: fixed; inset: 0; z-index: 5;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(13,21,37,.88);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    #model-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .ml-inner { display: flex; flex-direction: column; align-items: center; gap: 13px; }
+    .ml-ring { width: 38px; height: 38px; border: 2px solid rgba(94,184,255,.18); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+    .ml-txt  { font-size: 12px; color: var(--ink-2); }
+
+    /* ─── Topbar / Nav ────────────────────────────── */
+    .topbar {
+      position: fixed; top: 0; inset-inline: 0;
+      height: var(--topbar-h); z-index: 30;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      background: rgba(13,21,37,.94);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 8px 32px rgba(0,0,0,.4);
+    }
+    .topbar-brand {
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .topbar-brand img {
+      height: 26px; width: auto; display: block;
+      filter: invert(1) brightness(1.4) hue-rotate(180deg);
+    }
+    .topbar-brand .brand-sep {
+      width: 1px; height: 18px;
+      background: rgba(255,255,255,.15);
+    }
+    .page-title {
+      font-size: 12px; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--ink-2);
+      white-space: nowrap;
+    }
+    .topbar-end { display: flex; align-items: center; gap: 10px; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: var(--r-pill);
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.10);
+      color: var(--ink-1); font-family: var(--font); font-size: 13px; font-weight: 500;
+      text-decoration: none; transition: background .2s, color .2s, border-color .2s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,.12); color: var(--ink-0); border-color: rgba(255,255,255,.18); }
+    .hint-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 13px; border-radius: var(--r-pill);
+      background: rgba(94,184,255,.07); border: 1px solid rgba(94,184,255,.15);
+      font-size: 11px; color: var(--accent); opacity: .85;
+    }
+
+    /* ─── Sidebar FAB ─────────────────────────────── */
+    #sb-fab {
+      position: fixed;
+      top: calc(var(--topbar-h) + 10px);
+      right: 12px;
+      z-index: 26;
+      width: 38px; height: 38px; border-radius: 11px;
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-bd);
+      color: var(--ink-1); cursor: pointer;
+      display: none;               /* shown via .show or media query */
+      align-items: center; justify-content: center;
+      transition: background .2s, color .2s, border-color .2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    }
+    #sb-fab.show { display: flex; }
+    #sb-fab:hover { background: var(--accent-dim); color: var(--accent); border-color: rgba(94,184,255,.35); }
+
+    /* ─── Sidebar ─────────────────────────────────── */
+    #sidebar {
+      position: fixed;
+      top: calc(var(--topbar-h) + 10px);
+      right: 12px;
+      width: var(--sb-w);
+      max-height: calc(100vh - var(--topbar-h) - var(--ctrl-h) - 24px);
+      z-index: 25;
+      overflow: hidden;
+      /* slide out to the right when .closed */
+      transition: transform .32s cubic-bezier(.4,0,.2,1), opacity .28s ease;
+    }
+    #sidebar.closed {
+      transform: translateX(calc(100% + 20px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Single unified glass card */
+    .sb-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-bd);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.07),
+        0 8px 32px rgba(0,0,0,.45),
+        0 0 0 0.5px rgba(94,184,255,.05);
+    }
+
+    /* Card header */
+    .sb-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sb-htitle {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: var(--ink-2);
+    }
+    .sb-close {
+      width: 24px; height: 24px; border-radius: 7px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      color: var(--ink-2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .18s; flex-shrink: 0;
+    }
+    .sb-close:hover { background: rgba(255,255,255,.12); color: var(--ink-0); }
+
+    /* Card section */
+    .sb-sec { padding: 12px 14px; }
+    .sb-sec + .sb-sec { border-top: 1px solid rgba(255,255,255,.05); }
+
+    .sb-lbl {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: var(--ink-2); margin-bottom: 9px;
+    }
+    .sb-lbl-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 9px;
+    }
+    .sb-lbl-row .sb-lbl { margin-bottom: 0; }
+
+    /* Brand grid — 2 columns */
+    .brands-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    .brand-btn {
+      padding: 7px 6px; border-radius: 9px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      color: var(--ink-2);
+      font-family: var(--font); font-size: 11.5px; font-weight: 500;
+      cursor: pointer; transition: all .18s;
+      text-align: center; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .brand-btn:hover { background: rgba(255,255,255,.09); color: var(--ink-1); border-color: rgba(255,255,255,.14); }
+    .brand-btn.active {
+      background: var(--accent-dim);
+      border-color: rgba(94,184,255,.5);
+      color: var(--accent); font-weight: 700;
+      box-shadow: 0 0 10px rgba(94,184,255,.12);
+    }
+
+    /* Model nav */
+    .model-nav { display: flex; gap: 3px; }
+    .mnav-btn {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      color: var(--ink-2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .18s;
+    }
+    .mnav-btn:hover:not(:disabled) { background: var(--accent-dim); color: var(--accent); border-color: rgba(94,184,255,.35); }
+    .mnav-btn:disabled { opacity: .28; cursor: default; }
+
+    /* Model list */
+    .models-list {
+      display: flex; flex-direction: column; gap: 3px;
+      max-height: 130px; overflow-y: auto; scrollbar-width: none;
+    }
+    .models-list::-webkit-scrollbar { display: none; }
+
+    .model-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 10px; border-radius: 9px;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+      color: var(--ink-1);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .2s; width: 100%; text-align: start;
+    }
+    .model-item:hover { background: rgba(94,184,255,.1); border-color: rgba(94,184,255,.25); color: var(--ink-0); }
+    .model-item.active { background: var(--accent-dim); border-color: rgba(94,184,255,.48); color: var(--accent); }
+    .model-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.22); flex-shrink: 0;
+      transition: background .2s, border-color .2s;
+    }
+    .model-item.active .model-dot { background: var(--accent); border-color: var(--accent); }
+    .model-name { flex: 1; }
+    .model-arr  { font-size: 11px; color: var(--accent); opacity: 0; transition: opacity .18s; }
+    .model-item:hover .model-arr,
+    .model-item.active .model-arr { opacity: 1; }
+
+    .coming-msg { font-size: 12px; color: var(--ink-2); text-align: center; padding: 14px 8px; opacity: .65; }
+
+    /* Material indicator */
+    .mat-row {
+      margin: 0 14px 12px;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(94,184,255,.06); border: 1px solid rgba(94,184,255,.13);
+      border-radius: 8px; padding: 7px 10px;
+      font-size: 10px; color: var(--ink-2);
+    }
+    .mat-row.hidden { display: none; }
+    .mat-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .mat-row strong { color: var(--accent); font-weight: 600; }
+    #mat-select {
+      flex: 1; min-width: 0;
+      background: rgba(5,9,18,.8); border: 1px solid rgba(94,184,255,.25);
+      color: var(--ink-1); border-radius: 5px; padding: 3px 6px;
+      font-size: 11px; font-family: var(--font); cursor: pointer;
+      outline: none; direction: ltr;
+    }
+    #mat-select:focus { border-color: rgba(94,184,255,.55); }
+    #mat-select option { background: #0a1424; color: var(--ink-0); }
+
+    /* ─── Mobile backdrop ─────────────────────────── */
+    #sb-back {
+      position: fixed; inset: 0; z-index: 24;
+      background: rgba(0,0,0,.5);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none;
+      transition: opacity .3s ease;
+    }
+    #sb-back.show { opacity: 1; pointer-events: auto; }
+
+    /* ─── Control panel (single row) ─────────────── */
+    .ctrl-panel {
+      position: fixed; bottom: 0; inset-inline: 0;
+      height: var(--ctrl-h); z-index: 20;
+      display: flex; align-items: center; flex-wrap: nowrap;
+      padding: 0 20px; gap: 14px;
+      background: linear-gradient(to top, rgba(13,21,37,.97) 60%, transparent);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    /* Color segment */
+    .ctrl-colors { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .row-lbl {
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: var(--ink-2); white-space: nowrap; flex-shrink: 0;
+    }
+    .swatches-scroll {
+      display: flex; gap: 7px;
+      overflow-x: auto; padding: 4px 2px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; flex: 1; min-width: 0;
+    }
+    .swatches-scroll::-webkit-scrollbar { display: none; }
+
+    .swatch {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      cursor: pointer;
+      border: 2px solid rgba(0,0,0,.2);
+      outline: 2.5px solid transparent; outline-offset: 3px;
+      transition: transform .16s ease, outline-color .16s ease, box-shadow .16s ease;
+    }
+    .swatch:hover { transform: scale(1.18); }
+    .swatch.active {
+      outline-color: rgba(255,255,255,.9);
+      box-shadow: 0 0 12px rgba(94,184,255,.3);
+      transform: scale(1.14);
+    }
+
+    /* Custom color picker */
+    .custom-wrap { position: relative; flex-shrink: 0; }
+    .custom-circle {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px dashed rgba(255,255,255,.28);
+      background: rgba(255,255,255,.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: rgba(255,255,255,.35);
+      cursor: pointer; transition: border-color .18s, background .18s;
+    }
+    .custom-circle:hover { border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.1); }
+    #custom-input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; border-radius: 50%;
+    }
+
+    /* Divider */
+    .ctrl-div { width: 1px; height: 30px; background: rgba(255,255,255,.08); flex-shrink: 0; }
+
+    /* Finish segment */
+    .ctrl-finish { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .finish-btns { display: flex; gap: 4px; }
+    .finish-btn {
+      padding: 6px 12px; border-radius: var(--r-pill);
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.05); color: var(--ink-2);
+      transition: all .18s;
+    }
+    .finish-btn:hover { background: rgba(255,255,255,.1); color: var(--ink-1); }
+    .finish-btn.active { background: var(--accent-dim); border-color: rgba(94,184,255,.45); color: var(--accent); }
+
+    /* Selection info */
+    .sel-info { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+    .sel-lbl { font-size: 9px; color: var(--ink-2); letter-spacing: .15em; text-transform: uppercase; }
+    .sel-val { font-size: 13px; font-weight: 700; color: var(--ink-0); white-space: nowrap; }
+
+    /* WhatsApp */
+    .wa-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: var(--r-pill);
+      background: #25D366; color: #fff;
+      font-family: var(--font); font-size: 13px; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer; flex-shrink: 0;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 3px 16px rgba(37,211,102,.26);
+      white-space: nowrap;
+    }
+    .wa-btn:hover { background: #1cb956; transform: translateY(-1px); box-shadow: 0 5px 22px rgba(37,211,102,.36); }
+
+    /* ─── Hover tooltip ───────────────────────────── */
+    #clr-tip {
+      position: fixed; z-index: 100;
+      background: rgba(8,12,21,.96);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 7px; padding: 5px 12px;
+      font-size: 12px; color: var(--ink-1);
+      pointer-events: none; opacity: 0;
+      transition: opacity .15s ease;
+      white-space: nowrap;
+      transform: translate(-50%, calc(-100% - 10px));
+    }
+    #clr-tip.show { opacity: 1; }
+
+    /* ─── Tablet (661–900px) ────────────────────────── */
+    @media (min-width: 661px) and (max-width: 900px) {
+      :root { --sb-w: 188px; }
+      .brand-btn  { font-size: 11px; padding: 6px 5px; }
+      .ctrl-panel { padding: 0 14px; gap: 10px; }
+      .finish-btn { padding: 5px 10px; font-size: 11px; }
+      .swatch     { width: 28px; height: 28px; }
+      .custom-circle { width: 28px; height: 28px; }
+    }
+
+    /* ─── Mobile (≤ 660px) ────────────────────────── */
+    @media (max-width: 660px) {
+      :root { --topbar-h: 54px; --ctrl-h: 0px; --sb-w: 100%; }
+
+      /* Sidebar: bottom sheet */
+      #sidebar {
+        top: auto; right: 0; bottom: 128px;
+        width: 100%; max-height: 65vh;
+        border-radius: 20px 20px 0 0;
+        overflow-y: auto;
+        transform: translateY(0);
+      }
+      #sidebar.closed { transform: translateY(110%); opacity: 0; }
+      .sb-card { border-radius: 20px 20px 0 0; }
+      .brands-grid { grid-template-columns: repeat(4, 1fr); }
+      #sb-fab { display: flex !important; }
+
+      /* Ctrl panel: two rows */
+      .ctrl-panel {
+        height: auto; flex-wrap: wrap;
+        padding: 12px 16px 22px; gap: 10px 8px;
+        bottom: 0;
+      }
+      .ctrl-colors { width: 100%; flex: none; order: 1; }
+      .ctrl-div    { display: none; }
+      .ctrl-finish { order: 2; }
+      .sel-info    { order: 3; flex: 1; min-width: 90px; }
+      .wa-btn      { order: 4; flex: 1; justify-content: center; min-width: 120px; }
+
+      .hint-pill  { display: none; }
+      .page-title { display: none; }
+    }
+
+    /* ─── Small phones (≤ 400px) ────────────────────── */
+    @media (max-width: 400px) {
+      .swatch, .custom-circle { width: 28px; height: 28px; }
+      .row-lbl  { display: none; }
+      .sel-info { display: none; }
+      .wa-btn   { min-width: auto; flex: 1; }
+      .finish-btn { font-size: 11px; padding: 5px 9px; }
+    }
+
+    /* ─── Tiny phones (≤ 380px) ─────────────────────── */
+    @media (max-width: 380px) {
+      .wa-btn    { width: 100%; order: 5; }
+      .ctrl-finish { flex: 1; }
+      #sidebar   { bottom: 162px; }
+      .ctrl-panel { padding: 10px 12px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Page loader ──────────────────────────────── -->
+<div id="page-loader">
+  <span class="ld-logo"><img src="assets/logo.png?v=2" alt="هافركامب" /></span>
+  <div class="ld-ring"></div>
+  <span class="ld-txt">جاري التحضير...</span>
+</div>
+
+<!-- ─── Viewer ───────────────────────────────────── -->
+<div id="viewer-wrap">
+  <div id="viewer-ph">
+    <span class="ph-icon">🚗</span>
+    <span class="ph-txt">اختر موديلاً لعرض السيارة</span>
+  </div>
+  <iframe id="sf-iframe"
+    allow="autoplay; fullscreen; xr-spatial-tracking"
+    xr-spatial-tracking execution-while-out-of-viewport
+    execution-while-not-rendered web-share
+    allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true">
+  </iframe>
+</div>
+
+<!-- ─── Model loader ─────────────────────────────── -->
+<div id="model-loader" class="hidden">
+  <div class="ml-inner">
+    <div class="ml-ring"></div>
+    <span class="ml-txt">جاري تحميل الموديل...</span>
+  </div>
+</div>
+
+<!-- ─── Topbar ───────────────────────────────────── -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <a href="index.html">
+      <img src="assets/logo.png?v=2" alt="هافركامب" />
+    </a>
+    <div class="brand-sep"></div>
+    <span class="page-title">مُكوّن اللون — 3D</span>
+  </div>
+  <div class="topbar-end">
+    <span class="hint-pill">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+      </svg>
+      اسحب للدوران
+    </span>
+    <a href="index.html" class="back-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+      الرئيسية
+    </a>
+  </div>
+</header>
+
+<!-- ─── Sidebar FAB ──────────────────────────────── -->
+<button id="sb-fab" aria-label="اختر سيارة">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <path d="M3 7h18M3 12h18M3 17h18"/>
+  </svg>
+</button>
+
+<!-- ─── Mobile backdrop ──────────────────────────── -->
+<div id="sb-back"></div>
+
+<!-- ─── Sidebar ──────────────────────────────────── -->
+<aside id="sidebar" class="closed">
+  <div class="sb-card">
+
+    <!-- Header -->
+    <div class="sb-head">
+      <span class="sb-htitle">اختر سيارتك</span>
+      <button class="sb-close" id="sb-close" aria-label="إغلاق">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Brands -->
+    <div class="sb-sec">
+      <div class="sb-lbl">الماركة</div>
+      <div class="brands-grid" id="brands-wrap"></div>
+    </div>
+
+    <!-- Models -->
+    <div class="sb-sec">
+      <div class="sb-lbl-row">
+        <span class="sb-lbl">الموديل</span>
+        <div class="model-nav">
+          <button class="mnav-btn" id="model-prev" aria-label="للأعلى">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button class="mnav-btn" id="model-next" aria-label="للأسفل">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="models-list" id="models-wrap">
+        <div class="coming-msg">اختر ماركة أولاً</div>
+      </div>
+    </div>
+
+    <!-- Material picker -->
+    <div class="mat-row hidden" id="mat-row">
+      <div class="mat-dot"></div>
+      <select id="mat-select" title="اختر خامة البدي"></select>
+    </div>
+
+  </div>
+</aside>
+
+<!-- ─── Control panel ────────────────────────────── -->
+<div class="ctrl-panel">
+
+  <!-- Colors -->
+  <div class="ctrl-colors">
+    <span class="row-lbl">اللون</span>
+    <div class="swatches-scroll" id="swatches"></div>
+    <div class="custom-wrap">
+      <div class="custom-circle">+
+        <input type="color" id="custom-input" value="#5eb8ff">
+      </div>
+    </div>
+  </div>
+
+  <div class="ctrl-div"></div>
+
+  <!-- Finish -->
+  <div class="ctrl-finish">
+    <span class="row-lbl">الفينش</span>
+    <div class="finish-btns">
+      <button class="finish-btn active" data-f="glossy">لامع</button>
+      <button class="finish-btn"        data-f="matte">مطفي</button>
+      <button class="finish-btn"        data-f="metallic">ميتاليك</button>
+    </div>
+  </div>
+
+  <div class="ctrl-div"></div>
+
+  <!-- Info -->
+  <div class="sel-info">
+    <span class="sel-lbl">الاختيار</span>
+    <span class="sel-val" id="sel-val">—</span>
+  </div>
+
+  <!-- WhatsApp -->
+  <a id="wa-btn" href="https://wa.me/96551111154" target="_blank" rel="noopener" class="wa-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    احجز تغيير اللون
+  </a>
+
+</div>
+
+<!-- ─── Color tooltip ─────────────────────────────── -->
+<div id="clr-tip"></div>
+
+<script>
+/* ══════════════════════════════════
+   CATALOG
+══════════════════════════════════ */
+const CATALOG = {
+  'كاديلاك':       [
+    { name:'اسكاليد', uid:'56c704d6b1ce473eb835023c18e3c3d6', body:'' },
+    { name:'XT6 Luxury 2023', uid:'b6a0be0c32e343b4812ec47660142824', body:'' },
+  ],
+  'تويوتا':        [
+    { name:'Land Cruiser LC300 2024',  uid:'0937e2b405964856a1aac96f54861274', body:'' },
+    { name:'Land Cruiser 250 2025', uid:'b53e78d5e3474474a788e7ef4deccda0', body:'' },
+    { name:'Camry Hybrid SE 2021', uid:'147a0afe465144b5a474dc2f8c0a42cc', body:'' },
+    { name:'GR 86 2022', uid:'1c86f6b4a9494727971e3b7cac28f27f', body:'' },
+  ],
+  'لكزس':          [
+    { name:'LX600 2022',   uid:'e2157f0ab55149619907e88dc875be89', body:'' },
+    { name:'LX700h 2025',  uid:'1dd2df7c68e74ca3a3ea83fb6c4bd1a2', body:'' },
+    { name:'UX300e 2021',  uid:'f49b0dfdc8e440af855364f9b1d1d903', body:'' },
+    { name:'LS 2021',          uid:'31aa78f8e32244a899128cf947c7b1a1', body:'' },
+    { name:'RX F-Sport 2020',  uid:'794d931c09ba4b9ab06445690bd2c60a', body:'' },
+  ],
+  'جي إم سي':     [
+    { name:'Sierra HD Denali 2020', uid:'66899840294e47018ee6f7020f945743', body:'' },
+    { name:'Yukon Denali 2021',     uid:'7229130fbcfc4a3e81c657ccd30855ca', body:'' },
+  ],
+  'بي إم دابليو':  [
+    { name:'X1 2020', uid:'3427b044f85d42c5a36c701de41d95af', body:'' },
+    { name:'X2 2019', uid:'d6490063074345a78370cc350875c577', body:'' },
+    { name:'X3M Competition 2020', uid:'991c26a1a4c2448baae7b218a7df7b98', body:'' },
+    { name:'X4 M40d 2019', uid:'e38ddaad56b443a39de6c37a12f234e1', body:'' },
+    { name:'X5 M Sport 2019', uid:'9fe1f32c80b6427e8f971df55a008b90', body:'' },
+    { name:'X6 M50i 2020', uid:'237154e8209d4ac99dd9858108491ced', body:'' },
+    { name:'7-Series M Long 2020', uid:'20c533d253f643beb719cfa2b7023d2b', body:'' },
+  ],
+  'مرسيدس':       [
+    { name:'GLC AMG 2020', uid:'dd536935c2f442b1b522d3dd24059f98', body:'' },
+    { name:'S-Class AMG 2021', uid:'47d0f7cb675347529aea747ac38f3fad', body:'' },
+    { name:'CLS AMG 2022', uid:'1202e3dd546e4f668003277b47c4a3cc', body:'' },
+    { name:'E63 Coupe AMG 2021', uid:'724a44a483584df1af4e964da76bd86b', body:'' },
+    { name:'GLE 63 AMG Coupe 2021', uid:'241dde009dac40339173c213deb37d46', body:'' },
+  ],
+  'شيفروليه':      [{ name:'Tahoe RST 2021', uid:'f0682a95702f4ebc96d3e425c7a3c3ee', body:'' }],
+  'فورد':          [
+    { name:'F150 Raptor 2021', uid:'51979838475245ab9377e03b3d7d8382', body:'' },
+    { name:'Bronco', uid:'3555e344a37248b1ab8025779baf63a8', body:'' },
+  ],
+  'جينيسيس':      [
+    { name:'G70 2022',        uid:'64b1b58d849d4bdfbeb527ff56fbdeff', body:'' },
+    { name:'GV70 Sport 2020', uid:'f5d4aa1e7af74d0a9ab7ae6ee0dad0cf', body:'' },
+  ],
+  'نيسان':        [{ name:'Patrol 2021', uid:'a744e67676ce4f238a4f81f6b41ec671', body:'' }],
+  'لاند روفر':     [{ name:'Defender 110 2020', uid:'1aa1683d9b1845e7ab631e65aa63ae1f', body:'' }],
+};
+
+/* ══════════════════════════════════
+   COLOR PALETTE
+══════════════════════════════════ */
+const COLORS = [
+  { name:'أبيض لؤلؤي',  hex:'#F0EEE8' },
+  { name:'أسود غامق',   hex:'#181818' },
+  { name:'رمادي فضي',   hex:'#9AAABB' },
+  { name:'رمادي داكن',  hex:'#444444' },
+  { name:'أحمر',        hex:'#CC1A1A' },
+  { name:'أحمر كرزي',   hex:'#7D0A0A' },
+  { name:'أزرق صوري',   hex:'#1A7DE8' },
+  { name:'أزرق غامق',   hex:'#003087' },
+  { name:'أخضر زيتي',   hex:'#3D8C5C' },
+  { name:'أخضر زمردي',  hex:'#009688' },
+  { name:'ذهبي',        hex:'#B8902A' },
+  { name:'برتقالي',     hex:'#E85D18' },
+  { name:'بنفسجي',      hex:'#7B3DCC' },
+  { name:'بني برونزي',  hex:'#6B4226' },
+];
+
+const FINISH_LABELS = { glossy:'لامع', matte:'مطفي', metallic:'ميتاليك' };
+
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+const S = {
+  brand:null, model:null, color:COLORS[6],
+  finish:'glossy', api:null, mats:null, bodyMat:null,
+  matCandidates:[], matIdx:0,
+};
+
+/* ══════════════════════════════════
+   COLOR UTILS
+══════════════════════════════════ */
+function toLinear(c255) {
+  const c = c255 / 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+function hexToLinear(hex) {
+  return [
+    toLinear(parseInt(hex.slice(1,3), 16)),
+    toLinear(parseInt(hex.slice(3,5), 16)),
+    toLinear(parseInt(hex.slice(5,7), 16)),
+  ];
+}
+
+/* ══════════════════════════════════
+   BODY MATERIAL DETECTION
+══════════════════════════════════ */
+const EXCLUDE_RE = /glass|window|chrome|wheel|tire|tyre|brake|headlight|taillight|light|lamp|seat|dashboard|interior|trim|rubber|mirror|emblem|logo|handle|plate|sky|ground|under|lower|bottom|floor|sill|rocker|skirt/i;
+
+function detectBodyCandidates(mats) {
+  const ranked = [], seen = new Set();
+  const add = m => { if (m && !seen.has(m.name)) { ranked.push(m); seen.add(m.name); } };
+  // Tier 1: strong regex
+  const RE = /paint.?body|body.?paint|car.?paint|car.?body|body.?car|^body$|^paint$|^exterior$|^carpaint$/i;
+  mats.filter(x => RE.test(x.name)).forEach(add);
+  // Tier 2: keyword partial (excluding obvious non-body parts)
+  const kw = ['body','paint','exterior','lacquer','coat','colour','color','shell'];
+  mats.filter(x => !EXCLUDE_RE.test(x.name) && kw.some(k => x.name.toLowerCase().includes(k))).forEach(add);
+  // Tier 3: PBR paint workflow (albedo+roughness), exclude obvious non-body
+  mats.filter(x => !EXCLUDE_RE.test(x.name) &&
+                   (x.channels?.AlbedoPBR || x.channels?.DiffusePBR) &&
+                   (x.channels?.RoughnessPBR || x.channels?.GlossinessPBR)).forEach(add);
+  // Tier 4: any color channel, excluding non-body
+  mats.filter(x => !EXCLUDE_RE.test(x.name) &&
+                   (x.channels?.AlbedoPBR || x.channels?.DiffusePBR ||
+                    x.channels?.Albedo     || x.channels?.Diffuse)).forEach(add);
+  // Tier 5 (fallback): everything — lets user cycle through all materials
+  mats.forEach(add);
+  return ranked;
+}
+
+/* ══════════════════════════════════
+   APPLY COLOR + FINISH
+══════════════════════════════════ */
+function applyToModel() {
+  if (!S.api || !S.mats || !S.bodyMat) return;
+  const matRef = S.mats.find(x => x.name === S.bodyMat);
+  if (!matRef) return;
+
+  // Deep clone — avoids frozen/proxy issues in some Sketchfab models
+  const mat = JSON.parse(JSON.stringify(matRef));
+  const ch  = mat.channels;
+  const rgb = hexToLinear(S.color.hex);
+
+  // Disable MatCap — when active it overrides all material color changes
+  if (ch.Matcap) { ch.Matcap.enable = false; ch.Matcap.texture = null; }
+
+  // Apply to ALL known color channels (PBR metalness, PBR specular, legacy Blinn-Phong)
+  ['AlbedoPBR', 'DiffusePBR', 'DiffuseColor', 'Albedo', 'Diffuse'].forEach(name => {
+    if (!ch[name]) return;
+    ch[name].color   = rgb;
+    ch[name].factor  = 1;
+    ch[name].enable  = true;
+    ch[name].texture = null;
+  });
+
+  // Finish
+  const finishCfg = {
+    glossy:   { r:.10, m:.00, g:.90 },
+    matte:    { r:.92, m:.00, g:.08 },
+    metallic: { r:.25, m:.95, g:.72 },
+  }[S.finish];
+
+  if (ch.MetalnessPBR !== undefined) {
+    if (ch.RoughnessPBR) { ch.RoughnessPBR.factor = finishCfg.r; ch.RoughnessPBR.enable = true; }
+    ch.MetalnessPBR.factor = finishCfg.m; ch.MetalnessPBR.enable = true;
+  } else if (ch.GlossinessPBR !== undefined) {
+    ch.GlossinessPBR.factor = finishCfg.g;
+    if (S.finish === 'metallic' && ch.SpecularPBR) ch.SpecularPBR.factor = .85;
+  }
+
+  S.api.setMaterial(mat, () => {});
+}
+
+function updateMatUI() {
+  const sel = document.getElementById('mat-select');
+  sel.innerHTML = '';
+  S.matCandidates.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = m.name;
+    opt.textContent = m.name;
+    if (i === S.matIdx) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════
+   SKETCHFAB LOADER
+══════════════════════════════════ */
+function loadModel(model) {
+  const iframe  = document.getElementById('sf-iframe');
+  const ph      = document.getElementById('viewer-ph');
+  const loader  = document.getElementById('model-loader');
+  const matRow  = document.getElementById('mat-row');
+
+  S.api = null; S.mats = null;
+  S.bodyMat = model.body || null;
+  S.matCandidates = []; S.matIdx = 0;
+
+  iframe.classList.remove('ready');
+  ph.classList.add('hidden');
+  loader.classList.remove('hidden');
+  matRow.classList.add('hidden');
+
+  const client = new Sketchfab(iframe);
+  client.init(model.uid, {
+    autostart:1, ui_infos:0, ui_stop:0, ui_controls:0,
+    ui_inspector:0, ui_watermark:0, ui_ar:0, ui_help:0,
+    ui_settings:0, ui_vr:0, ui_fullscreen:0, ui_annotations:0,
+    transparent:1, preload:1, camera:0,
+
+    success: api => {
+      api.start();
+      api.addEventListener('viewerready', () => {
+        api.setBackground({ transparent: true });
+        api.getMaterialList((err, mats) => {
+          if (err) {
+            console.error(err);
+            loader.classList.add('hidden');
+            ph.classList.remove('hidden');
+            return;
+          }
+          console.log('MATERIALS:', mats.map(m => m.name));
+          window._api = api; window._mats = mats;
+          S.api = api; S.mats = mats;
+          S.matCandidates = detectBodyCandidates(mats);
+          S.matIdx = 0;
+          if (!S.bodyMat) S.bodyMat = S.matCandidates[0]?.name || null;
+          else {
+            const i = S.matCandidates.findIndex(m => m.name === S.bodyMat);
+            S.matIdx = i >= 0 ? i : 0;
+          }
+          console.log('MATS:', mats.map(m => m.name));
+          console.log('body →', S.bodyMat, '| channels:', Object.keys(S.mats.find(m=>m.name===S.bodyMat)?.channels||{}));
+          updateMatUI();
+          matRow.classList.remove('hidden');
+          document.getElementById('mat-select').value = S.bodyMat || '';
+          loader.classList.add('hidden');
+          iframe.classList.add('ready');
+          applyToModel();
+        });
+      });
+    },
+    error: () => {
+      loader.classList.add('hidden');
+      ph.classList.remove('hidden');
+      ph.querySelector('.ph-icon').textContent = '⚠️';
+      ph.querySelector('.ph-txt').textContent  = 'فشل تحميل النموذج';
+    },
+  });
+}
+
+/* ══════════════════════════════════
+   SYNC HELPERS
+══════════════════════════════════ */
+function syncSelVal() {
+  document.getElementById('sel-val').textContent =
+    (S.color && S.model)
+      ? `${S.color.name} — ${FINISH_LABELS[S.finish]}`
+      : (S.color ? S.color.name : '—');
+}
+function syncWA() {
+  const msg = [
+    'السلام عليكم،','أرغب في تغيير لون سيارتي:',
+    `🚗 الماركة: ${S.brand||'—'}`,
+    `🔹 الموديل: ${S.model?.name||'—'}`,
+    `🎨 اللون: ${S.color?.name} (${S.color?.hex})`,
+    `✨ الفينش: ${FINISH_LABELS[S.finish]}`,
+    '','أرجو التواصل.',
+  ].join('\n');
+  document.getElementById('wa-btn').href =
+    `https://wa.me/96551111154?text=${encodeURIComponent(msg)}`;
+}
+
+/* ══════════════════════════════════
+   TOOLTIP (hover)
+══════════════════════════════════ */
+let _tipTimer;
+const tip = document.getElementById('clr-tip');
+function showTip(text, el) {
+  clearTimeout(_tipTimer);
+  const r = el.getBoundingClientRect();
+  tip.textContent = text;
+  tip.style.left  = `${r.left + r.width / 2}px`;
+  tip.style.top   = `${r.top}px`;
+  tip.classList.add('show');
+}
+function hideTip() {
+  _tipTimer = setTimeout(() => tip.classList.remove('show'), 80);
+}
+
+/* ══════════════════════════════════
+   SIDEBAR TOGGLE
+══════════════════════════════════ */
+const sidebar = document.getElementById('sidebar');
+const sbFab   = document.getElementById('sb-fab');
+const sbBack  = document.getElementById('sb-back');
+const isMob   = () => window.innerWidth <= 660;
+
+function openSidebar() {
+  sidebar.classList.remove('closed');
+  if (isMob()) sbBack.classList.add('show');
+  else          sbFab.classList.remove('show');
+}
+function closeSidebar() {
+  sidebar.classList.add('closed');
+  sbBack.classList.remove('show');
+  if (!isMob()) sbFab.classList.add('show');
+}
+
+document.getElementById('sb-close').addEventListener('click', closeSidebar);
+sbFab.addEventListener('click', openSidebar);
+sbBack.addEventListener('click', closeSidebar);
+
+// Model nav: scroll the list
+const modelsWrap = document.getElementById('models-wrap');
+document.getElementById('model-prev').addEventListener('click', () => modelsWrap.scrollBy({ top:-48, behavior:'smooth' }));
+document.getElementById('model-next').addEventListener('click', () => modelsWrap.scrollBy({ top: 48, behavior:'smooth' }));
+document.getElementById('mat-select').addEventListener('change', e => {
+  S.bodyMat = e.target.value;
+  S.matIdx  = S.matCandidates.findIndex(m => m.name === S.bodyMat);
+  console.log('manual mat →', S.bodyMat, S.mats.find(m => m.name === S.bodyMat)?.channels);
+  applyToModel();
+});
+
+/* ══════════════════════════════════
+   BUILD BRANDS
+══════════════════════════════════ */
+function buildBrands() {
+  const wrap = document.getElementById('brands-wrap');
+  Object.keys(CATALOG).forEach(brand => {
+    const btn = document.createElement('button');
+    btn.className   = 'brand-btn';
+    btn.textContent = brand;
+    btn.addEventListener('click', () => selectBrand(brand));
+    wrap.appendChild(btn);
+  });
+}
+
+function selectBrand(brand) {
+  S.brand = brand;
+  document.querySelectorAll('.brand-btn')
+    .forEach(b => b.classList.toggle('active', b.textContent === brand));
+
+  const models = CATALOG[brand] || [];
+  modelsWrap.innerHTML = '';
+
+  if (!models.length) {
+    modelsWrap.innerHTML = '<div class="coming-msg">🔜 قريبًا...</div>';
+    return;
+  }
+  models.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className   = 'model-item';
+    btn.dataset.uid = m.uid;
+    btn.innerHTML =
+      `<span class="model-dot"></span>` +
+      `<span class="model-name">${m.name}</span>` +
+      `<span class="model-arr">‹</span>`;
+    btn.addEventListener('click', () => selectModel(m, btn));
+    modelsWrap.appendChild(btn);
+  });
+}
+
+function selectModel(model, btn) {
+  S.model = model;
+  document.querySelectorAll('.model-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  syncSelVal(); syncWA();
+  loadModel(model);
+}
+
+/* ══════════════════════════════════
+   BUILD COLORS
+══════════════════════════════════ */
+function buildColors() {
+  const scroll = document.getElementById('swatches');
+  COLORS.forEach(color => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch' + (color === S.color ? ' active' : '');
+    btn.style.backgroundColor = color.hex;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      S.color = color; applyToModel(); syncSelVal(); syncWA();
+    });
+    btn.addEventListener('mouseenter', () => showTip(color.name, btn));
+    btn.addEventListener('mouseleave', hideTip);
+    scroll.appendChild(btn);
+  });
+
+  document.getElementById('custom-input').addEventListener('input', e => {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    S.color = { name:'مخصص', hex:e.target.value };
+    applyToModel(); syncSelVal(); syncWA();
+  });
+}
+
+/* ══════════════════════════════════
+   BUILD FINISH
+══════════════════════════════════ */
+function buildFinish() {
+  document.querySelectorAll('.finish-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.finish-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      S.finish = btn.dataset.f;
+      applyToModel(); syncSelVal(); syncWA();
+    });
+  });
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+buildBrands();
+buildColors();
+buildFinish();
+syncSelVal();
+syncWA();
+
+// Desktop: open sidebar by default
+if (!isMob()) openSidebar();
+
+// Auto-select كاديلاك + اسكاليد
+selectBrand('كاديلاك');
+setTimeout(() => {
+  const first = document.querySelector('.model-item');
+  if (first) first.click();
+}, 80);
+
+setTimeout(() => {
+  document.getElementById('page-loader').classList.add('out');
+}, 350);
+</script>
+</body>
+</html>

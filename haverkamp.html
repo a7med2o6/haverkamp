@@ -1,668 +1,1189 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- seo -->
-  <title>haverkamp | هافركامب</title>
-  <meta name="robots" content="index, follow">
-  <meta name="description" content="افضل واقوي حماية وعازل حراري بالكويت ، منتج الماني 
- ">
-  <meta name="author" content="Ahmad M-Nofal">
-  <!-- Google tag (gtag.js) -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="الوكيل الحصري لأفلام حماية الطلاء الألمانية هافركامب في الشرق الأوسط. حماية احترافية بأعلى معايير الجودة الألمانية مع كفالة تصل إلى 10 سنوات في الكويت." />
+  <meta name="keywords" content="هافركامب الألمانية، Haverkamp PPF، حماية ألمانية للسيارات، PPF الكويت، أفلام حماية ألمانية" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="Haverkamp Kuwait" />
+  <link rel="canonical" href="https://haverkampkw.com/haverkamp.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://haverkampkw.com/haverkamp.html" />
+  <meta property="og:title" content="حماية هافركامب الألمانية PPF — الوكيل الحصري في الكويت والشرق الأوسط" />
+  <meta property="og:description" content="الوكيل الحصري لأفلام حماية الطلاء الألمانية هافركامب في الشرق الأوسط. حماية احترافية بأعلى معايير الجودة الألمانية مع كفالة تصل إلى 10 سنوات في الكويت." />
+  <meta property="og:image" content="https://haverkampkw.com/assets/main.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="ar_KW" />
+  <meta property="og:site_name" content="هافركامب — Haverkamp Kuwait" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="حماية هافركامب الألمانية PPF — الوكيل الحصري في الكويت والشرق الأوسط" />
+  <meta name="twitter:description" content="الوكيل الحصري لأفلام حماية الطلاء الألمانية هافركامب في الشرق الأوسط. حماية احترافية بأعلى معايير الجودة الألمانية مع كفالة تصل إلى 10 سنوات في الكويت." />
+  <meta name="twitter:image" content="https://haverkampkw.com/assets/main.webp" />
+  <title>حماية هافركامب الألمانية PPF — الوكيل الحصري في الكويت والشرق الأوسط</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <style>
+    /* ── Page shell ── */
+    .svc-page {
+      position: relative;
+      z-index: 1;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 32px;
+      padding-top: 80px;
+    }
+
+    /* ── Back link ── */
+    .svc-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-1);
+      text-decoration: none;
+      font-size: 14px;
+      margin: 28px 0 0;
+      padding: 8px 14px;
+      border-radius: var(--r-pill);
+      background: var(--glass-tint);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border: 1px solid var(--glass-border);
+      transition: all .25s;
+    }
+
+    .svc-back:hover {
+      color: var(--ink-0);
+      transform: translateX(4px);
+    }
+
+    /* ── Hero ── */
+    .svc-hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      padding: 56px 0 72px;
+      position: relative;
+    }
+
+    /* Blue glow behind the logo panel */
+    .svc-hero::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -80px;
+      width: 70%;
+      height: calc(100% + 80px);
+      background: radial-gradient(ellipse 60% 70% at 65% 50%, rgba(94,184,255,.07), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .svc-hero-text { position: relative; z-index: 1; }
+
+    .svc-hero-text .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    [data-theme="light"] .svc-hero-text .tag {
+      color: #00345C;
+    }
+
+    .svc-hero-text .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-hero-text h1 {
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.12;
+      margin-bottom: 16px;
+      text-wrap: balance;
+    }
+
+    .svc-hero-text h1 .em {
+      color: #00345C;
+    }
+
+    [data-theme="dark"] .svc-hero-text h1 .em {
+      color: var(--accent);
+    }
+
+    .svc-hero-text .subtitle {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink-0);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .svc-hero-text p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 560px;
+      text-wrap: pretty;
+      margin-bottom: 32px;
+    }
+
+    .svc-hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Hero logo panel ── */
+    .svc-hero-logo-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      border-radius: var(--r-xl);
+      padding: 48px 40px;
+      text-align: center;
+    }
+
+    .hero-brand-logo { width: 200px; height: auto; object-fit: contain; display: block; }
+
+    .hero-brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: var(--r-pill);
+      background: linear-gradient(135deg, rgba(0,52,92,.12), rgba(0,52,92,.04));
+      border: 1px solid var(--glass-border-bright);
+      font-size: 13px;
+      font-weight: 600;
+      color: #00345C;
+      letter-spacing: .04em;
+    }
+
+    [data-theme="dark"] .hero-brand-badge {
+      background: linear-gradient(135deg, rgba(94,184,255,.15), rgba(94,184,255,.04));
+      color: var(--accent);
+    }
+
+    .hero-brand-badge .flag { font-size: 18px; }
+    .hero-brand-subtitle { font-size: 14px; color: var(--ink-2); line-height: 1.6; }
+
+    /* Trust badges */
+    .trust-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .trust-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(8px);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+    }
+    .trust-badge .tb-icon { font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .svc-hero {
+        grid-template-columns: 1fr;
+        padding: 36px 0 56px;
+      }
+      .svc-hero::after { display: none; }
+
+      .svc-hero-logo-panel {
+        order: -1;
+        padding: 40px 28px 36px;
+      }
+
+      .hero-brand-logo { width: 260px; }
+
+      .trust-badges { justify-content: center; }
+    }
+
+    /* ── Section header ── */
+    .svc-sec {
+      padding: 64px 0;
+    }
+
+    .svc-sec-head {
+      margin-bottom: 40px;
+    }
+
+    .svc-sec-head .tag {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    [data-theme="light"] .svc-sec-head .tag {
+      color: #00345C;
+    }
+
+    .svc-sec-head .tag::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .svc-sec-head h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-sec-head p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.7;
+      max-width: 620px;
+      margin-top: 12px;
+      text-wrap: pretty;
+    }
+
+    /* ── Specs grid ── */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .specs-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .specs-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .spec-card {
+      padding: 28px 26px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-radius: var(--r-lg);
+    }
+
+    .spec-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, rgba(0,52,92,.12), rgba(0,52,92,.04));
+      border: 1px solid var(--glass-border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00345C;
+      flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .spec-icon {
+      background: linear-gradient(135deg, rgba(94,184,255,.15), rgba(94,184,255,.04));
+      color: var(--accent);
+    }
+
+    .spec-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--ink-0);
+      letter-spacing: -.01em;
+      line-height: 1;
+    }
+
+    .spec-label {
+      font-size: 13px;
+      color: var(--ink-1);
+      line-height: 1.5;
+    }
+
+    /* ── About / نبذة ── */
+    .about-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    @media (max-width: 900px) {
+      .about-block {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .about-text p {
+      font-size: 16px;
+      color: var(--ink-1);
+      line-height: 1.8;
+      text-wrap: pretty;
+    }
+
+    .about-stat-row {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .about-stat {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 22px;
+      border-radius: var(--r-md);
+    }
+
+    .about-stat-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: #00345C;
+      white-space: nowrap;
+    }
+
+    [data-theme="dark"] .about-stat-num {
+      color: var(--accent);
+    }
+
+    .about-stat-label {
+      font-size: 14px;
+      color: var(--ink-1);
+      line-height: 1.4;
+    }
+
+    /* ── Packages grid ── */
+    .packages-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .packages-grid {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        margin: 0 auto;
+      }
+    }
+
+    .pkg-card {
+      border-radius: var(--r-xl);
+      padding: 32px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      transition: transform .35s cubic-bezier(.2,.7,.3,1);
+    }
+
+    .pkg-card:hover { transform: translateY(-6px); }
+
+    .pkg-card--platinum {
+      border: 1.5px solid rgba(212, 175, 55, .45);
+      box-shadow: 0 0 0 1px rgba(212, 175, 55, .12), var(--glass-shadow);
+    }
+
+    [data-theme="light"] .pkg-card--platinum {
+      border-color: rgba(180, 140, 20, .35);
+    }
+
+    .pkg-badge {
+      position: absolute;
+      top: -13px;
+      right: 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px 5px 10px;
+      border-radius: var(--r-pill);
+      background: linear-gradient(135deg, #d4af37, #f0c040);
+      color: #1a1000;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(212,175,55,.45);
+    }
+
+    .pkg-badge svg { flex-shrink: 0; }
+
+    .pkg-tier {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+      margin-bottom: 10px;
+    }
+
+    .pkg-name {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: var(--ink-0);
+      margin-bottom: 4px;
+    }
+
+    .pkg-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 42px;
+      font-weight: 500;
+      letter-spacing: -.03em;
+      color: var(--ink-0);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .pkg-price-note {
+      font-size: 12px;
+      color: var(--ink-2);
+      margin-bottom: 24px;
+    }
+
+    .pkg-divider {
+      height: 1px;
+      background: var(--glass-border);
+      margin-bottom: 20px;
+    }
+
+    .pkg-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+      flex: 1;
+    }
+
+    .pkg-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--ink-1);
+      line-height: 1.45;
+    }
+
+    .pkg-features li .check {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(37, 211, 102, .12);
+      border: 1px solid rgba(37, 211, 102, .25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      color: #25D366;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pkg-card--platinum .pkg-features li .check {
+      background: rgba(212, 175, 55, .15);
+      border-color: rgba(212, 175, 55, .35);
+      color: #d4af37;
+    }
+
+    .pkg-wa-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--r-pill);
+      background: rgba(37, 211, 102, .10);
+      border: 1px solid rgba(37, 211, 102, .30);
+      color: #25D366;
+      font-family: var(--font-ar);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .25s;
+    }
+
+    .pkg-wa-btn:hover {
+      background: rgba(37, 211, 102, .18);
+      transform: scale(1.02);
+    }
+
+    /* ── Bento gallery ── */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 220px 220px 300px;
+      gap: 12px;
+    }
+
+    .bento-item {
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: transform .4s cubic-bezier(.2, .7, .3, 1), box-shadow .3s;
+    }
+
+    .bento-item:hover {
+      transform: scale(1.025);
+      box-shadow:
+        0 0 0 1px rgba(94, 184, 255, .35),
+        0 0 32px rgba(94, 184, 255, .14),
+        var(--glass-shadow);
+      z-index: 2;
+    }
+
+    .bento-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .5s cubic-bezier(.2, .7, .3, 1);
+    }
+
+    .bento-item:hover img { transform: scale(1.04); }
+
+
+    /* Bento explicit placement */
+    .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: 1 / 3; } /* 2×2 كبيرة */
+    .bento-item:nth-child(2) { grid-column: 1 / 3; grid-row: 3 / 4; } /* 2×1 عريضة */
+    .bento-item:nth-child(3) { grid-column: 3 / 4; grid-row: 1 / 3; } /* 1×2 طويلة */
+    .bento-item:nth-child(4) { grid-column: 4 / 5; grid-row: 1 / 2; } /* 1×1 */
+    .bento-item:nth-child(5) { grid-column: 4 / 5; grid-row: 2 / 3; } /* 1×1 */
+    .bento-item:nth-child(6) { grid-column: 3 / 5; grid-row: 3 / 4; } /* 2×1 عريضة */
+
+    @media (max-width: 900px) {
+      .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: none;
+        grid-auto-rows: 200px;
+      }
+      .bento-item:nth-child(1) { grid-column: 1 / 3; grid-row: auto; }
+      .bento-item:nth-child(2),
+      .bento-item:nth-child(3),
+      .bento-item:nth-child(4),
+      .bento-item:nth-child(5),
+      .bento-item:nth-child(6) { grid-column: auto; grid-row: auto; }
+    }
+
+    @media (max-width: 560px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 220px;
+      }
+      .bento-item:nth-child(1) { grid-column: 1; }
+    }
+
+    /* Lightbox */
+    .lb-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(5, 9, 18, .88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .lb-overlay.open { display: flex; }
+
+    .lb-img-wrap {
+      position: relative;
+      max-width: min(90vw, 1100px);
+      max-height: 90vh;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      box-shadow: 0 40px 120px rgba(0,0,0,.7);
+    }
+
+    .lb-img-wrap img {
+      display: block;
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+    }
+
+    .lb-close {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .lb-close:hover { background: rgba(255,255,255,.22); }
+
+    /* ── FAQ ── */
+    .svc-faq {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── CTA section ── */
+    .svc-cta {
+      margin: 64px 0 80px;
+      padding: 56px 48px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      border-radius: var(--r-xl);
+    }
+
+    .svc-cta h2 {
+      font-size: clamp(26px, 3.5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+
+    .svc-cta p {
+      font-size: 16px;
+      color: var(--ink-1);
+      max-width: 480px;
+      line-height: 1.6;
+      text-wrap: pretty;
+    }
+
+    .svc-cta-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+      .svc-page {
+        padding: 0 16px;
+        padding-top: 80px;
+      }
+
+      .svc-cta {
+        padding: 40px 24px;
+      }
+
+      .specs-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .svc-page { padding: 0 12px; padding-top: 72px; }
+      .svc-hero { gap: 28px; padding: 28px 0 44px; }
+.trust-badges { gap: 8px; }
+      .trust-badge { font-size: 11.5px; padding: 5px 10px; }
+      .svc-hero-actions { flex-direction: column; }
+      .svc-hero-actions .btn { width: 100%; justify-content: center; text-align: center; }
+      .about-block { grid-template-columns: 1fr; }
+      .about-stat-row { grid-template-columns: 1fr 1fr; }
+      .pkg-card { padding: 24px 20px; }
+      .svc-cta { padding: 32px 16px; }
+      .bento-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .bento-item { grid-column: auto !important; grid-row: auto !important; height: 200px; }
+    }
+  </style>
+  <!-- Google Ads Tag -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-16636917037"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){ dataLayer.push(arguments); }
     gtag('js', new Date());
-
     gtag('config', 'AW-16636917037');
   </script>
-
-  <!-- Event snippet for Contact conversion page -->
-  <script>
-    gtag('event', 'conversion', {
-      'send_to': 'AW-16636851413/56fJCOXMzs0bENXpiP09',
-      'value': 1.0,
-      'currency': 'USD'
-    });
-  </script>
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:locale" content="ar_AR">
-  <meta property="og:title"
-    content=" هافركامب اقوي حماية سيارات بالكويت حماية المانية كفالة 10 سنوات - حماية فل بدي - عازل حراري - حماية جام - نانو للمقاعد - نانو للرنقات - بوليش  " />
-  <meta property="og:description"
-    content=" هافركامب اقوي حماية سيارات بالكويت حماية المانية كفالة 10 سنوات - حماية فل بدي - عازل حراري - حماية جام - نانو للمقاعد - نانو للرنقات - بوليش  " />
-  <meta property="og:image" content="https://haverkampkw.com/img/contact/cover.jpeg" />
-  <meta property="og:url" content="https://haverkampkw.com/haverkamp.html" />
-  <meta property="og:site_name" content="هافركامب">
-  <meta name="theme-color" content="#00345c">
-  <link rel="canonical" href="https://www.haverkampkw.com/">
-
-  <!-- Schema.org JSON-LD -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Service",
-    "serviceType": "حماية سيارات المانية - كورية - امريكية",
+    "name": "حماية هافركامب الألمانية PPF",
+    "description": "الوكيل الحصري لأفلام حماية الطلاء الألمانية هافركامب في الشرق الأوسط. حماية احترافية بأعلى معايير الجودة الألمانية مع كفالة تصل إلى 10 سنوات.",
+    "url": "https://haverkampkw.com/haverkamp.html",
+    "image": "https://haverkampkw.com/assets/main.webp",
+    "areaServed": "الكويت",
+    "serviceType": "خدمات السيارات",
     "provider": {
       "@type": "LocalBusiness",
-      "name": "هافركامب الكويت",
-      "image": "https://haverkampkw.com/img/contact/cover.jpeg",
-      "telephone": "+965651111154",
+      "name": "هافركامب",
+      "url": "https://haverkampkw.com",
+      "telephone": "+96551111154",
       "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "الري - قطعة 3- شارع 19",
-              "addressLocality": "الكويت",
-              "addressCountry": "KW"
-       }
-    },
-    "description": "مجموعة متنوعة من حمايات السيارات الالمانية - الكورية - الامريكية - كفالة 10 سنوات",
-    "url": "https://haverkampkw.com/tint.html"
+        "@type": "PostalAddress",
+        "streetAddress": "قطعة 1، شارع 19",
+        "addressLocality": "الري",
+        "addressCountry": "KW"
+      }
+    }
   }
   </script>
-  <!-- favicon -->
-  <link rel="shortcut icon" href="./img/favicon_io/favicon.ico" type="image/x-icon">
-  <link rel="icon" type="image/png" sizes="32x32" href="./img/favicon_io/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="192x192" href="./img/favicon_io/android-chrome-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="./img/favicon_io/android-chrome-512x512.png">
-  <link rel="apple-touch-icon" href="./img/favicon_io/apple-touch-icon.png">
-  <!-- font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-  <!-- faq-->
-  <link rel="stylesheet" href=" https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css">
-  <!-- css style -->
-  <link rel="stylesheet" href="css/style.css" />
-  <!-- slider-boot -->
-  <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!-- font-awesome  -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
-  <!-- js -->
-  <script defer src="js/script.js"></script>
 </head>
 
 <body>
-  <!-- start header -->
-  <header class="header">
-    <a href="#">
-      <img class="logo" alt="albaraka logo" src="./img/main_page/logo.svg" />
+
+  <!-- Animated background -->
+  <div class="bg-stage" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+    <div class="orb o4"></div>
+    <div class="orb o5"></div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-wrap">
+    <nav class="nav glass">
+      <div class="nav-brand">
+        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      </div>
+      <div class="nav-links">
+        <a href="#about">عن هافركامب</a>
+        <a href="#specs">المواصفات</a>
+        <a href="#gallery">معرض الصور</a>
+        <a href="#packages">الباقات</a>
+        <a href="#faq">الأسئلة الشائعة</a>
+        <a href="terms.html">البنود والشروط</a>
+      </div>
+      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+    </nav>
+  </div>
+
+  <main class="svc-page">
+
+    <a href="protication.html" class="svc-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+      حماية البدي
     </a>
 
-    <nav class="main-nav">
-      <ul class="main-nav-list">
-        <li><a class="main-nav-link" href="#specifications"> الخصائص</a></li>
-        <li><a class="main-nav-link" href="#pricing"> الباقات</a></li>
-        <li><a class="main-nav-link" href="#gallery"> معرض الصور</a></li>
-        <li><a class="main-nav-link" href="#testimonials"> اراءالعملاء</a></li>
-        <li><a class="main-nav-link" href="./terms.html"> البنود والشروط</a></li>
-        <li><a class="main-nav-link" href="./contactus.html"> تواصل معنا</a></li>
-      </ul>
-    </nav>
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <div class="svc-hero">
+      <div class="svc-hero-text">
+        <div class="tag">HAVERKAMP — الحماية الألمانية</div>
+        <h1>هافركامب — <span class="em">الحماية الألمانية</span></h1>
+        <p class="subtitle">الوكيل الحصري لحماية هافركامب الألمانية في الشرق الأوسط</p>
+        <p>هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
 
-    <button class="btn-mobile-nav">
+        <div class="trust-badges">
+          <span class="trust-badge"><span class="tb-icon">🏆</span> +40 عام خبرة عالمية</span>
+          <span class="trust-badge"><span class="tb-icon">🛡️</span> كفالة 10 سنوات</span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> وكيل حصري</span>
+        </div>
 
-      <i class="fa-solid fa-bars icon-mobile-nav" name="menu-outline"></i>
-      <i class="fa-solid fa-xmark icon-mobile-nav" name="close-outline"></i>
-    </button>
-  </header>
-  <!-- end header -->
-  <!-- start hero -->
-  <main>
-    <section class="section-hero" id="section-hero">
-      <div class="protication">
-        <img src="./img/haverkamp/haverkamp-landing.webp" alt="protication">
-        <div class="container">
-          <div class="protication-text">
-            <h1>هافركامب اقوي حماية المانية بالكويت مع سماكة تصل الي 9.5 ميكرميلي </h1>
-          </div>
+        <div class="svc-hero-actions" style="margin-top:28px;">
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+            style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            واتساب
+          </a>
         </div>
       </div>
-    </section>
-    <!-- end hero -->
-    <!-- start specifications -->
-    <div class="specifications" id="specifications">
-      <div class="center-text">
-        <h2 class="heading-secondary">خصائص الحماية</h2>
+
+      <div class="svc-hero-logo-panel glass">
+        <img src="assets/services/haverkamp/haverkamp.png" alt="هافركامب — الحماية الألمانية" class="hero-brand-logo" style="mix-blend-mode: multiply;" />
+        <div class="hero-brand-badge">
+          <span class="flag">🇩🇪</span>
+          صناعة ألمانية
+        </div>
+        <p class="hero-brand-subtitle">حمايات ألمانية متقدمة لأعلى معايير الجودة</p>
       </div>
-      <div class="container">
-        <div class="box">
-          <div class="img"><img src="./img/haverkamp/ppf-heat.png" alt=""></div>
-          <div class="box-text">
-            <h3>المعالجة الذاتية</h3>
-            <p>
-              المعالجة الذاتية تعمل على اعادة طبقة الحماية الى حالتها الاصلية
-              عند تعرضها لحرارة مثل الشمس او مجفف الشعر
-            </p>
-          </div>
+    </div>
+
+    <!-- ═══════════════ ABOUT ═══════════════ -->
+    <div id="about" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">ABOUT — نبذة عن هافركامب</div>
+        <h2>جودة ألمانية بمعايير عالمية</h2>
+        <p>هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
+      </div>
+      <div class="about-block">
+        <div class="about-text glass" style="padding: 32px 36px; border-radius: var(--r-xl);">
+          <p>هافركامب (Haverkamp) شركة ألمانية متخصصة في تطوير وتصنيع أفلام الحماية منذ أكثر من أربعة عقود. تُعدّ من أوائل الشركات التي أدخلت تقنية المعالجة الذاتية لأفلام الحماية الشفافة، مما يجعلها الخيار الأمثل لمن يريد حماية فعلية وطويلة الأمد لسيارته.</p>
+          <br>
+          <p>نحن الوكيل الحصري لهافركامب في الشرق الأوسط، ونضمن لك الحصول على منتج أصلي 100% مع تركيب احترافي في بيئة مُعقّمة وكفالة كاملة.</p>
         </div>
-        <div class="box">
-          <div class="img"><img src="./img/haverkamp/ppf-shi.png" alt=""></div>
-          <div class="box-text">
-            <h3>لمعة اضافية</h3>
-            <p>
-              احصل على لعمة اضافية تصل الى 70% اضافية على لعمة السيارة بعد
-              التركيب
-            </p>
+        <div class="about-stat-row">
+          <div class="about-stat glass">
+            <div class="about-stat-num">+40</div>
+            <div class="about-stat-label">عامًا من التميز والخبرة في صناعة أفلام الحماية الألمانية</div>
           </div>
-        </div>
-        <div class="box">
-          <div class="img"><img src="./img/haverkamp/ppf-nano.png" alt=""></div>
-          <div class="box-text">
-            <h3>تقنية النانو سيراميك</h3>
-            <p>
-              مدمجة مع الحماية حيث تعمل على اضافة حماية اضافية لطبقة الحماية
-              تعمل على مقاومة الاصفرار
-            </p>
+          <div class="about-stat glass">
+            <div class="about-stat-num">9.5μ</div>
+            <div class="about-stat-label">سمك الحماية بتقنية ألمانية متقدمة لأقصى حماية ممكنة</div>
+          </div>
+          <div class="about-stat glass">
+            <div class="about-stat-num">10 سنوات</div>
+            <div class="about-stat-label">كفالة على عيوب التركيب لراحة البال الكاملة</div>
           </div>
         </div>
       </div>
     </div>
-    <!-- end specifications -->
-    <!-- start tint number -->
-    <div class="tint-number" id="tint-number">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          تعرف على باقات الحماية المتوفرة لدين</h2>
+
+    <!-- ═══════════════ SPECS ═══════════════ -->
+    <div id="specs" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">SPECS — المواصفات التقنية</div>
+        <h2>مواصفات هافركامب الألمانية</h2>
       </div>
-      <div class="tint-number-container">
-        <div class="container">
-          <div class="flip">
-            <div class="front" style="background-image: url(./img/haverkamp/ppf-silver.png)"></div>
-            <div class="back">
-              <h2>الباقة الفضية</h2>
-            </div>
+      <div class="specs-grid">
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/>
+            </svg>
           </div>
-          <div class="flip">
-            <div class="front" style="background-image: url(./img/haverkamp/ppf-goald.png)"></div>
-            <div class="back">
-              <h2>الباقة الذهبية</h2>
-            </div>
-          </div>
-          <div class="flip">
-            <div class="front" style="background-image: url(./img/haverkamp/ppf-platinum.png)"></div>
-            <div class="back">
-              <h2>الباقة البلاتينية</h2>
-            </div>
-          </div>
+          <div class="spec-value">9.5μ</div>
+          <div class="spec-label">السمك 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى</div>
         </div>
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="spec-value">10 سنوات</div>
+          <div class="spec-label">كفالة 10 سنوات ضد عيوب التركيب — أطول كفالة في السوق</div>
+        </div>
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+            </svg>
+          </div>
+          <div class="spec-value">Self‑Heal</div>
+          <div class="spec-label">معالجة ذاتية — تختفي الخدوش الدقيقة بالحرارة تلقائيًا</div>
+        </div>
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+            </svg>
+          </div>
+          <div class="spec-value">+70%</div>
+          <div class="spec-label">لمعة إضافية — تصل إلى 70% فوق لمعة السيارة الأصلية</div>
+        </div>
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="spec-value">كل 6 أشهر</div>
+          <div class="spec-label">سيرفس دوري مجاني — فحص الحماية كل 6 أشهر للحفاظ على الكفالة</div>
+        </div>
+
+        <div class="spec-card glass">
+          <div class="spec-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div class="spec-value">100%</div>
+          <div class="spec-label">منتج أصلي معتمد من المصنع — وكيل حصري في الشرق الأوسط</div>
+        </div>
+
       </div>
     </div>
-    <!-- end tint number -->
-    <!-- Start Pricing -->
-    <div class="pricing" id="pricing">
-      <div class="dots dots-up"></div>
-      <div class="dots dots-down"></div>
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          الاسعار</h2>
+
+    <!-- ═══════════════ GALLERY ═══════════════ -->
+    <div class="svc-sec" id="gallery" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">GALLERY — معرض الأعمال</div>
+        <h2>من أعمالنا مع هافركامب</h2>
+        <p>نماذج حقيقية من تركيبات حماية هافركامب الألمانية في الكويت.</p>
       </div>
-      <div class="container">
-        <div class="box popular">
-          <div class="label">الاكثر مبيعا</div>
-          <div class="title">بلاتينية</div>
-          <div class="price">
-            <span class="amount">580 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
+      <div class="bento-grid">
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g1.webp" alt="تركيب حماية هافركامب — بدي كامل" loading="lazy" />
+        </div>
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g2.webp" alt="حماية هافركامب — مقدمة السيارة" loading="lazy" />
+        </div>
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g3.webp" alt="حماية هافركامب — جانب السيارة" loading="lazy" />
+        </div>
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g4.webp" alt="حماية هافركامب — الكبوت" loading="lazy" />
+        </div>
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g5.webp" alt="حماية هافركامب — تفاصيل التركيب" loading="lazy" />
+        </div>
+
+        <div class="bento-item glass" onclick="openLb(this)">
+          <img src="assets/services/haverkamp/gallery/g6.webp" alt="حماية هافركامب — نتيجة نهائية" loading="lazy" />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lb-overlay" id="lb" onclick="closeLb(event)">
+      <div class="lb-img-wrap">
+        <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
+        <img id="lb-img" src="" alt="" />
+      </div>
+    </div>
+
+    <!-- ═══════════════ PACKAGES ═══════════════ -->
+    <div class="svc-sec" id="packages" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">PACKAGES — الباقات والأسعار</div>
+        <h2>الأسعار</h2>
+        <p>اختر الباقة المناسبة لسيارتك — السعر متغير حسب نوع السيارة.</p>
+      </div>
+      <div class="packages-grid">
+
+        <!-- بلاتينية -->
+        <div class="pkg-card glass pkg-card--platinum">
+          <div class="pkg-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            الأكثر مبيعًا
           </div>
-          <ul>
-            <li>حماية بدى كامل</li>
-            <li>عازل حراري شامل جميع زجاج السيارة</li>
-            <li>حماية الجام الامامي</li>
-            <li>عمل نانو للمقاعد</li>
-            <li>عمل نانو للرنجات</li>
-            <li>تلبيس دواسات</li>
-            <li>تعقيم عدد 2 سيارة</li>
-            <li>خدمة الونش متوفرة لمرة واحدة</li>
+          <div class="pkg-tier">PLATINUM</div>
+          <div class="pkg-name">البلاتينية</div>
+          <div class="pkg-price">580 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
+          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li><span class="check">✓</span>حماية بدي كامل</li>
+            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
+            <li><span class="check">✓</span>حماية الجام الأمامي</li>
+            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
+            <li><span class="check">✓</span>عمل نانو للرنجات</li>
+            <li><span class="check">✓</span>تلبيس دواسات</li>
+            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
+            <li><span class="check">✓</span>خدمة الونش متوفرة لمرة واحدة</li>
           </ul>
+          <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%A8%D9%84%D8%A7%D8%AA%D9%8A%D9%86%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
+            target="_blank" rel="noopener" class="pkg-wa-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            اطلب عبر واتساب
+          </a>
         </div>
-        <div class="box">
-          <div class="title">ذهبية</div>
-          <div class="price">
-            <span class="amount">320 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
-          </div>
-          <ul>
-            <li>حماية كبوت كامل</li>
-            <li>عازل حراري شامل جميع زجاج السيارة</li>
-            <li>حماية الجام الامامي</li>
-            <li>عمل نانو للمقاعد</li>
-            <li>عمل نانو للرنجات</li>
-            <li>تعقيم عدد 2 سيارة</li>
+
+        <!-- ذهبية -->
+        <div class="pkg-card glass">
+          <div class="pkg-tier">GOLD</div>
+          <div class="pkg-name">الذهبية</div>
+          <div class="pkg-price">320 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
+          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li><span class="check">✓</span>حماية كبوت كامل</li>
+            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
+            <li><span class="check">✓</span>حماية الجام الأمامي</li>
+            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
+            <li><span class="check">✓</span>عمل نانو للرنجات</li>
+            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
           </ul>
+          <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%B0%D9%87%D8%A8%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
+            target="_blank" rel="noopener" class="pkg-wa-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            اطلب عبر واتساب
+          </a>
         </div>
-        <div class="box">
-          <div class="title">فضية</div>
-          <div class="price">
-            <span class="amount">230 K.D</span>
-            <span class="time">السعر متغير حسب نوع السيارة</span>
-          </div>
-          <ul>
-            <li>حماية نص كبوت</li>
-            <li>عازل حراري شامل جميع زجاج السيارة</li>
-            <li>حماية الجام الامامي</li>
-            <li>عمل نانو للمقاعد</li>
-            <li>عمل نانو للرنجات</li>
-            <li>تعقيم عدد 2 سيارة</li>
+
+        <!-- فضية -->
+        <div class="pkg-card glass">
+          <div class="pkg-tier">SILVER</div>
+          <div class="pkg-name">الفضية</div>
+          <div class="pkg-price">230 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
+          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-divider"></div>
+          <ul class="pkg-features">
+            <li><span class="check">✓</span>حماية نص كبوت</li>
+            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
+            <li><span class="check">✓</span>حماية الجام الأمامي</li>
+            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
+            <li><span class="check">✓</span>عمل نانو للرنجات</li>
+            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
           </ul>
+          <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D9%81%D8%B6%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
+            target="_blank" rel="noopener" class="pkg-wa-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            اطلب عبر واتساب
+          </a>
         </div>
+
       </div>
     </div>
-    <!-- End Pricing -->
-    <!-- start gallery -->
-    <section class="gallery" id="gallery">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          معرض الصور</h2>
-      </div>
-      <div class="carosel">
-        <div class=" list">
-          <div class="item">
-            <img src="./img/gallery/protication/pro-1.webp" alt="اقوي حماية المانية بالكويت كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/protication/pro-2.webp" alt="اقوي حماية كورية بالكويت كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/protication/pro-3.webp" alt="اقوي حماية امريكية بالكويت كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/protication/pro-4.webp" alt="افضل حماية المانية بالكويت كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/protication/pro-5.webp" alt="افضل حماية كورية بالكويت كفالة 10 سنوات ">
-          </div>
-          <div class="item">
-            <img src="./img/gallery/protication/pro-6.webp" alt="افضل حماية امريكية بالكويت كفالة 10 سنوات ">
-          </div>
 
-        </div>
-        <!--button prev and next-->
-        <div class="buttons">
-          <button id="prev">
-            &lt; </button>
-          <button id="next">></button>
-        </div>
-        <!--Dots (if 6 items => 6 dots)-->
-        <ul class="dots">
-          <li class="active"></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
+    <!-- ═══════════════ FAQ ═══════════════ -->
+    <div id="faq" class="svc-sec" style="padding-top:0;">
+      <div class="svc-sec-head">
+        <div class="tag">FAQ — أسئلة شائعة</div>
+        <h2>كل ما تحتاج معرفته عن هافركامب</h2>
       </div>
-    </section>
-    <!-- end gallery -->
-    <!-- Start Testimonials -->
-    <div class="testimonials" id="testimonials">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          اراءالعملاء</h2>
-      </div>
-      <div class="container">
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>عمر السعدون</h3>
-          <span class="title">تويوتا لاندكروزر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>مشكورين الاخ بيتر ومبارك خدمة ممتازة و سعر يستحق الخدمة المقدمة</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>لطيقة الياسين</h3>
-          <span class="title">رانج روفر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>صراحة اول مرة اجرب شغلكم وباذن الله راح اقترح اسم محلكم لاهلنا</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3>خالد الفيلكاوي</h3>
-          <span class="title">بي ام دابليو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>يعطيكم العافية شغل مميز والله يبارك لكم فى حلالكم</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>ابراهيم القحطاني</h3>
-          <span class="title">لكزيس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            شكرا على حسن التعامل والاستقبال الطيب المكان حيل مرتب مو اول سيارة
-            اعملها عندكم باذن الله اصير زبون دائم
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>مريم الانبعي</h3>
-          <span class="title">جيلى مانجارو</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>الحلو ان المحل كبير وفية استراحة منفصلة للعوائل</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>اسامة العميري</h3>
-          <span class="title">دودج رام تي ار اكس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            قسم الاكسسوارات ممتاز واشتريت شاحن التليفون و دقمة حزام الامان
-            واشتراك للسيارة
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-1.png" alt="avatar-1" />
-          <h3>ناصر المطيري</h3>
-          <span class="title">جينيسيس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>يا ليت لو تفتحتون فرع فى المنطقة العاشرة</p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/female-3.png" alt="avatar-1" />
-          <h3>مني الدويسان</h3>
-          <span class="title">ديفندر</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            يعطيكم العافية شغل ممتاز <br />استقبال وتعامل راقي الله يباركلك فى
-            حلالكم
-          </p>
-        </div>
-        <div class="box">
-          <img src="./img/testimonials/male-2.png" alt="avatar-1" />
-          <h3>فهد السهلي</h3>
-          <span class="title">مرسيدس</span>
-          <div class="rate">
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-            <i class="filled fas fa-star"></i>
-          </div>
-          <p>
-            سويت حماية مطفية لسياراتي شغل ممتاز واسعار جيدة بالنسبة لباقى
-            الشركات مشكورين على التعامل الراقي وحسن الاستقبال
-          </p>
-        </div>
+      <div class="svc-faq">
+
+        <details class="faq-item glass">
+          <summary>
+            ما هو سمك حماية هافركامب؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">سمك حماية هافركامب 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى والصخر المتطاير على الطريق.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما هي مدة الكفالة؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">10 سنوات على عيوب التركيب — من أطول الكفالات المتاحة في السوق الكويتي، مما يعكس ثقة هافركامب في جودة منتجها.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            هل تتوفر خاصية المعالجة الذاتية؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">نعم، حماية هافركامب تتميز بتقنية المعالجة الذاتية؛ الخدوش الدقيقة تختفي تلقائيًا عند تعريضها للحرارة (الشمس أو مجفف شعر).</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما نسبة اللمعة الإضافية؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">تضيف الحماية الشفافة من هافركامب ما يصل إلى 70% لمعة إضافية فوق لمعة السيارة الأصلية، مما يجعل بدي سيارتك يبدو أكثر إشراقًا من يوم شرائها.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            ما هو السيرفس الدوري؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">كل 6 أشهر نجري فحصًا مجانيًا للحماية للتأكد من سلامة التركيب وحفظ الكفالة، وتقديم أي صيانة وقائية عند الحاجة.</div>
+        </details>
+
+        <details class="faq-item glass">
+          <summary>
+            هل هافركامب معتمدة في الكويت؟
+            <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
+          </summary>
+          <div class="answer">نعم، نحن الوكيل الحصري لهافركامب في الشرق الأوسط، وجميع منتجاتنا أصلية 100% مستوردة مباشرة من المصنع في ألمانيا.</div>
+        </details>
+
       </div>
     </div>
-    <!-- End Testimonials -->
 
-    <!-- start faq -->
-    <div class="faq" id="faq">
-      <div class="center-text">
-        <h2 class="heading-secondary">
-          الاسئلةالشائعة</h2>
-      </div>
-      <div class="container">
-        <section class="working-process my-5">
-          <div class="container">
-            <div class="row">
-              <div class="row d-flex flex-nowrap flex-row">
-              </div>
-            </div>
-            <div class="row">
-              <div class="accordion mt-5" id="accordionExample">
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingOne">
-                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                      <span class="accordian-numbers">01</span> ما هو سمك الحماية
-                    </button>
-                  </h2>
-                  <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      سمك الحماية 9.5 ميكروميلى
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingTwo">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                      <span class="accordian-numbers">02</span> مدة الكفالة
-                    </button>
-                  </h2>
-                  <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      10 سنوات علي عيوب التركيب
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingThree">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                      <span class="accordian-numbers">03</span> طريقة التركيب
-                    </button>
-                  </h2>
-                  <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      قص احترافي وقطع كاملة بدون وصلات وتركيب داخلي
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFour">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                      <span class="accordian-numbers">04</span> المعالجة الذاتية
-                    </button>
-                  </h2>
-                  <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      تحتوي الحماية علي خاصية المعالجة الذاتية عن طريق تعريضها الي الحرارة
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingFive">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                      <span class="accordian-numbers">05</span> نسبة اللمعة الاضافية
-                    </button>
-                  </h2>
-                  <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      تصل اللمعة الاضافيةالي 70٪
-                    </div>
-                  </div>
-                </div>
-                <div class="accordion-item mb-4">
-                  <h2 class="accordion-header" id="headingSix">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
-                      <span class="accordian-numbers">06</span> هل يوجد سيرفس دوري
-                    </button>
-                  </h2>
-                  <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix"
-                    data-bs-parent="#accordionExample">
-                    <div class="accordion-body">
-                      نعم يوجد سيرفس دوري لفحص الحماية كل 6 اشهر مجانا
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+    <!-- ═══════════════ CTA ═══════════════ -->
+    <div class="svc-cta glass">
+      <h2>اطلب حماية هافركامب الألمانية</h2>
+      <p>تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</p>
+      <div class="svc-cta-btns">
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">تواصل معنا</a>
+        <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
+          style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          راسلنا على واتساب
+        </a>
       </div>
     </div>
-    <!-- end faq -->
-    <section class="section-cta" id="cta">
-      <div class="container">
-        <div class="cta">
-          <div class="cta-text-box">
-            <h2 class="heading-secondary">احمي سيارتك الان
-            </h2>
-            <p class="cta-text">
-              نقدم لكم أفضل حماية للسيارات باستخدام أحدث التقنيات والمواد عالية الجودة</p>
 
-            <form class="cta-form" name="sign-up" action="https://formsubmit.co/ef7d656274c363dc9eb3ce5c5ff03525"
-              method="post">
-              <div>
-                <label for="full-name">الاسم بالكامل </label>
-                <input id="full-name" type="text" placeholder=" من فضلك اكتب اسمك" name="full-name" required
-                  autocomplete="given-name" />
-              </div>
-
-              <div>
-                <label for="email">البريد الالكتروني </label>
-                <input id="email" type="email" placeholder="من فضلك ادخل بريدك الالكتروني" name="email" required
-                  autocomplete="off" />
-              </div>
-
-              <div>
-                <label for="message">اترك رسالتك</label>
-                <textarea name="message" id="message" placeholder="اترك رسالتك هنا " autocomplete="off"></textarea>
-                </select>
-              </div>
-
-              <button class="btn btn--form">ارسل الان </button>
-            </form>
-          </div>
-          <div class="cta-img-box" role="img" aria-label="child win"></div>
+    <!-- FOOTER -->
+    <footer class="footer" style="padding: 32px 0;">
+      <div class="footer-row">
+        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="links">
+          <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
+          <a href="terms.html">الشروط</a>
+          <a href="index.html">الرئيسية</a>
         </div>
       </div>
-    </section>
+    </footer>
+
   </main>
-  <!-- start footer -->
-  <div class="footer" id="contacts-us">
-    <div class="container">
-      <div class="box">
-        <h3>هافركامب</h3>
-        <!-- <ul class="social">
-            <li>
-              <a href="tel:51111154" class="phone">
-                <i class="fa-solid fa-mobile-screen-button fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://wa.me/96551111154" target="_blank" class="whatsapp">
-                <i class="fab fa-whatsapp fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/haverkampkw/" target="_blank" class="instagram">
-                <i class="fab fa-instagram fa-2x"></i>
-              </a>
-            </li>
-            <li>
-              <a href="https://www.snapchat.com/add/haverkampkw" target="_blank" class="snapchat">
-                <i class="fab fa-snapchat fa-2x"></i>
-              </a>
-            </li>
-          </ul>
-          -->
-        <p class="text"> الوكيل الحصري لحماية هافركامب الالمانية في الشرق الاوسط <br> الوكيل الحصري لحماية كلايف ديزاين
-          الكورية</p>
 
-      </div>
-
-      <div class="box">
-        <div class="line">
-          <i class="fa-solid fa-house fa-2x"></i>
-          <div class="info">الري- قطعة 1- شارع 19</div>
-        </div>
-        <div class="line">
-          <i class="far fa-clock fa-fw"></i>
-          <div class="info">
-            ساعات العمل <br />
-            السبت الى الخميس <br />
-            10 صباحا الى 8 مساء
-          </div>
-        </div>
-      </div>
-      <div class="box map">
-        <iframe
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw"
-          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>
-    <p class="copyright">
-      جميع الحقوق محفوظة لشركة هافركامب &copy; <span class="year">2027</span>
-    </p>
-  </div>
-  <!-- <div class="designer">
-      <p class="copyright">Made With &#10084; By a7med206</p>
-      <ul class="social-a7med">
-        <li>
-          <a href="tel:65811402" class="phone">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://wa.me/96565811402" target="_blank" class="whatsapp">
-            <i class="fab fa-whatsapp fa-2x"></i>
-          </a>
-        </li>
-        <li>
-          <a href="https://www.instagram.com/a7med206/" target="_blank" class="instagram">
-            <i class="fab fa-instagram fa-2x"></i>
-          </a>
-        </li>
-      </ul>
-  
-    </div> -->
-  <!-- End Footer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.min.js"></script>
-  <script src="./js/slider.js"></script>
+  <script src="js/whatsapp-float.js"></script>
+  <script src="js/lightbox.js"></script>
 </body>
 
 </html>

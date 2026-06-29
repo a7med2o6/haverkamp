@@ -48,25 +48,6 @@
       padding-top: 80px;
     }
 
-    .svc-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--ink-1);
-      text-decoration: none;
-      font-size: 14px;
-      margin: 28px 0 0;
-      padding: 8px 14px;
-      border-radius: var(--r-pill);
-      background: var(--glass-tint);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      border: 1px solid var(--glass-border);
-      transition: all .25s;
-    }
-
-    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
-
     /* ── Hero ── */
     .svc-hero {
       display: grid;
@@ -612,144 +593,140 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#packages">الباقات والأسعار</a>
-        <a href="#features">لماذا نحن</a>
-        <a href="#gallery">معرض الصور</a>
-        <a href="#reviews">آراء العملاء</a>
-        <a href="terms.html">البنود والشروط</a>
+        <a href="#packages" data-i18n="wash.nav.packages">الباقات والأسعار</a>
+        <a href="#features" data-i18n="wash.nav.why">لماذا نحن</a>
+        <a href="#gallery" data-i18n="nav.gallery">معرض الصور</a>
+        <a href="#reviews" data-i18n="wash.nav.reviews">آراء العملاء</a>
+        <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
       </div>
-      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
-    </nav>
+      <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="svc-page">
 
-    <a href="index.html" class="svc-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-      الرئيسية
-    </a>
-
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="svc-hero">
       <div class="svc-hero-text">
-        <div class="tag">CAR WASH — غسيل السيارات</div>
-        <h1>نجي إليك <span class="em">أينما كنت</span></h1>
-        <p class="subtitle">أفضل خدمة غسيل سيارات في الكويت — خارجي وداخلي ومتكامل</p>
-        <p>نقدم خدمة غسيل سيارات احترافية بدون خدوش تشمل الخارجي والداخلي والتعقيم — بمواد معتمدة آمنة على الطلاء مع اهتمام بأدق التفاصيل. خدمة متنقلة نحضر إليك أينما كنت.</p>
+        <div class="tag" data-i18n="wash.hero.tag">CAR WASH — غسيل السيارات</div>
+        <h1 data-i18n="wash.hero.h1">نجي إليك <span class="em">أينما كنت</span></h1>
+        <p class="subtitle" data-i18n="wash.hero.sub">أفضل خدمة غسيل سيارات في الكويت — خارجي وداخلي ومتكامل</p>
+        <p data-i18n="wash.hero.p">نقدم خدمة غسيل سيارات احترافية بدون خدوش تشمل الخارجي والداخلي والتعقيم — بمواد معتمدة آمنة على الطلاء مع اهتمام بأدق التفاصيل. خدمة متنقلة نحضر إليك أينما كنت.</p>
 
         <div class="trust-badges">
-          <span class="trust-badge"><span class="tb-icon">🚗</span> خدمة متنقلة نحضر إليك</span>
-          <span class="trust-badge"><span class="tb-icon">✨</span> غسيل بدون خدوش</span>
-          <span class="trust-badge"><span class="tb-icon">🧴</span> مواد آمنة ومعتمدة</span>
+          <span class="trust-badge"><span class="tb-icon">🚗</span> <span data-i18n="wash.tb1">خدمة متنقلة نحضر إليك</span></span>
+          <span class="trust-badge"><span class="tb-icon">✨</span> <span data-i18n="wash.tb2">غسيل بدون خدوش</span></span>
+          <span class="trust-badge"><span class="tb-icon">🧴</span> <span data-i18n="wash.tb3">مواد آمنة ومعتمدة</span></span>
         </div>
 
         <div class="svc-hero-actions" style="margin-top:28px;">
-          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
           <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
             style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            واتساب
+            <span data-i18n="svc.btn.wa">واتساب</span>
           </a>
         </div>
       </div>
 
       <div class="svc-hero-img glass">
-        <img src="assets/services/wash/wash-hero.png" alt="غسيل السيارات الاحترافي — هافركامب" />
+        <img loading="lazy" src="assets/services/wash/wash-hero.png" alt="غسيل السيارات الاحترافي — هافركامب" />
       </div>
     </div>
 
     <!-- ═══════════════ PACKAGES ═══════════════ -->
     <div id="packages" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">PACKAGES — الباقات والأسعار</div>
-        <h2>اختر الباقة المناسبة لسيارتك</h2>
-        <p>ثلاث باقات مصممة لتلبية كل الاحتياجات — من الغسيل السريع إلى التنظيف الشامل المتكامل. السعر يختلف حسب نوع السيارة.</p>
+        <div class="tag" data-i18n="wash.pkg.tag">PACKAGES — الباقات والأسعار</div>
+        <h2 data-i18n="wash.pkg.h2">اختر الباقة المناسبة لسيارتك</h2>
+        <p data-i18n="wash.pkg.p">ثلاث باقات مصممة لتلبية كل الاحتياجات — من الغسيل السريع إلى التنظيف الشامل المتكامل. السعر يختلف حسب نوع السيارة.</p>
       </div>
 
       <div class="packages-grid">
 
         <!-- VIP -->
         <div class="pkg-card glass featured">
-          <div class="pkg-badge">الأكثر شمولاً</div>
+          <div class="pkg-badge" data-i18n="wash.pkg1.badge">الأكثر شمولاً</div>
           <div class="pkg-header">
-            <div class="pkg-name">VIP</div>
-            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+            <div class="pkg-name" data-i18n="wash.pkg1.name">VIP</div>
+            <div class="pkg-note" data-i18n="wash.pkg1.note">السعر يختلف حسب نوع السيارة</div>
           </div>
           <div class="pkg-price">
             <span class="amount">25</span>
-            <span class="currency">د.ك يبدأ من</span>
+            <span class="currency" data-i18n="wash.pkg.from">د.ك يبدأ من</span>
           </div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li>تنظيف المقاعد والمفروشات من الغبار والبقع</li>
-            <li>غسيل الأرضيات والسقف</li>
-            <li>تنظيف سجادة الدواسات</li>
-            <li>تلميع لوحة التحكم بمواد ألمانية</li>
-            <li>تلميع الكاوتش بمواد ألمانية</li>
-            <li>تنظيف فتحات التهوية</li>
-            <li>تنظيف الرمز (الجنوط)</li>
-            <li>وكس الكار</li>
-            <li>تعقيم السيارة</li>
-            <li>عمل فومشين</li>
-            <li>تعطير السيارة</li>
-            <li>نايلون حماية للكراسي والأرضيات</li>
+            <li data-i18n="wash.f.seats.vip">تنظيف المقاعد والمفروشات من الغبار والبقع</li>
+            <li data-i18n="wash.f.floors">غسيل الأرضيات والسقف</li>
+            <li data-i18n="wash.f.mat">تنظيف سجادة الدواسات</li>
+            <li data-i18n="wash.f.dash">تلميع لوحة التحكم بمواد ألمانية</li>
+            <li data-i18n="wash.f.tire">تلميع الكاوتش بمواد ألمانية</li>
+            <li data-i18n="wash.f.vents">تنظيف فتحات التهوية</li>
+            <li data-i18n="wash.f.rims">تنظيف الرمز (الجنوط)</li>
+            <li data-i18n="wash.f.wax">وكس الكار</li>
+            <li data-i18n="wash.f.san">تعقيم السيارة</li>
+            <li data-i18n="wash.f.foam">عمل فومشين</li>
+            <li data-i18n="wash.f.frag">تعطير السيارة</li>
+            <li data-i18n="wash.f.nylon.vip">نايلون حماية للكراسي والأرضيات</li>
           </ul>
-          <a href="contactus.html" class="pkg-cta pkg-cta-primary">احجز الباقة VIP</a>
+          <a href="contactus.html" class="pkg-cta pkg-cta-primary" data-i18n="wash.pkg1.cta">احجز الباقة VIP</a>
         </div>
 
         <!-- Gold -->
         <div class="pkg-card glass">
           <div class="pkg-header">
-            <div class="pkg-name">ذهبية</div>
-            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+            <div class="pkg-name" data-i18n="wash.pkg2.name">ذهبية</div>
+            <div class="pkg-note" data-i18n="wash.pkg1.note">السعر يختلف حسب نوع السيارة</div>
           </div>
           <div class="pkg-price">
             <span class="amount">15</span>
-            <span class="currency">د.ك يبدأ من</span>
+            <span class="currency" data-i18n="wash.pkg.from">د.ك يبدأ من</span>
           </div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li>تنظيف المقاعد والمفروشات</li>
-            <li>غسيل الأرضيات والسقف</li>
-            <li>تنظيف سجادة الدواسات</li>
-            <li>تنظيف فتحات التهوية</li>
-            <li>تنظيف الرمز (الجنوط)</li>
-            <li>وكس الكار</li>
-            <li>تعقيم السيارة وعمل فومشين</li>
-            <li>تعطير السيارة</li>
-            <li>نايلون حماية</li>
+            <li data-i18n="wash.f.seats">تنظيف المقاعد والمفروشات</li>
+            <li data-i18n="wash.f.floors">غسيل الأرضيات والسقف</li>
+            <li data-i18n="wash.f.mat">تنظيف سجادة الدواسات</li>
+            <li data-i18n="wash.f.vents">تنظيف فتحات التهوية</li>
+            <li data-i18n="wash.f.rims">تنظيف الرمز (الجنوط)</li>
+            <li data-i18n="wash.f.wax">وكس الكار</li>
+            <li data-i18n="wash.f.san.combo">تعقيم السيارة وعمل فومشين</li>
+            <li data-i18n="wash.f.frag">تعطير السيارة</li>
+            <li data-i18n="wash.f.nylon">نايلون حماية</li>
           </ul>
-          <a href="contactus.html" class="pkg-cta pkg-cta-glass">احجز الباقة الذهبية</a>
+          <a href="contactus.html" class="pkg-cta pkg-cta-glass" data-i18n="wash.pkg2.cta">احجز الباقة الذهبية</a>
         </div>
 
         <!-- Silver -->
         <div class="pkg-card glass">
           <div class="pkg-header">
-            <div class="pkg-name">فضية</div>
-            <div class="pkg-note">السعر يختلف حسب نوع السيارة</div>
+            <div class="pkg-name" data-i18n="wash.pkg3.name">فضية</div>
+            <div class="pkg-note" data-i18n="wash.pkg1.note">السعر يختلف حسب نوع السيارة</div>
           </div>
           <div class="pkg-price">
             <span class="amount">8</span>
-            <span class="currency">د.ك يبدأ من</span>
+            <span class="currency" data-i18n="wash.pkg.from">د.ك يبدأ من</span>
           </div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li>تنظيف المقاعد والمفروشات</li>
-            <li>غسيل الأرضيات والسقف</li>
-            <li>تنظيف سجادة الدواسات</li>
-            <li>تنظيف فتحات التهوية</li>
-            <li>تنظيف الرمز (الجنوط)</li>
-            <li>تعقيم وفومشين وتعطير</li>
-            <li>نايلون حماية</li>
+            <li data-i18n="wash.f.seats">تنظيف المقاعد والمفروشات</li>
+            <li data-i18n="wash.f.floors">غسيل الأرضيات والسقف</li>
+            <li data-i18n="wash.f.mat">تنظيف سجادة الدواسات</li>
+            <li data-i18n="wash.f.vents">تنظيف فتحات التهوية</li>
+            <li data-i18n="wash.f.rims">تنظيف الرمز (الجنوط)</li>
+            <li data-i18n="wash.f.all.combo">تعقيم وفومشين وتعطير</li>
+            <li data-i18n="wash.f.nylon">نايلون حماية</li>
           </ul>
-          <a href="contactus.html" class="pkg-cta pkg-cta-glass">احجز الباقة الفضية</a>
+          <a href="contactus.html" class="pkg-cta pkg-cta-glass" data-i18n="wash.pkg3.cta">احجز الباقة الفضية</a>
         </div>
 
       </div>
@@ -758,9 +735,9 @@
     <!-- ═══════════════ FEATURES ═══════════════ -->
     <div id="features" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">WHY US — لماذا تختار هافركامب</div>
-        <h2>غسيل احترافي بدون مجهود منك</h2>
-        <p>لسنا مجرد خدمة غسيل عادية — نحن نحضر إليك بمعدات احترافية ومواد آمنة ونتيجة مضمونة.</p>
+        <div class="tag" data-i18n="wash.why.tag">WHY US — لماذا تختار هافركامب</div>
+        <h2 data-i18n="wash.why.h2">غسيل احترافي بدون مجهود منك</h2>
+        <p data-i18n="wash.why.p">لسنا مجرد خدمة غسيل عادية — نحن نحضر إليك بمعدات احترافية ومواد آمنة ونتيجة مضمونة.</p>
       </div>
       <div class="features-grid">
 
@@ -771,8 +748,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>خدمة متنقلة — نحضر إليك</h3>
-            <p>لا تضيع وقتك في الانتظار بمحطات الغسيل — فريقنا يحضر إليك في البيت أو العمل أو أي مكان تريده ويُنجز المهمة باحترافية.</p>
+            <h3 data-i18n="wash.w1.h3">خدمة متنقلة — نحضر إليك</h3>
+            <p data-i18n="wash.w1.p">لا تضيع وقتك في الانتظار بمحطات الغسيل — فريقنا يحضر إليك في البيت أو العمل أو أي مكان تريده ويُنجز المهمة باحترافية.</p>
           </div>
         </div>
 
@@ -783,8 +760,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>غسيل بدون خدوش</h3>
-            <p>نعتمد أسلوب الغسيل اليدوي مع أدوات متخصصة ومحاليل تنظيف مصممة لحماية الطلاء — نتيجة لامعة دون خدش أو إتلاف.</p>
+            <h3 data-i18n="wash.w2.h3">غسيل بدون خدوش</h3>
+            <p data-i18n="wash.w2.p">نعتمد أسلوب الغسيل اليدوي مع أدوات متخصصة ومحاليل تنظيف مصممة لحماية الطلاء — نتيجة لامعة دون خدش أو إتلاف.</p>
           </div>
         </div>
 
@@ -795,8 +772,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>مواد آمنة ومعتمدة</h3>
-            <p>منتجاتنا مختارة بعناية — خالية من المواد القاسية، آمنة للاستخدام المتكرر، تضمن تنظيفاً فعّالاً مع حفاظ على قيمة ومظهر سيارتك.</p>
+            <h3 data-i18n="wash.w3.h3">مواد آمنة ومعتمدة</h3>
+            <p data-i18n="wash.w3.p">منتجاتنا مختارة بعناية — خالية من المواد القاسية، آمنة للاستخدام المتكرر، تضمن تنظيفاً فعّالاً مع حفاظ على قيمة ومظهر سيارتك.</p>
           </div>
         </div>
 
@@ -807,8 +784,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>فريق متخصص ومدرّب</h3>
-            <p>فريقنا يمتلك الخبرة والمعرفة الدقيقة بأساليب الغسيل الصحيحة لمختلف أنواع السيارات — ينفذ كل مراحل التنظيف باحترافية واهتمام بالتفاصيل.</p>
+            <h3 data-i18n="wash.w4.h3">فريق متخصص ومدرّب</h3>
+            <p data-i18n="wash.w4.p">فريقنا يمتلك الخبرة والمعرفة الدقيقة بأساليب الغسيل الصحيحة لمختلف أنواع السيارات — ينفذ كل مراحل التنظيف باحترافية واهتمام بالتفاصيل.</p>
           </div>
         </div>
 
@@ -819,8 +796,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>سرعة في الإنجاز ونتيجة واضحة</h3>
-            <p>نُنجز العمل بسرعة دون التنازل عن الجودة — تستلم سيارتك نظيفة لامعة من الخارج ومرتبة من الداخل في وقت قياسي.</p>
+            <h3 data-i18n="wash.w5.h3">سرعة في الإنجاز ونتيجة واضحة</h3>
+            <p data-i18n="wash.w5.p">نُنجز العمل بسرعة دون التنازل عن الجودة — تستلم سيارتك نظيفة لامعة من الخارج ومرتبة من الداخل في وقت قياسي.</p>
           </div>
         </div>
 
@@ -831,8 +808,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>التزام كامل بمعايير النظافة</h3>
-            <p>نتبع إجراءات شفافة ومراقبة بدقة في كل مرحلة — سيارتك تخرج نظيفة 100% وتلبي توقعاتك بالكامل أو نُعيد العمل.</p>
+            <h3 data-i18n="wash.w6.h3">التزام كامل بمعايير النظافة</h3>
+            <p data-i18n="wash.w6.p">نتبع إجراءات شفافة ومراقبة بدقة في كل مرحلة — سيارتك تخرج نظيفة 100% وتلبي توقعاتك بالكامل أو نُعيد العمل.</p>
           </div>
         </div>
 
@@ -842,9 +819,9 @@
     <!-- ═══════════════ GALLERY ═══════════════ -->
     <div id="gallery" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">GALLERY — معرض الأعمال</div>
-        <h2>من أعمالنا في الغسيل والتنظيف</h2>
-        <p>نماذج حقيقية من جلسات الغسيل والتنظيف الداخلي لدى هافركامب في الكويت.</p>
+        <div class="tag" data-i18n="wash.gal.tag">GALLERY — معرض الأعمال</div>
+        <h2 data-i18n="wash.gal.h2">من أعمالنا في الغسيل والتنظيف</h2>
+        <p data-i18n="wash.gal.p">نماذج حقيقية من جلسات الغسيل والتنظيف الداخلي لدى هافركامب في الكويت.</p>
       </div>
       <div class="bento-grid">
         <div class="bento-item glass" onclick="openLb(this)">
@@ -872,87 +849,87 @@
     <div class="lb-overlay" id="lb" onclick="closeLb(event)">
       <div class="lb-img-wrap">
         <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
-        <img id="lb-img" src="" alt="" />
+        <img loading="lazy" id="lb-img" src="" alt="" />
       </div>
     </div>
 
     <!-- ═══════════════ REVIEWS ═══════════════ -->
     <div id="reviews" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">REVIEWS — آراء العملاء</div>
-        <h2>ماذا يقول عملاؤنا</h2>
-        <p>آراء حقيقية من عملائنا الكرام في الكويت بعد تجربة خدمة الغسيل الاحترافية.</p>
+        <div class="tag" data-i18n="wash.rev.tag">REVIEWS — آراء العملاء</div>
+        <h2 data-i18n="wash.rev.h2">ماذا يقول عملاؤنا</h2>
+        <p data-i18n="wash.rev.p">آراء حقيقية من عملائنا الكرام في الكويت بعد تجربة خدمة الغسيل الاحترافية.</p>
       </div>
       <div class="reviews-grid">
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"خدمة ممتازة واهتمام واضح بالتفاصيل — أول مرة أشوف سيارتي بهالنظافة من الداخل"</p>
+          <p class="review-text" data-i18n="wash.rev.1.t">"خدمة ممتازة واهتمام واضح بالتفاصيل — أول مرة أشوف سيارتي بهالنظافة من الداخل"</p>
           <div class="review-author">
             <div class="review-avatar">👨</div>
             <div>
               <div class="review-name">عمر السعدون</div>
-              <div class="review-car">تويوتا لاند كروزر</div>
+              <div class="review-car" data-i18n="wash.rev.1.car">تويوتا لاند كروزر</div>
             </div>
           </div>
         </div>
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"الغسيل بدون خدوش فاق توقعاتي — واضح الفرق عن محطات الغسيل العادية"</p>
+          <p class="review-text" data-i18n="wash.rev.2.t">"الغسيل بدون خدوش فاق توقعاتي — واضح الفرق عن محطات الغسيل العادية"</p>
           <div class="review-author">
             <div class="review-avatar">👩</div>
             <div>
               <div class="review-name">لطيقة الياسين</div>
-              <div class="review-car">رينج روفر</div>
+              <div class="review-car" data-i18n="wash.rev.2.car">رينج روفر</div>
             </div>
           </div>
         </div>
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"تعامل احترافي وجودة ثابتة في كل مرة — أنصح بيهم بشدة"</p>
+          <p class="review-text" data-i18n="wash.rev.3.t">"تعامل احترافي وجودة ثابتة في كل مرة — أنصح بيهم بشدة"</p>
           <div class="review-author">
             <div class="review-avatar">👨</div>
             <div>
               <div class="review-name">خالد الفلكاوي</div>
-              <div class="review-car">BMW</div>
+              <div class="review-car" data-i18n="wash.rev.3.car">BMW</div>
             </div>
           </div>
         </div>
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"تنظيف داخلي دقيق وإزالة كاملة للروائح — سيارتي مثل الجديدة"</p>
+          <p class="review-text" data-i18n="wash.rev.4.t">"تنظيف داخلي دقيق وإزالة كاملة للروائح — سيارتي مثل الجديدة"</p>
           <div class="review-author">
             <div class="review-avatar">👨</div>
             <div>
               <div class="review-name">إبراهيم القحطاني</div>
-              <div class="review-car">لكزس</div>
+              <div class="review-car" data-i18n="wash.rev.4.car">لكزس</div>
             </div>
           </div>
         </div>
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"منتجات عالية الجودة ما تترك أي أثر — فريق منظم ومحترم"</p>
+          <p class="review-text" data-i18n="wash.rev.5.t">"منتجات عالية الجودة ما تترك أي أثر — فريق منظم ومحترم"</p>
           <div class="review-author">
             <div class="review-avatar">👩</div>
             <div>
               <div class="review-name">مريم العنبي</div>
-              <div class="review-car">جيلي مونجارو</div>
+              <div class="review-car" data-i18n="wash.rev.5.car">جيلي مونجارو</div>
             </div>
           </div>
         </div>
 
         <div class="review-card glass">
           <div class="review-stars">★★★★★</div>
-          <p class="review-text">"جاوا على الموعد بالضبط وسيارتي طلعت بأفضل حالة — يستاهل الاشتراك الشهري"</p>
+          <p class="review-text" data-i18n="wash.rev.6.t">"جاوا على الموعد بالضبط وسيارتي طلعت بأفضل حالة — يستاهل الاشتراك الشهري"</p>
           <div class="review-author">
             <div class="review-avatar">👨</div>
             <div>
               <div class="review-name">فهد السهلي</div>
-              <div class="review-car">مرسيدس</div>
+              <div class="review-car" data-i18n="wash.rev.6.car">مرسيدس</div>
             </div>
           </div>
         </div>
@@ -962,28 +939,28 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="svc-cta glass">
-      <h2>سيارتك تستاهل الأفضل</h2>
-      <p>تواصل معنا الآن لحجز موعد الغسيل — نحضر إليك أينما كنت في الكويت.</p>
+      <h2 data-i18n="wash.cta.h2">سيارتك تستاهل الأفضل</h2>
+      <p data-i18n="wash.cta.p">تواصل معنا الآن لحجز موعد الغسيل — نحضر إليك أينما كنت في الكويت.</p>
       <div class="svc-cta-btns">
-        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
       </div>
     </div>
 
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -991,7 +968,10 @@
   </main>
 
   <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
   <script src="js/lightbox.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

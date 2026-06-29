@@ -174,6 +174,17 @@
     background: #4ade80;
     box-shadow: 0 0 10px #4ade80;
     animation: pulse 2s ease-in-out infinite;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .profile-tag.is-closed .dot {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239,68,68,0.4);
+    animation: none;
+  }
+  .profile-tag.is-closed {
+    background: rgba(239,68,68,0.08);
+    border-color: rgba(239,68,68,0.25);
+    color: var(--ink-1);
   }
   .profile-bio {
     max-width: 580px;
@@ -593,40 +604,43 @@
 <div class="nav-wrap">
   <nav class="nav glass">
     <div class="nav-brand">
-      <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
     </div>
     <div class="nav-links">
-      <a href="index.html">الرئيسية</a>
-      <a href="terms.html">البنود والشروط</a>
+      <a href="index.html" data-i18n="footer.home">الرئيسية</a>
+      <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
     </div>
+    <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
   </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
 </div>
 
 <main class="contact-page" data-screen-label="Contact Page">
 
   <a href="index.html" class="back-link">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-    العودة للرئيسية
+    <span data-i18n="cus.back">العودة للرئيسية</span>
   </a>
 
   <!-- Profile card -->
   <div class="profile-card glass">
     <div class="profile-cover">
-      <img src="assets/cover.jpeg" alt="مقر هافركامب" />
+      <img loading="lazy" src="assets/cover.jpeg" alt="مقر هافركامب" />
     </div>
     <div class="profile-body">
       <div class="profile-avatar-sq">
-        <img src="assets/profile.png" alt="هافركامب" />
+        <img loading="lazy" src="assets/profile.png" alt="هافركامب" />
       </div>
 
       <h1 class="profile-name">هافركامب<span class="verified-badge" title="موثّق"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></span></h1>
 
-      <div class="profile-tag">
-        <span class="dot"></span>
-        جاهزون لاستقبالك
+      <div class="profile-tag" id="profile-status-tag">
+        <span class="dot" id="profile-status-dot"></span>
+        <span id="profile-status-text">جاهزون لاستقبالك</span>
       </div>
 
-      <p class="profile-bio">
+      <p class="profile-bio" data-i18n="cus.bio">
         الوكيل الحصري لحماية <b>هافركامب الألمانية</b> في الشرق الأوسط، و<b>كلايف ديزاين الكورية</b> بالكويت.<br />
         أكثر من ١٥ سنة خبرة في حماية وعناية السيارات الفاخرة.
       </p>
@@ -641,7 +655,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
       </div>
       <div class="tile-body">
-        <div class="tile-label">PHONE — هاتف</div>
+        <div class="tile-label" data-i18n="cus.phone.lbl">PHONE — هاتف</div>
         <div class="tile-value en">+965 5111 1154</div>
       </div>
       <div class="tile-arrow">
@@ -654,7 +668,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
       </div>
       <div class="tile-body">
-        <div class="tile-label">WHATSAPP — رد سريع</div>
+        <div class="tile-label" data-i18n="cus.wa.lbl">WHATSAPP — رد سريع</div>
         <div class="tile-value en">+965 5111 1154</div>
       </div>
       <div class="tile-arrow">
@@ -667,7 +681,7 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"/></svg>
       </div>
       <div class="tile-body">
-        <div class="tile-label">INSTAGRAM — انستجرام</div>
+        <div class="tile-label" data-i18n="cus.ig.lbl">INSTAGRAM — انستجرام</div>
         <div class="tile-value en">@haverkampkw</div>
       </div>
       <div class="tile-arrow">
@@ -680,8 +694,8 @@
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
       </div>
       <div class="tile-body">
-        <div class="tile-label">LOCATION — الموقع</div>
-        <div class="tile-value">الري – قطعة 1 – شارع 19</div>
+        <div class="tile-label" data-i18n="cus.loc.lbl">LOCATION — الموقع</div>
+        <div class="tile-value" data-i18n="cus.loc.val">الري – قطعة 1 – شارع 19</div>
       </div>
       <div class="tile-arrow">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
@@ -696,7 +710,7 @@
         <span class="ico-wrap">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
         </span>
-        ساعات العمل
+        <span data-i18n="cus.hours.h3">ساعات العمل</span>
       </h3>
       <span class="hours-status-badge" id="hours-status">
         <span class="status-dot"></span>
@@ -705,52 +719,52 @@
     </div>
     <div class="hours-list">
       <div class="hours-row" data-day="6">
-        <span class="hours-day"><span class="day-dot"></span>السبت</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.sat">السبت</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row" data-day="0">
-        <span class="hours-day"><span class="day-dot"></span>الأحد</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.sun">الأحد</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row" data-day="1">
-        <span class="hours-day"><span class="day-dot"></span>الإثنين</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.mon">الإثنين</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row" data-day="2">
-        <span class="hours-day"><span class="day-dot"></span>الثلاثاء</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.tue">الثلاثاء</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row" data-day="3">
-        <span class="hours-day"><span class="day-dot"></span>الأربعاء</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.wed">الأربعاء</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row" data-day="4">
-        <span class="hours-day"><span class="day-dot"></span>الخميس</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.thu">الخميس</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
           <span class="hours-time" dir="ltr">8:00 PM — 10:00 AM</span>
         </div>
       </div>
       <div class="hours-row closed" data-day="5">
-        <span class="hours-day"><span class="day-dot"></span>الجمعة</span>
+        <span class="hours-day"><span class="day-dot"></span><span data-i18n="cus.day.fri">الجمعة</span></span>
         <div class="hours-row-right">
-          <span class="today-badge">اليوم</span>
-          <span class="hours-time" style="direction:rtl; unicode-bidi:isolate;">مغلق</span>
+          <span class="today-badge" data-i18n="cus.today">اليوم</span>
+          <span class="hours-time" style="direction:rtl; unicode-bidi:isolate;" data-i18n="cus.closed.day">مغلق</span>
         </div>
       </div>
     </div>
@@ -763,10 +777,10 @@
         <span class="ico-wrap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         </span>
-        موقعنا على الخريطة
+        <span data-i18n="cus.map.h3">موقعنا على الخريطة</span>
       </h3>
       <a href="https://maps.app.goo.gl/jUvgrQSMBKqiScXJA" target="_blank" rel="noopener" class="map-open">
-        فتح في خرائط جوجل
+        <span data-i18n="cus.map.open">فتح في خرائط جوجل</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M7 7h10v10"/></svg>
       </a>
     </div>
@@ -776,12 +790,12 @@
       loading="lazy"
       referrerpolicy="no-referrer-when-downgrade"
       title="موقع هافركامب"></iframe>
-    <div class="map-address">
+    <div class="map-address" data-i18n="cus.map.addr">
       الكويت – الري، قطعة 1، شارع 19
     </div>
   </div>
 
-  <div class="footer-note">
+  <div class="footer-note" data-i18n="footer.copy">
     © ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.
     <span style="margin: 0 10px; opacity:0.3;">|</span>
     <a href="tel:+96551111154" dir="ltr" style="color:inherit; text-decoration:none;">‎+965 5111 1154</a>
@@ -792,33 +806,78 @@
 </main>
 
 <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
+  <script src="js/i18n.js"></script>
 <script>
-  (function () {
+  document.addEventListener('DOMContentLoaded', function () {
     // Kuwait = UTC+3
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuwait' }));
+    const now  = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kuwait' }));
     const day  = now.getDay();   // 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
     const hour = now.getHours();
 
     // Mark today row
-    const rows = document.querySelectorAll('.hours-row');
-    rows.forEach(row => {
-      if (parseInt(row.dataset.day) === day) {
-        row.classList.add('today');
-      }
+    document.querySelectorAll('.hours-row').forEach(function (row) {
+      if (parseInt(row.dataset.day) === day) row.classList.add('today');
     });
 
-    // Open: Sat(6)–Thu(0–4), 10:00–20:00; Fri(5) closed
+    // Open: Sat(6)–Thu(0–4), 10:00–20:00; Fri(5) always closed
     const isOpen = day !== 5 && hour >= 10 && hour < 20;
-    const badge  = document.getElementById('hours-status');
-    const text   = document.getElementById('hours-status-text');
-    if (isOpen) {
-      badge.classList.add('open');
-      text.textContent = 'مفتوح الآن';
-    } else {
-      badge.classList.add('closed');
-      text.textContent = 'مغلق الآن';
+
+    const badge = document.getElementById('hours-status');
+    badge.classList.add(isOpen ? 'open' : 'closed');
+
+    if (!isOpen) {
+      document.getElementById('profile-status-tag').classList.add('is-closed');
     }
-  })();
+
+    function setStatusTexts(lang) {
+      var isEn = lang === 'en';
+      var text       = document.getElementById('hours-status-text');
+      var statusText = document.getElementById('profile-status-text');
+
+      text.textContent = isOpen
+        ? (isEn ? 'Open Now' : 'مفتوح الآن')
+        : (isEn ? 'Closed Now' : 'مغلق الآن');
+
+      if (isOpen) {
+        statusText.textContent = isEn ? 'Ready to welcome you' : 'جاهزون لاستقبالك';
+      } else {
+        var dayNamesAr = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        var dayNamesEn = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        var nextOpen = '';
+        if (day === 5) {
+          nextOpen = isEn ? 'Opens Saturday at 10 AM' : 'يفتح السبت الساعة 10 صباحاً';
+        } else if (hour >= 20) {
+          var nextDay = (day + 1) % 7;
+          if (nextDay === 5) {
+            nextOpen = isEn ? 'Opens Saturday at 10 AM' : 'يفتح السبت الساعة 10 صباحاً';
+          } else {
+            nextOpen = isEn
+              ? 'Opens ' + dayNamesEn[nextDay] + ' at 10 AM'
+              : 'يفتح ' + dayNamesAr[nextDay] + ' الساعة 10 صباحاً';
+          }
+        } else {
+          var remaining = 10 - hour;
+          nextOpen = isEn
+            ? 'Opens in ' + remaining + (remaining === 1 ? ' hour' : ' hours')
+            : 'يفتح بعد ' + remaining + (remaining === 1 ? ' ساعة' : ' ساعات');
+        }
+        statusText.textContent = (isEn ? 'Closed · ' : 'مغلق · ') + nextOpen;
+      }
+    }
+
+    var initLang = localStorage.getItem('hk_lang') || 'ar';
+    setStatusTexts(initLang);
+
+    // Re-run on language switch (fires after i18n.js's applyLang handler)
+    document.querySelectorAll('.lang-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var newLang = document.documentElement.getAttribute('lang') || 'ar';
+        setStatusTexts(newLang);
+      });
+    });
+  });
 </script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

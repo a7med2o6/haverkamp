@@ -48,25 +48,6 @@
       padding-top: 80px;
     }
 
-    .svc-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--ink-1);
-      text-decoration: none;
-      font-size: 14px;
-      margin: 28px 0 0;
-      padding: 8px 14px;
-      border-radius: var(--r-pill);
-      background: var(--glass-tint);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      border: 1px solid var(--glass-border);
-      transition: all .25s;
-    }
-
-    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
-
     /* ── Hero ── */
     .svc-hero {
       display: grid;
@@ -487,94 +468,90 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#steps">خطوات العمل</a>
-        <a href="#features">لماذا نحن</a>
-        <a href="#gallery">معرض الصور</a>
-        <a href="#faq">الأسئلة الشائعة</a>
-        <a href="terms.html">البنود والشروط</a>
+        <a href="#steps" data-i18n="polish.nav.steps">خطوات العمل</a>
+        <a href="#features" data-i18n="polish.nav.why">لماذا نحن</a>
+        <a href="#gallery" data-i18n="nav.gallery">معرض الصور</a>
+        <a href="#faq" data-i18n="ppf.nav.faq">الأسئلة الشائعة</a>
+        <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
       </div>
-      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
-    </nav>
+      <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="svc-page">
 
-    <a href="index.html" class="svc-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-      الرئيسية
-    </a>
-
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="svc-hero">
       <div class="svc-hero-text">
-        <div class="tag">POLISH — بوليش وتلميع</div>
-        <h1>أعد لسيارتك <span class="em">بريقها الأصلي</span></h1>
-        <p class="subtitle">بوليش وتلميع احترافي يعيد سيارتك كأنها جديدة</p>
-        <p>نقدم خدمة بوليش وتلميع احترافية بمواد ألمانية معتمدة تزيل الخدوش السطحية، العلامات الدوامية، وبهتان اللون — لتعيد لسيارتك لمعتها وبريقها الذي كان.</p>
+        <div class="tag" data-i18n="polish.hero.tag">POLISH — بوليش وتلميع</div>
+        <h1 data-i18n="polish.hero.h1">أعد لسيارتك <span class="em">بريقها الأصلي</span></h1>
+        <p class="subtitle" data-i18n="polish.hero.sub">بوليش وتلميع احترافي يعيد سيارتك كأنها جديدة</p>
+        <p data-i18n="polish.hero.p">نقدم خدمة بوليش وتلميع احترافية بمواد ألمانية معتمدة تزيل الخدوش السطحية، العلامات الدوامية، وبهتان اللون — لتعيد لسيارتك لمعتها وبريقها الذي كان.</p>
 
         <div class="trust-badges">
-          <span class="trust-badge"><span class="tb-icon">✨</span> Menzerna & Sonax ألمانية</span>
-          <span class="trust-badge"><span class="tb-icon">🔍</span> 4 مراحل دقيقة</span>
-          <span class="trust-badge"><span class="tb-icon">✅</span> فنيون متخصصون</span>
+          <span class="trust-badge"><span class="tb-icon">✨</span> <span data-i18n="polish.tb1">Menzerna & Sonax ألمانية</span></span>
+          <span class="trust-badge"><span class="tb-icon">🔍</span> <span data-i18n="polish.tb2">4 مراحل دقيقة</span></span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> <span data-i18n="polish.tb3">فنيون متخصصون</span></span>
         </div>
 
         <div class="svc-hero-actions" style="margin-top:28px;">
-          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
           <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
             style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            واتساب
+            <span data-i18n="svc.btn.wa">واتساب</span>
           </a>
         </div>
       </div>
 
       <div class="svc-hero-img glass">
-        <img src="assets/services/polish/polish-hero.png" alt="بوليش وتلميع السيارات — هافركامب" />
+        <img loading="lazy" src="assets/services/polish/polish-hero.png" alt="بوليش وتلميع السيارات — هافركامب" />
       </div>
     </div>
 
     <!-- ═══════════════ STEPS ═══════════════ -->
     <div id="steps" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">PROCESS — خطوات العمل</div>
-        <h2>أربع مراحل لنتيجة مثالية</h2>
-        <p>عملية بوليش دقيقة ومنهجية تضمن إزالة كل الخدوش السطحية واستعادة لمعة الطلاء الأصلية.</p>
+        <div class="tag" data-i18n="polish.proc.tag">PROCESS — خطوات العمل</div>
+        <h2 data-i18n="polish.proc.h2">أربع مراحل لنتيجة مثالية</h2>
+        <p data-i18n="polish.proc.p">عملية بوليش دقيقة ومنهجية تضمن إزالة كل الخدوش السطحية واستعادة لمعة الطلاء الأصلية.</p>
       </div>
       <div class="steps-grid">
 
         <div class="step-card glass">
           <div class="step-num">01</div>
           <div class="step-icon">🚿</div>
-          <h3>الغسيل والتنظيف</h3>
-          <p>غسيل كامل للسيارة لإزالة الغبار والأوساخ تمهيداً للفحص الدقيق قبل بدء عملية البوليش.</p>
+          <h3 data-i18n="polish.s1.h3">الغسيل والتنظيف</h3>
+          <p data-i18n="polish.s1.p">غسيل كامل للسيارة لإزالة الغبار والأوساخ تمهيداً للفحص الدقيق قبل بدء عملية البوليش.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">02</div>
           <div class="step-icon">🔍</div>
-          <h3>فحص السيارة</h3>
-          <p>تقييم حالة الطلاء وتحديد الخدوش وعلامات الغسيل الخاطئ وبهتان اللون لتحديد المعالجة المناسبة.</p>
+          <h3 data-i18n="polish.s2.h3">فحص السيارة</h3>
+          <p data-i18n="polish.s2.p">تقييم حالة الطلاء وتحديد الخدوش وعلامات الغسيل الخاطئ وبهتان اللون لتحديد المعالجة المناسبة.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">03</div>
           <div class="step-icon">✨</div>
-          <h3>البوليش والتلميع</h3>
-          <p>تطبيق مركبات البوليش القوية لإزالة الخدوش السطحية وعلامات الدوامة واستعادة بريق الطلاء الأصلي.</p>
+          <h3 data-i18n="polish.s3.h3">البوليش والتلميع</h3>
+          <p data-i18n="polish.s3.p">تطبيق مركبات البوليش القوية لإزالة الخدوش السطحية وعلامات الدوامة واستعادة بريق الطلاء الأصلي.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">04</div>
           <div class="step-icon">💡</div>
-          <h3>الفحص النهائي</h3>
-          <p>فحص دقيق تحت إضاءة خاصة للتأكد من جودة النتيجة وخلوّ السطح من أي عيوب قبل التسليم.</p>
+          <h3 data-i18n="polish.s4.h3">الفحص النهائي</h3>
+          <p data-i18n="polish.s4.p">فحص دقيق تحت إضاءة خاصة للتأكد من جودة النتيجة وخلوّ السطح من أي عيوب قبل التسليم.</p>
         </div>
 
       </div>
@@ -583,17 +560,17 @@
       <div class="materials-strip glass">
         <div class="mat-item">
           <div class="mat-name">Menzerna</div>
-          <div class="mat-desc">مواد بوليش ألمانية</div>
+          <div class="mat-desc" data-i18n="polish.mat1">مواد بوليش ألمانية</div>
         </div>
         <div class="mat-divider"></div>
         <div class="mat-item">
           <div class="mat-name">Sonax</div>
-          <div class="mat-desc">منتجات عناية ألمانية</div>
+          <div class="mat-desc" data-i18n="polish.mat2">منتجات عناية ألمانية</div>
         </div>
         <div class="mat-divider"></div>
         <div class="mat-item">
           <div class="mat-name">🇩🇪</div>
-          <div class="mat-desc">جودة ألمانية معتمدة 100%</div>
+          <div class="mat-desc" data-i18n="polish.mat3">جودة ألمانية معتمدة 100%</div>
         </div>
       </div>
     </div>
@@ -601,9 +578,9 @@
     <!-- ═══════════════ FEATURES ═══════════════ -->
     <div id="features" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">WHY US — لماذا تختار هافركامب</div>
-        <h2>جودة بوليش فائقة بمواد ألمانية</h2>
-        <p>نستخدم أفضل مواد البوليش الألمانية المعتمدة لنضمن لك نتيجة استثنائية وطويلة الأمد.</p>
+        <div class="tag" data-i18n="polish.why.tag">WHY US — لماذا تختار هافركامب</div>
+        <h2 data-i18n="polish.why.h2">جودة بوليش فائقة بمواد ألمانية</h2>
+        <p data-i18n="polish.why.p">نستخدم أفضل مواد البوليش الألمانية المعتمدة لنضمن لك نتيجة استثنائية وطويلة الأمد.</p>
       </div>
       <div class="features-grid">
 
@@ -614,8 +591,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>مواد ألمانية Menzerna & Sonax</h3>
-            <p>نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — من أفضل وأقوى مواد البوليش في العالم، تضمن إزالة الخدوش بفعالية قصوى ولمعة تدوم.</p>
+            <h3 data-i18n="polish.w1.h3">مواد ألمانية Menzerna & Sonax</h3>
+            <p data-i18n="polish.w1.p">نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — من أفضل وأقوى مواد البوليش في العالم، تضمن إزالة الخدوش بفعالية قصوى ولمعة تدوم.</p>
           </div>
         </div>
 
@@ -626,8 +603,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>إزالة الخدوش السطحية</h3>
-            <p>البوليش يزيل الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، والعلامات الدوامية التي تُشوّه مظهر سيارتك — ويعيد لها بريقها الأصلي.</p>
+            <h3 data-i18n="polish.w2.h3">إزالة الخدوش السطحية</h3>
+            <p data-i18n="polish.w2.p">البوليش يزيل الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، والعلامات الدوامية التي تُشوّه مظهر سيارتك — ويعيد لها بريقها الأصلي.</p>
           </div>
         </div>
 
@@ -638,8 +615,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>فنيون متخصصون</h3>
-            <p>فريقنا مدرّب على أعلى مستوى في تقنيات البوليش والتلميع — يحرص كل فني على أدق التفاصيل لضمان نتيجة خالية من أي عيوب.</p>
+            <h3 data-i18n="polish.w3.h3">فنيون متخصصون</h3>
+            <p data-i18n="polish.w3.p">فريقنا مدرّب على أعلى مستوى في تقنيات البوليش والتلميع — يحرص كل فني على أدق التفاصيل لضمان نتيجة خالية من أي عيوب.</p>
           </div>
         </div>
 
@@ -650,8 +627,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>فحص تحت إضاءة خاصة</h3>
-            <p>بعد البوليش، نفحص كل سطح تحت إضاءة متخصصة تكشف أي خدش أو عيب غير مرئي بالعين المجردة — لنضمن لك نتيجة مثالية 100%.</p>
+            <h3 data-i18n="polish.w4.h3">فحص تحت إضاءة خاصة</h3>
+            <p data-i18n="polish.w4.p">بعد البوليش، نفحص كل سطح تحت إضاءة متخصصة تكشف أي خدش أو عيب غير مرئي بالعين المجردة — لنضمن لك نتيجة مثالية 100%.</p>
           </div>
         </div>
 
@@ -661,9 +638,9 @@
     <!-- ═══════════════ GALLERY ═══════════════ -->
     <div id="gallery" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">GALLERY — معرض الأعمال</div>
-        <h2>من أعمالنا في البوليش والتلميع</h2>
-        <p>نماذج حقيقية من جلسات البوليش والتلميع لدى هافركامب في الكويت.</p>
+        <div class="tag" data-i18n="polish.gal.tag">GALLERY — معرض الأعمال</div>
+        <h2 data-i18n="polish.gal.h2">من أعمالنا في البوليش والتلميع</h2>
+        <p data-i18n="polish.gal.p">نماذج حقيقية من جلسات البوليش والتلميع لدى هافركامب في الكويت.</p>
       </div>
       <div class="bento-grid">
 
@@ -693,56 +670,56 @@
     <div class="lb-overlay" id="lb" onclick="closeLb(event)">
       <div class="lb-img-wrap">
         <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
-        <img id="lb-img" src="" alt="" />
+        <img loading="lazy" id="lb-img" src="" alt="" />
       </div>
     </div>
 
     <!-- ═══════════════ FAQ ═══════════════ -->
     <div id="faq" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">FAQ — أسئلة شائعة</div>
-        <h2>كل ما تحتاج معرفته عن البوليش</h2>
+        <div class="tag" data-i18n="polish.faq.tag">FAQ — أسئلة شائعة</div>
+        <h2 data-i18n="polish.faq.h2">كل ما تحتاج معرفته عن البوليش</h2>
       </div>
       <div class="svc-faq">
 
         <details class="faq-item glass">
           <summary>
-            ما هو البوليش؟
+            <span data-i18n="polish.faq.1.q">ما هو البوليش؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">البوليش هو عملية معالجة سطح طلاء السيارة لإزالة الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، العلامات الدوامية (Swirl Marks)، وبهتان اللون — بهدف استعادة لمعة الطلاء الأصلية وتحسين مظهر السيارة.</div>
+          <div class="answer" data-i18n="polish.faq.1.a">البوليش هو عملية معالجة سطح طلاء السيارة لإزالة الخدوش السطحية الدقيقة، علامات الغسيل الخاطئ، العلامات الدوامية (Swirl Marks)، وبهتان اللون — بهدف استعادة لمعة الطلاء الأصلية وتحسين مظهر السيارة.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            كم يوم تحتاج السيارة للبوليش؟
+            <span data-i18n="polish.faq.2.q">كم يوم تحتاج السيارة للبوليش؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">تستغرق جلسة البوليش من يوم إلى يومين حسب درجة تضرر بدي السيارة وحجمها — البوليش الأساسي يستغرق يوماً واحداً، أما البوليش متعدد المراحل (2-3 مراحل) فقد يصل إلى يومين.</div>
+          <div class="answer" data-i18n="polish.faq.2.a">تستغرق جلسة البوليش من يوم إلى يومين حسب درجة تضرر بدي السيارة وحجمها — البوليش الأساسي يستغرق يوماً واحداً، أما البوليش متعدد المراحل (2-3 مراحل) فقد يصل إلى يومين.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما هي المواد المستخدمة في البوليش؟
+            <span data-i18n="polish.faq.3.q">ما هي المواد المستخدمة في البوليش؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — وهي من أفضل وأجود مواد البوليش والتلميع في العالم، تُستخدم في أكبر ورش السيارات الاحترافية عالمياً.</div>
+          <div class="answer" data-i18n="polish.faq.3.a">نستخدم حصراً مركبات Menzerna وSonax الألمانية المعتمدة — وهي من أفضل وأجود مواد البوليش والتلميع في العالم، تُستخدم في أكبر ورش السيارات الاحترافية عالمياً.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل البوليش يزيل الخدوش بالكامل؟
+            <span data-i18n="polish.faq.4.q">هل البوليش يزيل الخدوش بالكامل؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">البوليش يزيل الخدوش السطحية الدقيقة إلى حد كبير أو بشكل كامل. أما الخدوش العميقة التي تخترق طبقة الطلاء وتصل للمعدن، فهذه تحتاج إلى إصلاح وصبغ ولا يمكن للبوليش إزالتها.</div>
+          <div class="answer" data-i18n="polish.faq.4.a">البوليش يزيل الخدوش السطحية الدقيقة إلى حد كبير أو بشكل كامل. أما الخدوش العميقة التي تخترق طبقة الطلاء وتصل للمعدن، فهذه تحتاج إلى إصلاح وصبغ ولا يمكن للبوليش إزالتها.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما الفرق بين البوليش العادي والبوليش متعدد المراحل؟
+            <span data-i18n="polish.faq.5.q">ما الفرق بين البوليش العادي والبوليش متعدد المراحل؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">البوليش العادي (مرحلة واحدة) يحسّن مظهر السيارة بشكل سريع ومناسب للخدوش الخفيفة. أما البوليش متعدد المراحل (2-3 مراحل) فيوفر تصحيحاً أعمق للطلاء ونتيجة أطول أمداً وأكثر احترافية — وهو الخيار الأمثل للسيارات ذات الأضرار المتوسطة إلى الشديدة.</div>
+          <div class="answer" data-i18n="polish.faq.5.a">البوليش العادي (مرحلة واحدة) يحسّن مظهر السيارة بشكل سريع ومناسب للخدوش الخفيفة. أما البوليش متعدد المراحل (2-3 مراحل) فيوفر تصحيحاً أعمق للطلاء ونتيجة أطول أمداً وأكثر احترافية — وهو الخيار الأمثل للسيارات ذات الأضرار المتوسطة إلى الشديدة.</div>
         </details>
 
       </div>
@@ -750,28 +727,28 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="svc-cta glass">
-      <h2>أعد لسيارتك بريقها اليوم</h2>
-      <p>تواصل معنا للحصول على كشف مجاني وعرض سعر واضح لخدمة البوليش بدون أي التزام.</p>
+      <h2 data-i18n="polish.cta.h2">أعد لسيارتك بريقها اليوم</h2>
+      <p data-i18n="polish.cta.p">تواصل معنا للحصول على كشف مجاني وعرض سعر واضح لخدمة البوليش بدون أي التزام.</p>
       <div class="svc-cta-btns">
-        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز جلستك الآن</a>
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="polish.cta.book">احجز جلستك الآن</a>
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
       </div>
     </div>
 
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -779,7 +756,10 @@
   </main>
 
   <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
   <script src="js/lightbox.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

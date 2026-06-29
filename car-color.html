@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>مُكوّن اللون — هافركامب</title>
-  <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+  <!-- Preconnect to Sketchfab CDN for faster model loading -->
+  <link rel="preconnect" href="https://static.sketchfab.com">
+  <link rel="preconnect" href="https://media.sketchfab.com">
+  <link rel="dns-prefetch" href="https://sketchfab.com">
+  <link rel="dns-prefetch" href="https://d1jyvh6bge.cloudfront.net">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
@@ -495,14 +500,14 @@
 <div id="page-loader">
   <span class="ld-logo"><img src="assets/logo.png?v=2" alt="هافركامب" /></span>
   <div class="ld-ring"></div>
-  <span class="ld-txt">جاري التحضير...</span>
+  <span class="ld-txt" data-i18n="cc.loading">جاري التحضير...</span>
 </div>
 
 <!-- ─── Viewer ───────────────────────────────────── -->
 <div id="viewer-wrap">
   <div id="viewer-ph">
     <span class="ph-icon">🚗</span>
-    <span class="ph-txt">اختر موديلاً لعرض السيارة</span>
+    <span class="ph-txt" data-i18n="cc.ph.txt">اختر موديلاً لعرض السيارة</span>
   </div>
   <iframe id="sf-iframe"
     allow="autoplay; fullscreen; xr-spatial-tracking"
@@ -516,7 +521,7 @@
 <div id="model-loader" class="hidden">
   <div class="ml-inner">
     <div class="ml-ring"></div>
-    <span class="ml-txt">جاري تحميل الموديل...</span>
+    <span class="ml-txt" data-i18n="cc.ml.txt">جاري تحميل الموديل...</span>
   </div>
 </div>
 
@@ -527,20 +532,21 @@
       <img src="assets/logo.png?v=2" alt="هافركامب" />
     </a>
     <div class="brand-sep"></div>
-    <span class="page-title">مُكوّن اللون — 3D</span>
+    <span class="page-title" data-i18n="cc.title">مُكوّن اللون — 3D</span>
   </div>
   <div class="topbar-end">
     <span class="hint-pill">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
       </svg>
-      اسحب للدوران
+      <span data-i18n="cc.hint">اسحب للدوران</span>
     </span>
+    <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة" style="background:none;border:none;cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;">&#x1F1EC;&#x1F1E7;</button>
     <a href="index.html" class="back-btn">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M9 18l6-6-6-6"/>
       </svg>
-      الرئيسية
+      <span data-i18n="cc.back">الرئيسية</span>
     </a>
   </div>
 </header>
@@ -561,7 +567,7 @@
 
     <!-- Header -->
     <div class="sb-head">
-      <span class="sb-htitle">اختر سيارتك</span>
+      <span class="sb-htitle" data-i18n="cc.sb.title">اختر سيارتك</span>
       <button class="sb-close" id="sb-close" aria-label="إغلاق">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M18 6 6 18M6 6l12 12"/>
@@ -571,14 +577,14 @@
 
     <!-- Brands -->
     <div class="sb-sec">
-      <div class="sb-lbl">الماركة</div>
+      <div class="sb-lbl" data-i18n="cc.sb.brand">الماركة</div>
       <div class="brands-grid" id="brands-wrap"></div>
     </div>
 
     <!-- Models -->
     <div class="sb-sec">
       <div class="sb-lbl-row">
-        <span class="sb-lbl">الموديل</span>
+        <span class="sb-lbl" data-i18n="cc.sb.model">الموديل</span>
         <div class="model-nav">
           <button class="mnav-btn" id="model-prev" aria-label="للأعلى">
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 15l-6-6-6 6"/></svg>
@@ -589,7 +595,7 @@
         </div>
       </div>
       <div class="models-list" id="models-wrap">
-        <div class="coming-msg">اختر ماركة أولاً</div>
+        <div class="coming-msg" data-i18n="cc.sb.pick.brand">اختر ماركة أولاً</div>
       </div>
     </div>
 
@@ -607,7 +613,7 @@
 
   <!-- Colors -->
   <div class="ctrl-colors">
-    <span class="row-lbl">اللون</span>
+    <span class="row-lbl" data-i18n="cc.ctrl.color">اللون</span>
     <div class="swatches-scroll" id="swatches"></div>
     <div class="custom-wrap">
       <div class="custom-circle">+
@@ -620,11 +626,11 @@
 
   <!-- Finish -->
   <div class="ctrl-finish">
-    <span class="row-lbl">الفينش</span>
+    <span class="row-lbl" data-i18n="cc.ctrl.finish">الفينش</span>
     <div class="finish-btns">
-      <button class="finish-btn active" data-f="glossy">لامع</button>
-      <button class="finish-btn"        data-f="matte">مطفي</button>
-      <button class="finish-btn"        data-f="metallic">ميتاليك</button>
+      <button class="finish-btn active" data-f="glossy"   data-i18n="cc.f.glossy">لامع</button>
+      <button class="finish-btn"        data-f="matte"    data-i18n="cc.f.matte">مطفي</button>
+      <button class="finish-btn"        data-f="metallic" data-i18n="cc.f.metallic">ميتاليك</button>
     </div>
   </div>
 
@@ -632,7 +638,7 @@
 
   <!-- Info -->
   <div class="sel-info">
-    <span class="sel-lbl">الاختيار</span>
+    <span class="sel-lbl" data-i18n="cc.ctrl.sel">الاختيار</span>
     <span class="sel-val" id="sel-val">—</span>
   </div>
 
@@ -641,7 +647,7 @@
     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
     </svg>
-    احجز تغيير اللون
+    <span data-i18n="cc.wa.btn">احجز تغيير اللون</span>
   </a>
 
 </div>
@@ -655,7 +661,7 @@
 ══════════════════════════════════ */
 const CATALOG = {
   'كاديلاك':       [
-    { name:'اسكاليد', uid:'56c704d6b1ce473eb835023c18e3c3d6', body:'' },
+    { name:'اسكاليد', nameEn:'Escalade', uid:'56c704d6b1ce473eb835023c18e3c3d6', body:'' },
     { name:'XT6 Luxury', uid:'b6a0be0c32e343b4812ec47660142824', body:'' },
   ],
   'تويوتا':        [
@@ -708,23 +714,35 @@ const CATALOG = {
    COLOR PALETTE
 ══════════════════════════════════ */
 const COLORS = [
-  { name:'أبيض لؤلؤي',  hex:'#F0EEE8' },
-  { name:'أسود غامق',   hex:'#181818' },
-  { name:'رمادي فضي',   hex:'#9AAABB' },
-  { name:'رمادي داكن',  hex:'#444444' },
-  { name:'أحمر',        hex:'#CC1A1A' },
-  { name:'أحمر كرزي',   hex:'#7D0A0A' },
-  { name:'أزرق صوري',   hex:'#1A7DE8' },
-  { name:'أزرق غامق',   hex:'#003087' },
-  { name:'أخضر زيتي',   hex:'#3D8C5C' },
-  { name:'أخضر زمردي',  hex:'#009688' },
-  { name:'ذهبي',        hex:'#B8902A' },
-  { name:'برتقالي',     hex:'#E85D18' },
-  { name:'بنفسجي',      hex:'#7B3DCC' },
-  { name:'بني برونزي',  hex:'#6B4226' },
+  { ar:'أبيض لؤلؤي',  en:'Pearl White',    hex:'#F0EEE8' },
+  { ar:'أسود غامق',   en:'Deep Black',      hex:'#181818' },
+  { ar:'رمادي فضي',   en:'Silver Grey',     hex:'#9AAABB' },
+  { ar:'رمادي داكن',  en:'Dark Grey',       hex:'#444444' },
+  { ar:'أحمر',        en:'Red',             hex:'#CC1A1A' },
+  { ar:'أحمر كرزي',   en:'Cherry Red',      hex:'#7D0A0A' },
+  { ar:'أزرق صوري',   en:'Sapphire Blue',   hex:'#1A7DE8' },
+  { ar:'أزرق غامق',   en:'Deep Blue',       hex:'#003087' },
+  { ar:'أخضر زيتي',   en:'Olive Green',     hex:'#3D8C5C' },
+  { ar:'أخضر زمردي',  en:'Emerald Green',   hex:'#009688' },
+  { ar:'ذهبي',        en:'Gold',            hex:'#B8902A' },
+  { ar:'برتقالي',     en:'Orange',          hex:'#E85D18' },
+  { ar:'بنفسجي',      en:'Purple',          hex:'#7B3DCC' },
+  { ar:'بني برونزي',  en:'Bronze Brown',    hex:'#6B4226' },
 ];
+function colorName(c) { return c[getLang()] || c.ar; }
 
-const FINISH_LABELS = { glossy:'لامع', matte:'مطفي', metallic:'ميتاليك' };
+const FINISH_LABELS = {
+  ar: { glossy:'لامع', matte:'مطفي', metallic:'ميتاليك' },
+  en: { glossy:'Glossy', matte:'Matte', metallic:'Metallic' },
+};
+const BRAND_NAMES_EN = {
+  'كاديلاك':'Cadillac','تويوتا':'Toyota','لكزس':'Lexus',
+  'جي إم سي':'GMC','بي إم دابليو':'BMW','مرسيدس':'Mercedes',
+  'شيفروليه':'Chevrolet','فورد':'Ford','جينيسيس':'Genesis',
+  'نيسان':'Nissan','لاند روفر':'Land Rover',
+};
+function getLang() { return localStorage.getItem('hk_lang') || 'ar'; }
+function finishLabel(f) { return FINISH_LABELS[getLang()][f]; }
 
 /* ══════════════════════════════════
    STATE
@@ -855,7 +873,8 @@ function loadModel(model) {
     autostart:1, ui_infos:0, ui_stop:0, ui_controls:0,
     ui_inspector:0, ui_watermark:0, ui_ar:0, ui_help:0,
     ui_settings:0, ui_vr:0, ui_fullscreen:0, ui_annotations:0,
-    transparent:1, preload:1, camera:0,
+    transparent:1, preload:1, camera:0, dnt:1,
+    graph_optimizer:1, texture_size:1024,
 
     success: api => {
       api.start();
@@ -893,7 +912,7 @@ function loadModel(model) {
       loader.classList.add('hidden');
       ph.classList.remove('hidden');
       ph.querySelector('.ph-icon').textContent = '⚠️';
-      ph.querySelector('.ph-txt').textContent  = 'فشل تحميل النموذج';
+      ph.querySelector('.ph-txt').textContent  = getLang() === 'en' ? 'Failed to load model' : 'فشل تحميل النموذج';
     },
   });
 }
@@ -902,18 +921,29 @@ function loadModel(model) {
    SYNC HELPERS
 ══════════════════════════════════ */
 function syncSelVal() {
+  const cName = S.color ? colorName(S.color) : '—';
   document.getElementById('sel-val').textContent =
     (S.color && S.model)
-      ? `${S.color.name} — ${FINISH_LABELS[S.finish]}`
-      : (S.color ? S.color.name : '—');
+      ? `${cName} — ${finishLabel(S.finish)}`
+      : cName;
 }
 function syncWA() {
-  const msg = [
+  const isEn = getLang() === 'en';
+  const cName = S.color ? colorName(S.color) : '—';
+  const bName = isEn ? (BRAND_NAMES_EN[S.brand] || S.brand || '—') : (S.brand || '—');
+  const msg = isEn ? [
+    'Hello,', 'I would like to book a color change for my car:',
+    `🚗 Brand: ${bName}`,
+    `🔹 Model: ${(S.model?.nameEn || S.model?.name)||'—'}`,
+    `🎨 Color: ${cName} (${S.color?.hex})`,
+    `✨ Finish: ${finishLabel(S.finish)}`,
+    '', 'Please get in touch.',
+  ].join('\n') : [
     'السلام عليكم،','أرغب في تغيير لون سيارتي:',
-    `🚗 الماركة: ${S.brand||'—'}`,
+    `🚗 الماركة: ${bName}`,
     `🔹 الموديل: ${S.model?.name||'—'}`,
-    `🎨 اللون: ${S.color?.name} (${S.color?.hex})`,
-    `✨ الفينش: ${FINISH_LABELS[S.finish]}`,
+    `🎨 اللون: ${cName} (${S.color?.hex})`,
+    `✨ الفينش: ${finishLabel(S.finish)}`,
     '','أرجو التواصل.',
   ].join('\n');
   document.getElementById('wa-btn').href =
@@ -976,10 +1006,12 @@ document.getElementById('mat-select').addEventListener('change', e => {
 ══════════════════════════════════ */
 function buildBrands() {
   const wrap = document.getElementById('brands-wrap');
+  const isEn = getLang() === 'en';
   Object.keys(CATALOG).forEach(brand => {
     const btn = document.createElement('button');
     btn.className   = 'brand-btn';
-    btn.textContent = brand;
+    btn.textContent = isEn ? (BRAND_NAMES_EN[brand] || brand) : brand;
+    btn.dataset.brand = brand;
     btn.addEventListener('click', () => selectBrand(brand));
     wrap.appendChild(btn);
   });
@@ -988,22 +1020,23 @@ function buildBrands() {
 function selectBrand(brand) {
   S.brand = brand;
   document.querySelectorAll('.brand-btn')
-    .forEach(b => b.classList.toggle('active', b.textContent === brand));
+    .forEach(b => b.classList.toggle('active', b.dataset.brand === brand));
 
   const models = CATALOG[brand] || [];
   modelsWrap.innerHTML = '';
 
   if (!models.length) {
-    modelsWrap.innerHTML = '<div class="coming-msg">🔜 قريبًا...</div>';
+    modelsWrap.innerHTML = `<div class="coming-msg">🔜 ${getLang() === 'en' ? 'Coming soon...' : 'قريبًا...'}</div>`;
     return;
   }
   models.forEach(m => {
     const btn = document.createElement('button');
     btn.className   = 'model-item';
     btn.dataset.uid = m.uid;
+    const displayName = (getLang() === 'en' && m.nameEn) ? m.nameEn : m.name;
     btn.innerHTML =
       `<span class="model-dot"></span>` +
-      `<span class="model-name">${m.name}</span>` +
+      `<span class="model-name">${displayName}</span>` +
       `<span class="model-arr">‹</span>`;
     btn.addEventListener('click', () => selectModel(m, btn));
     modelsWrap.appendChild(btn);
@@ -1032,14 +1065,14 @@ function buildColors() {
       btn.classList.add('active');
       S.color = color; applyToModel(); syncSelVal(); syncWA();
     });
-    btn.addEventListener('mouseenter', () => showTip(color.name, btn));
+    btn.addEventListener('mouseenter', () => showTip(colorName(color), btn));
     btn.addEventListener('mouseleave', hideTip);
     scroll.appendChild(btn);
   });
 
   document.getElementById('custom-input').addEventListener('input', e => {
     document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-    S.color = { name:'مخصص', hex:e.target.value };
+    S.color = { ar:'مخصص', en:'Custom', hex:e.target.value };
     applyToModel(); syncSelVal(); syncWA();
   });
 }
@@ -1072,14 +1105,31 @@ if (!isMob()) openSidebar();
 
 // Auto-select كاديلاك + اسكاليد
 selectBrand('كاديلاك');
-setTimeout(() => {
-  const first = document.querySelector('.model-item');
-  if (first) first.click();
-}, 80);
+const first = document.querySelector('.model-item');
+if (first) first.click();
 
 setTimeout(() => {
   document.getElementById('page-loader').classList.add('out');
-}, 350);
+}, 120);
+</script>
+<script src="js/i18n.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.lang-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        // Re-render dynamic UI after language switch
+        const wrap = document.getElementById('brands-wrap');
+        wrap.innerHTML = '';
+        buildBrands();
+        if (S.brand) selectBrand(S.brand);
+        document.querySelectorAll('.swatch').forEach(function (sw, i) {
+          if (COLORS[i]) sw._color = COLORS[i];
+        });
+        syncSelVal();
+        syncWA();
+      });
+    });
+  });
 </script>
 </body>
 </html>

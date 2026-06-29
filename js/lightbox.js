@@ -7,7 +7,7 @@ function openLb(item) {
 }
 
 function closeLb(e) {
-  if (e && e.target !== document.getElementById('lb') && !e.target.classList.contains('lb-close')) return;
+  if (e && e.target !== document.getElementById('lb') && !e.target.closest('.lb-close')) return;
   document.getElementById('lb').classList.remove('open');
   document.body.style.overflow = '';
 }

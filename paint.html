@@ -48,25 +48,6 @@
       padding-top: 80px;
     }
 
-    .svc-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--ink-1);
-      text-decoration: none;
-      font-size: 14px;
-      margin: 28px 0 0;
-      padding: 8px 14px;
-      border-radius: var(--r-pill);
-      background: var(--glass-tint);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      border: 1px solid var(--glass-border);
-      transition: all .25s;
-    }
-
-    .svc-back:hover { color: var(--ink-0); transform: translateX(4px); }
-
     /* ── Hero ── */
     .svc-hero {
       display: grid;
@@ -469,101 +450,97 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#steps">خطوات العمل</a>
-        <a href="#features">لماذا نحن</a>
-        <a href="#gallery">معرض الصور</a>
-        <a href="#faq">الأسئلة الشائعة</a>
-        <a href="terms.html">البنود والشروط</a>
+        <a href="#steps" data-i18n="paint.nav.steps">خطوات العمل</a>
+        <a href="#features" data-i18n="paint.nav.why">لماذا نحن</a>
+        <a href="#gallery" data-i18n="nav.gallery">معرض الصور</a>
+        <a href="#faq" data-i18n="ppf.nav.faq">الأسئلة الشائعة</a>
+        <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
       </div>
-      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
-    </nav>
+      <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="svc-page">
 
-    <a href="index.html" class="svc-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-      الرئيسية
-    </a>
-
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="svc-hero">
       <div class="svc-hero-text">
-        <div class="tag">PAINT — صبغ السيارات</div>
-        <h1>أعد لسيارتك <span class="em">بريقها من جديد</span></h1>
-        <p class="subtitle">صبغ احترافي وجودة مضمونة مع هافركامب</p>
-        <p>نقدم خدمة صبغ سيارات احترافية بمواد ألمانية معتمدة 100%، مع فريق متخصص وبيئة عمل مُعقّمة تضمن لك نتيجة مثالية تعيد لسيارتك لمعتها وبريقها الأصلي.</p>
+        <div class="tag" data-i18n="paint.hero.tag">PAINT — صبغ السيارات</div>
+        <h1 data-i18n="paint.hero.h1">أعد لسيارتك <span class="em">بريقها من جديد</span></h1>
+        <p class="subtitle" data-i18n="paint.hero.sub">صبغ احترافي وجودة مضمونة مع هافركامب</p>
+        <p data-i18n="paint.hero.p">نقدم خدمة صبغ سيارات احترافية بمواد ألمانية معتمدة 100%، مع فريق متخصص وبيئة عمل مُعقّمة تضمن لك نتيجة مثالية تعيد لسيارتك لمعتها وبريقها الأصلي.</p>
 
         <div class="trust-badges">
-          <span class="trust-badge"><span class="tb-icon">🎨</span> دهان ألماني Glasurit</span>
-          <span class="trust-badge"><span class="tb-icon">🛡️</span> جودة مضمونة</span>
-          <span class="trust-badge"><span class="tb-icon">✅</span> فنيون متخصصون</span>
+          <span class="trust-badge"><span class="tb-icon">🎨</span> <span data-i18n="paint.tb1">دهان ألماني Glasurit</span></span>
+          <span class="trust-badge"><span class="tb-icon">🛡️</span> <span data-i18n="paint.tb2">جودة مضمونة</span></span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> <span data-i18n="paint.tb3">فنيون متخصصون</span></span>
         </div>
 
         <div class="svc-hero-actions" style="margin-top:28px;">
-          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
           <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
             style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            واتساب
+            <span data-i18n="svc.btn.wa">واتساب</span>
           </a>
         </div>
       </div>
 
       <div class="svc-hero-img glass">
-        <img src="assets/services/paint/paint-hero.png" alt="صبغ السيارات — هافركامب" />
+        <img loading="lazy" src="assets/services/paint/paint-hero.png" alt="صبغ السيارات — هافركامب" />
       </div>
     </div>
 
     <!-- ═══════════════ STEPS ═══════════════ -->
     <div id="steps" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">PROCESS — خطوات العمل</div>
-        <h2>خمس خطوات لنتيجة مثالية</h2>
-        <p>عملية صبغ احترافية بمراحل دقيقة تضمن جودة ولمعة تدوم لسنوات.</p>
+        <div class="tag" data-i18n="paint.proc.tag">PROCESS — خطوات العمل</div>
+        <h2 data-i18n="paint.proc.h2">خمس خطوات لنتيجة مثالية</h2>
+        <p data-i18n="paint.proc.p">عملية صبغ احترافية بمراحل دقيقة تضمن جودة ولمعة تدوم لسنوات.</p>
       </div>
       <div class="steps-grid">
 
         <div class="step-card glass">
           <div class="step-num">01</div>
           <div class="step-icon">🔍</div>
-          <h3>معاينة السيارة</h3>
-          <p>فحص السيارة وتحديد الأجزاء المتضررة التي تحتاج إلى إعادة صبغ بدقة.</p>
+          <h3 data-i18n="paint.s1.h3">معاينة السيارة</h3>
+          <p data-i18n="paint.s1.p">فحص السيارة وتحديد الأجزاء المتضررة التي تحتاج إلى إعادة صبغ بدقة.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">02</div>
           <div class="step-icon">🛡️</div>
-          <h3>تغطية وتحضير</h3>
-          <p>تغطية الزجاج والكشافات والإطارات لحمايتها من الدهان أثناء العمل.</p>
+          <h3 data-i18n="paint.s2.h3">تغطية وتحضير</h3>
+          <p data-i18n="paint.s2.p">تغطية الزجاج والكشافات والإطارات لحمايتها من الدهان أثناء العمل.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">03</div>
           <div class="step-icon">🪄</div>
-          <h3>شغل الورق</h3>
-          <p>إزالة طبقات الدهان القديمة وتنعيم السطح تمهيداً لوضع المعجون والدهان الجديد.</p>
+          <h3 data-i18n="paint.s3.h3">شغل الورق</h3>
+          <p data-i18n="paint.s3.p">إزالة طبقات الدهان القديمة وتنعيم السطح تمهيداً لوضع المعجون والدهان الجديد.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">04</div>
           <div class="step-icon">🎨</div>
-          <h3>مزج الألوان</h3>
-          <p>يقوم الفنيون بمزج الألوان للحصول على نفس درجة صبغة السيارة الأصلية بدقة.</p>
+          <h3 data-i18n="paint.s4.h3">مزج الألوان</h3>
+          <p data-i18n="paint.s4.p">يقوم الفنيون بمزج الألوان للحصول على نفس درجة صبغة السيارة الأصلية بدقة.</p>
         </div>
 
         <div class="step-card glass">
           <div class="step-num">05</div>
           <div class="step-icon">✨</div>
-          <h3>الصبغ والتشطيب</h3>
-          <p>تطبيق الدهان على الأجزاء المحددة بيد فنيين متخصصين للحصول على نتيجة مثالية.</p>
+          <h3 data-i18n="paint.s5.h3">الصبغ والتشطيب</h3>
+          <p data-i18n="paint.s5.p">تطبيق الدهان على الأجزاء المحددة بيد فنيين متخصصين للحصول على نتيجة مثالية.</p>
         </div>
 
       </div>
@@ -572,9 +549,9 @@
     <!-- ═══════════════ FEATURES ═══════════════ -->
     <div id="features" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">WHY US — لماذا تختار هافركامب</div>
-        <h2>جودة دهان فائقة بمواد ألمانية</h2>
-        <p>نستخدم أفضل مواد الدهان الألمانية المعتمدة لنضمن لك نتيجة احترافية وتدوم طويلاً.</p>
+        <div class="tag" data-i18n="paint.why.tag">WHY US — لماذا تختار هافركامب</div>
+        <h2 data-i18n="paint.why.h2">جودة دهان فائقة بمواد ألمانية</h2>
+        <p data-i18n="paint.why.p">نستخدم أفضل مواد الدهان الألمانية المعتمدة لنضمن لك نتيجة احترافية وتدوم طويلاً.</p>
       </div>
       <div class="features-grid">
 
@@ -585,8 +562,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>دهان Glasurit الألماني</h3>
-            <p>نستخدم دهان Glasurit الألماني المعتمد 100% — من أفضل وأجود أنواع دهانات السيارات في العالم، يضمن لك لوناً ثابتاً ولمعة استثنائية.</p>
+            <h3 data-i18n="paint.w1.h3">دهان Glasurit الألماني</h3>
+            <p data-i18n="paint.w1.p">نستخدم دهان Glasurit الألماني المعتمد 100% — من أفضل وأجود أنواع دهانات السيارات في العالم، يضمن لك لوناً ثابتاً ولمعة استثنائية.</p>
           </div>
         </div>
 
@@ -597,8 +574,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>إصلاح الخدوش والدعمات</h3>
-            <p>نعالج الخدوش والدعمات الطفيفة بخبرة عالية — سواء كانت خدشاً صغيراً أو ضربة دعم، نعيد السيارة لحالتها الأصلية.</p>
+            <h3 data-i18n="paint.w2.h3">إصلاح الخدوش والدعمات</h3>
+            <p data-i18n="paint.w2.p">نعالج الخدوش والدعمات الطفيفة بخبرة عالية — سواء كانت خدشاً صغيراً أو ضربة دعم، نعيد السيارة لحالتها الأصلية.</p>
           </div>
         </div>
 
@@ -609,8 +586,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>فنيون متخصصون</h3>
-            <p>فريقنا من الفنيين المدرّبين على أعلى مستوى يحرصون على أدق التفاصيل لضمان نتيجة خالية من أي عيوب أو فقاعات.</p>
+            <h3 data-i18n="paint.w3.h3">فنيون متخصصون</h3>
+            <p data-i18n="paint.w3.p">فريقنا من الفنيين المدرّبين على أعلى مستوى يحرصون على أدق التفاصيل لضمان نتيجة خالية من أي عيوب أو فقاعات.</p>
           </div>
         </div>
 
@@ -621,8 +598,8 @@
             </svg>
           </div>
           <div class="feature-body">
-            <h3>بيئة عمل مُعقّمة</h3>
-            <p>نعمل في بيئة خالية من الغبار والملوثات لضمان التصاق الدهان بشكل مثالي ونتيجة نهائية ناعمة ومشرقة.</p>
+            <h3 data-i18n="paint.w4.h3">بيئة عمل مُعقّمة</h3>
+            <p data-i18n="paint.w4.p">نعمل في بيئة خالية من الغبار والملوثات لضمان التصاق الدهان بشكل مثالي ونتيجة نهائية ناعمة ومشرقة.</p>
           </div>
         </div>
 
@@ -632,9 +609,9 @@
     <!-- ═══════════════ GALLERY ═══════════════ -->
     <div id="gallery" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">GALLERY — معرض الأعمال</div>
-        <h2>من أعمالنا في صبغ السيارات</h2>
-        <p>نماذج حقيقية من تركيبات صبغ السيارات لدى هافركامب في الكويت.</p>
+        <div class="tag" data-i18n="paint.gal.tag">GALLERY — معرض الأعمال</div>
+        <h2 data-i18n="paint.gal.h2">من أعمالنا في صبغ السيارات</h2>
+        <p data-i18n="paint.gal.p">نماذج حقيقية من تركيبات صبغ السيارات لدى هافركامب في الكويت.</p>
       </div>
       <div class="bento-grid">
 
@@ -664,56 +641,56 @@
     <div class="lb-overlay" id="lb" onclick="closeLb(event)">
       <div class="lb-img-wrap">
         <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
-        <img id="lb-img" src="" alt="" />
+        <img loading="lazy" id="lb-img" src="" alt="" />
       </div>
     </div>
 
     <!-- ═══════════════ FAQ ═══════════════ -->
     <div id="faq" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">FAQ — أسئلة شائعة</div>
-        <h2>كل ما تحتاج معرفته عن خدمة الصبغ</h2>
+        <div class="tag" data-i18n="paint.faq.tag">FAQ — أسئلة شائعة</div>
+        <h2 data-i18n="paint.faq.h2">كل ما تحتاج معرفته عن خدمة الصبغ</h2>
       </div>
       <div class="svc-faq">
 
         <details class="faq-item glass">
           <summary>
-            كم يوم تحتاج السيارة لعمل الصبغ؟
+            <span data-i18n="paint.faq.1.q">كم يوم تحتاج السيارة لعمل الصبغ؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">تختلف مدة الصبغ حسب حجم السيارة وطبيعة الأضرار — الصبغ الجزئي يستغرق يوماً واحداً إلى يومين، أما الصبغ الكامل فقد يصل إلى 3-5 أيام لضمان الجودة المطلوبة.</div>
+          <div class="answer" data-i18n="paint.faq.1.a">تختلف مدة الصبغ حسب حجم السيارة وطبيعة الأضرار — الصبغ الجزئي يستغرق يوماً واحداً إلى يومين، أما الصبغ الكامل فقد يصل إلى 3-5 أيام لضمان الجودة المطلوبة.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما هي المواد المستخدمة في الصبغ؟
+            <span data-i18n="paint.faq.2.q">ما هي المواد المستخدمة في الصبغ؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نستخدم دهان Glasurit الألماني المعتمد 100% — وهو من أفضل وأجود أنواع دهانات السيارات في العالم، يُستخدم في أكبر ورش السيارات الاحترافية عالمياً ويضمن لوناً ثابتاً ولمعة استثنائية.</div>
+          <div class="answer" data-i18n="paint.faq.2.a">نستخدم دهان Glasurit الألماني المعتمد 100% — وهو من أفضل وأجود أنواع دهانات السيارات في العالم، يُستخدم في أكبر ورش السيارات الاحترافية عالمياً ويضمن لوناً ثابتاً ولمعة استثنائية.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل الصبغ الكامل أفضل أم الجزئي؟
+            <span data-i18n="paint.faq.3.q">هل الصبغ الكامل أفضل أم الجزئي؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">يعتمد القرار على حالة السيارة — إذا كان الضرر محدوداً في جزء واحد أو اثنين فالصبغ الجزئي هو الخيار الأمثل اقتصادياً، أما إذا كانت السيارة قديمة الصبغ أو تعرضت لأضرار واسعة فالصبغ الكامل يعطي نتيجة أفضل وأكثر تجانساً.</div>
+          <div class="answer" data-i18n="paint.faq.3.a">يعتمد القرار على حالة السيارة — إذا كان الضرر محدوداً في جزء واحد أو اثنين فالصبغ الجزئي هو الخيار الأمثل اقتصادياً، أما إذا كانت السيارة قديمة الصبغ أو تعرضت لأضرار واسعة فالصبغ الكامل يعطي نتيجة أفضل وأكثر تجانساً.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل أستطيع تغيير لون السيارة بالكامل؟
+            <span data-i18n="paint.faq.4.q">هل أستطيع تغيير لون السيارة بالكامل؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نعم، يمكن تغيير لون السيارة بالكامل بشرط استيفاء المتطلبات النظامية والحصول على موافقة الجهات المختصة (إدارة المرور العامة) لتغيير البيانات في الاستمارة. فريقنا يرشدك في كامل الإجراءات.</div>
+          <div class="answer" data-i18n="paint.faq.4.a">نعم، يمكن تغيير لون السيارة بالكامل بشرط استيفاء المتطلبات النظامية والحصول على موافقة الجهات المختصة (إدارة المرور العامة) لتغيير البيانات في الاستمارة. فريقنا يرشدك في كامل الإجراءات.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما هي تكلفة خدمة الصبغ؟
+            <span data-i18n="paint.faq.5.q">ما هي تكلفة خدمة الصبغ؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">التكلفة تختلف من سيارة لأخرى حسب نوع السيارة وحجم الأضرار ونوع الخدمة (جزئي أو كامل). تواصل معنا للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</div>
+          <div class="answer" data-i18n="paint.faq.5.a">التكلفة تختلف من سيارة لأخرى حسب نوع السيارة وحجم الأضرار ونوع الخدمة (جزئي أو كامل). تواصل معنا للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</div>
         </details>
 
       </div>
@@ -721,28 +698,28 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="svc-cta glass">
-      <h2>اطلب كشف مجاني لسيارتك</h2>
-      <p>تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح لخدمة الصبغ بدون أي التزام.</p>
+      <h2 data-i18n="paint.cta.h2">اطلب كشف مجاني لسيارتك</h2>
+      <p data-i18n="paint.cta.p">تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح لخدمة الصبغ بدون أي التزام.</p>
       <div class="svc-cta-btns">
-        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">تواصل معنا</a>
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.contact">تواصل معنا</a>
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
       </div>
     </div>
 
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -750,7 +727,10 @@
   </main>
 
   <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
   <script src="js/lightbox.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

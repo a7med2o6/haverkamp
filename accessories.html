@@ -598,17 +598,20 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#perfumes">عطور</a>
-        <a href="#medals">ميداليات</a>
-        <a href="#leather">ميداليات جلد</a>
-        <a href="contactus.html">تواصل معنا</a>
+        <a href="#perfumes" data-i18n="acc.nav.perfumes">عطور</a>
+        <a href="#medals" data-i18n="acc.nav.medals">ميداليات</a>
+        <a href="#leather" data-i18n="acc.nav.leather">ميداليات جلد</a>
+        <a href="contactus.html" data-i18n="svc.btn.contact">تواصل معنا</a>
       </div>
       <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="nav-cta"
-        style="text-decoration:none; display:inline-block;">اطلب الآن</a>
-    </nav>
+        data-i18n="acc.prod.order">اطلب الآن</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="shop-page">
@@ -617,29 +620,29 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M9 18l6-6-6-6"/>
       </svg>
-      الرئيسية
+      <span data-i18n="footer.home">الرئيسية</span>
     </a>
 
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="shop-hero">
-      <div class="tag">ACCESSORIES — إكسسوارات</div>
-      <h1>متجر <span class="em">هافركامب</span></h1>
-      <p>إكسسوارات سيارات راقية مختارة بعناية — عطور، ميداليات، وإضافات تميّز سيارتك.</p>
+      <div class="tag" data-i18n="acc.hero.tag">ACCESSORIES — إكسسوارات</div>
+      <h1 data-i18n="acc.hero.h1">متجر <span class="em">هافركامب</span></h1>
+      <p data-i18n="acc.hero.p">إكسسوارات سيارات راقية مختارة بعناية — عطور، ميداليات، وإضافات تميّز سيارتك.</p>
 
       <div class="filter-bar">
-        <button class="filter-btn active" data-filter="all">الكل</button>
-        <button class="filter-btn" data-filter="perfumes">عطور</button>
-        <button class="filter-btn" data-filter="medals">ميداليات</button>
-        <button class="filter-btn" data-filter="leather">ميداليات جلد</button>
+        <button class="filter-btn active" data-filter="all" data-i18n="acc.filter.all">الكل</button>
+        <button class="filter-btn" data-filter="perfumes" data-i18n="acc.nav.perfumes">عطور</button>
+        <button class="filter-btn" data-filter="medals" data-i18n="acc.nav.medals">ميداليات</button>
+        <button class="filter-btn" data-filter="leather" data-i18n="acc.nav.leather">ميداليات جلد</button>
       </div>
     </div>
 
     <!-- ═══════════════ PERFUMES ═══════════════ -->
     <div class="shop-section" id="perfumes" data-category="perfumes">
       <div class="shop-section-head">
-        <h2>🌿 عطور السيارة</h2>
+        <h2 data-i18n="acc.cat1.h2">🌿 عطور السيارة</h2>
         <div class="s-rule"></div>
-        <div class="s-count">8 منتجات</div>
+        <div class="s-count" data-i18n="acc.count.perf">8 منتجات</div>
       </div>
 
       <div class="products-grid">
@@ -655,13 +658,13 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">H 1</div>
-            <div class="prod-desc">عطر سيارة فاخر بعبق مميز</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.luxe">عطر سيارة فاخر بعبق مميز</div>
             <div class="prod-footer">
               <div class="prod-price">
                 <span class="amount">1.5</span>
-                <span class="currency">د.ك</span>
+                <span class="currency" data-i18n="currency.kd">د.ك</span>
               </div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%201" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%201" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -677,10 +680,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">H 2</div>
-            <div class="prod-desc">عطر سيارة فاخر بعبق مميز</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.luxe">عطر سيارة فاخر بعبق مميز</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%202" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%202" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -696,10 +699,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">H 3</div>
-            <div class="prod-desc">عطر سيارة فاخر بعبق مميز</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.luxe">عطر سيارة فاخر بعبق مميز</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%203" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%203" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -715,10 +718,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">H 4</div>
-            <div class="prod-desc">عطر سيارة فاخر بعبق مميز</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.luxe">عطر سيارة فاخر بعبق مميز</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%204" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20H%204" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -734,10 +737,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">Unique</div>
-            <div class="prod-desc">عطر سيارة بتصميم فريد ومميز</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.unique">عطر سيارة بتصميم فريد ومميز</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Unique" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Unique" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -753,10 +756,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">Universal</div>
-            <div class="prod-desc">عطر سيارة يناسب جميع الأذواق</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.univ">عطر سيارة يناسب جميع الأذواق</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Universal" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Universal" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -772,10 +775,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">Dr. Marcus — Senso Wood</div>
-            <div class="prod-desc">Exotic Vanilla بعبق خشبي فاخر</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.senso">Exotic Vanilla بعبق خشبي فاخر</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Dr.%20Marcus%20Senso%20Wood" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Dr.%20Marcus%20Senso%20Wood" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -791,10 +794,10 @@
           </div>
           <div class="prod-body">
             <div class="prod-name">Dr. Marcus</div>
-            <div class="prod-desc">عطر سيارة Dr. Marcus الفاخر</div>
+            <div class="prod-desc" data-i18n="acc.prod.desc.marc">عطر سيارة Dr. Marcus الفاخر</div>
             <div class="prod-footer">
-              <div class="prod-price"><span class="amount">1.5</span><span class="currency">د.ك</span></div>
-              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Dr.%20Marcus" target="_blank" rel="noopener" class="prod-order-btn">اطلب الآن</a>
+              <div class="prod-price"><span class="amount">1.5</span><span class="currency" data-i18n="currency.kd">د.ك</span></div>
+              <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20عطر%20Dr.%20Marcus" target="_blank" rel="noopener" class="prod-order-btn" data-i18n="acc.prod.order">اطلب الآن</a>
             </div>
           </div>
         </div>
@@ -805,9 +808,9 @@
     <!-- ═══════════════ MEDALS ═══════════════ -->
     <div class="shop-section" id="medals" data-category="medals">
       <div class="shop-section-head">
-        <h2>🏅 ميداليات</h2>
+        <h2 data-i18n="acc.cat2.h2">🏅 ميداليات</h2>
         <div class="s-rule"></div>
-        <div class="s-count">6 تصاميم</div>
+        <div class="s-count" data-i18n="acc.count.med">6 تصاميم</div>
       </div>
 
       <div class="medals-grid">
@@ -817,7 +820,7 @@
             <img src="assets/accessories/medal/medal-1.png" alt="ميدالية 1" loading="lazy" />
           </div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%201" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب">
               <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
@@ -827,7 +830,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/medal/medal-2.png" alt="ميدالية 2" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%202" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -835,7 +838,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/medal/medal-3.png" alt="ميدالية 3" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%203" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -843,7 +846,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/medal/medal-4.png" alt="ميدالية 4" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%204" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -851,7 +854,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/medal/medal-5.png" alt="ميدالية 5" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%205" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -859,7 +862,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/medal/medal-6.png" alt="ميدالية 6" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20رقم%206" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -869,16 +872,16 @@
     <!-- ═══════════════ LEATHER MEDALS ═══════════════ -->
     <div class="shop-section" id="leather" data-category="leather">
       <div class="shop-section-head">
-        <h2>🟤 ميداليات جلد</h2>
+        <h2 data-i18n="acc.cat3.h2">🟤 ميداليات جلد</h2>
         <div class="s-rule"></div>
-        <div class="s-count">6 تصاميم</div>
+        <div class="s-count" data-i18n="acc.count.med">6 تصاميم</div>
       </div>
 
       <div class="medals-grid">
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/1.png" alt="ميدالية جلد 1" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%201" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -886,7 +889,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/2.png" alt="ميدالية جلد 2" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%202" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -894,7 +897,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/3.png" alt="ميدالية جلد 3" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%203" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -902,7 +905,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/4.png" alt="ميدالية جلد 4" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%204" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -910,7 +913,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/5.png" alt="ميدالية جلد 5" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%205" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -918,7 +921,7 @@
         <div class="medal-card glass">
           <div class="medal-img"><img src="assets/accessories/leather_medal/6.png" alt="ميدالية جلد 6" loading="lazy" /></div>
           <div class="medal-footer">
-            <div class="medal-price"><span class="amount">3</span> <span class="currency">د.ك</span></div>
+            <div class="medal-price"><span class="amount">3</span> <span class="currency" data-i18n="currency.kd">د.ك</span></div>
             <a href="https://wa.me/96551111154?text=أود%20الاستفسار%20عن%20ميدالية%20الجلد%20رقم%206" target="_blank" rel="noopener" class="medal-wa" aria-label="اطلب عبر واتساب"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
           </div>
         </div>
@@ -927,28 +930,28 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="shop-cta glass">
-      <h2>ما وجدت ما تبحث عنه؟</h2>
-      <p>تواصل معنا مباشرة وسنساعدك في اختيار المنتج المناسب أو نوفره لك خصيصاً.</p>
+      <h2 data-i18n="acc.cta.h2">ما وجدت ما تبحث عنه؟</h2>
+      <p data-i18n="acc.cta.p">تواصل معنا مباشرة وسنساعدك في اختيار المنتج المناسب أو نوفره لك خصيصاً.</p>
       <div class="shop-cta-btns">
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-primary"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35); background:rgba(37,211,102,.12);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
-        <a href="contactus.html" class="btn btn-glass" style="text-decoration:none;">صفحة التواصل</a>
+        <a href="contactus.html" class="btn btn-glass" style="text-decoration:none;" data-i18n="acc.cta.contact">صفحة التواصل</a>
       </div>
     </div>
 
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -956,6 +959,7 @@
   </main>
 
   <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
   <script>
     // Filter tabs
     const btns = document.querySelectorAll('.filter-btn');
@@ -976,6 +980,8 @@
       });
     });
   </script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

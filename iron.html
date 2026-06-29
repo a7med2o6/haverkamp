@@ -48,28 +48,6 @@
       padding-top: 80px;
     }
 
-    .svc-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--ink-1);
-      text-decoration: none;
-      font-size: 14px;
-      margin: 28px 0 0;
-      padding: 8px 14px;
-      border-radius: var(--r-pill);
-      background: var(--glass-tint);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      border: 1px solid var(--glass-border);
-      transition: all .25s;
-    }
-
-    .svc-back:hover {
-      color: var(--ink-0);
-      transform: translateX(4px);
-    }
-
     .svc-hero {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -511,83 +489,79 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#about">عن ايرون شيلد</a>
-        <a href="#specs">المواصفات</a>
-        <a href="#gallery">معرض الصور</a>
-        <a href="#packages">الأسعار</a>
-        <a href="#faq">الأسئلة الشائعة</a>
-        <a href="terms.html">البنود والشروط</a>
+        <a href="#about" data-i18n="iron.nav.about">عن ايرون شيلد</a>
+        <a href="#specs" data-i18n="iron.nav.specs">المواصفات</a>
+        <a href="#gallery" data-i18n="nav.gallery">معرض الصور</a>
+        <a href="#packages" data-i18n="iron.nav.packages">الأسعار</a>
+        <a href="#faq" data-i18n="ppf.nav.faq">الأسئلة الشائعة</a>
+        <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
       </div>
-      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
-    </nav>
+      <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="svc-page">
 
-    <a href="protication.html" class="svc-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-      حماية البدي
-    </a>
-
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="svc-hero">
       <div class="svc-hero-text">
-        <div class="tag">IRON SHIELD — الحماية الأمريكية</div>
-        <h1>ايرون شيلد — <span class="em">الحماية الأمريكية</span></h1>
-        <p class="subtitle">حماية أمريكية بجودة عالية</p>
-        <p>ايرون شيلد علامة أمريكية توفّر أفلام حماية متينة تحافظ على طلاء سيارتك ضد الخدوش وعوامل الطريق.</p>
+        <div class="tag" data-i18n="iron.hero.tag">IRON SHIELD — الحماية الأمريكية</div>
+        <h1 data-i18n="iron.hero.h1">ايرون شيلد — <span class="em">الحماية الأمريكية</span></h1>
+        <p class="subtitle" data-i18n="iron.hero.sub">حماية أمريكية بجودة عالية</p>
+        <p data-i18n="iron.hero.p">ايرون شيلد علامة أمريكية توفّر أفلام حماية متينة تحافظ على طلاء سيارتك ضد الخدوش وعوامل الطريق.</p>
         <div class="svc-hero-actions">
-          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
           <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
             style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            واتساب
+            <span data-i18n="svc.btn.wa">واتساب</span>
           </a>
         </div>
       </div>
 
       <div class="svc-hero-logo-panel glass">
-        <img src="assets/services/iron/iron.png" alt="ايرون شيلد — Iron Shield" class="hero-brand-logo" />
+        <img loading="lazy" src="assets/services/iron/iron.png" alt="ايرون شيلد — Iron Shield" class="hero-brand-logo" />
         <div class="hero-brand-badge">
           <span class="flag">🇺🇸</span>
-          صناعة أمريكية
+          <span data-i18n="iron.hero.badge">صناعة أمريكية</span>
         </div>
-        <p class="hero-brand-subtitle">أفلام حماية أمريكية متينة لمختلف أنواع السيارات</p>
+        <p class="hero-brand-subtitle" data-i18n="iron.hero.bsub">أفلام حماية أمريكية متينة لمختلف أنواع السيارات</p>
       </div>
     </div>
 
     <!-- ═══════════════ ABOUT ═══════════════ -->
     <div id="about" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">ABOUT — نبذة عن ايرون شيلد</div>
-        <h2>جودة أمريكية بمعايير عالمية</h2>
-        <p>ايرون شيلد علامة أمريكية متخصصة في أفلام حماية الطلاء المتينة.</p>
+        <div class="tag" data-i18n="iron.about.tag">ABOUT — نبذة عن ايرون شيلد</div>
+        <h2 data-i18n="iron.about.h2">جودة أمريكية بمعايير عالمية</h2>
+        <p data-i18n="iron.about.p">ايرون شيلد علامة أمريكية متخصصة في أفلام حماية الطلاء المتينة.</p>
       </div>
       <div class="about-block">
         <div class="about-text glass" style="padding: 32px 36px; border-radius: var(--r-xl);">
-          <p>ايرون شيلد (Iron Shield) علامة أمريكية متخصصة في تصنيع أفلام حماية الطلاء بمعايير الجودة الأمريكية العالية، توفّر حماية فعّالة وطويلة الأمد ضد الخدوش والحصى المتطاير وعوامل الطريق المختلفة، مع الحفاظ على مظهر السيارة الأصلي.</p>
+          <p data-i18n="iron.about.p2">ايرون شيلد (Iron Shield) علامة أمريكية متخصصة في تصنيع أفلام حماية الطلاء بمعايير الجودة الأمريكية العالية، توفّر حماية فعّالة وطويلة الأمد ضد الخدوش والحصى المتطاير وعوامل الطريق المختلفة، مع الحفاظ على مظهر السيارة الأصلي.</p>
           <br>
-          <p>نوفّر ايرون شيلد في الكويت مع تركيب احترافي في بيئة مُعقّمة وكفالة كاملة على عيوب التركيب.</p>
+          <p data-i18n="iron.about.p3">نوفّر ايرون شيلد في الكويت مع تركيب احترافي في بيئة مُعقّمة وكفالة كاملة على عيوب التركيب.</p>
         </div>
         <div class="about-stat-row">
           <div class="about-stat glass">
             <div class="about-stat-num">8.7μ</div>
-            <div class="about-stat-label">سمك الحماية بتقنية أمريكية متقدمة لحماية فعّالة</div>
+            <div class="about-stat-label" data-i18n="iron.st1.lbl">سمك الحماية بتقنية أمريكية متقدمة لحماية فعّالة</div>
           </div>
           <div class="about-stat glass">
-            <div class="about-stat-num">10 سنوات</div>
-            <div class="about-stat-label">كفالة على عيوب التركيب لراحة البال الكاملة</div>
+            <div class="about-stat-num" data-i18n="iron.sp2.val">10 سنوات</div>
+            <div class="about-stat-label" data-i18n="iron.st2.lbl">كفالة على عيوب التركيب لراحة البال الكاملة</div>
           </div>
           <div class="about-stat glass">
             <div class="about-stat-num">Self‑Heal</div>
-            <div class="about-stat-label">معالجة ذاتية — تختفي الخدوش الدقيقة بالحرارة</div>
+            <div class="about-stat-label" data-i18n="iron.st3.lbl">معالجة ذاتية — تختفي الخدوش الدقيقة بالحرارة</div>
           </div>
         </div>
       </div>
@@ -596,8 +570,8 @@
     <!-- ═══════════════ SPECS ═══════════════ -->
     <div id="specs" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">SPECS — المواصفات التقنية</div>
-        <h2>مواصفات ايرون شيلد</h2>
+        <div class="tag" data-i18n="iron.specs.tag">SPECS — المواصفات التقنية</div>
+        <h2 data-i18n="iron.specs.h2">مواصفات ايرون شيلد</h2>
       </div>
       <div class="specs-grid">
 
@@ -607,8 +581,8 @@
               <path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/>
             </svg>
           </div>
-          <div class="spec-value">8.7μ</div>
-          <div class="spec-label">السمك 8.7 ميكروميلي — حماية متينة ضد الخدوش وضربات الحصى</div>
+          <div class="spec-value" data-i18n="iron.sp1.val">8.7μ</div>
+          <div class="spec-label" data-i18n="iron.sp1.lbl">السمك 8.7 ميكروميلي — حماية متينة ضد الخدوش وضربات الحصى</div>
         </div>
 
         <div class="spec-card glass">
@@ -617,8 +591,8 @@
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <div class="spec-value">10 سنوات</div>
-          <div class="spec-label">كفالة 10 سنوات ضد عيوب التركيب</div>
+          <div class="spec-value" data-i18n="iron.sp2.val">10 سنوات</div>
+          <div class="spec-label" data-i18n="iron.sp2.lbl">كفالة 10 سنوات ضد عيوب التركيب</div>
         </div>
 
         <div class="spec-card glass">
@@ -627,8 +601,8 @@
               <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
             </svg>
           </div>
-          <div class="spec-value">Self‑Heal</div>
-          <div class="spec-label">معالجة ذاتية بالحرارة — تختفي الخدوش الدقيقة تلقائيًا</div>
+          <div class="spec-value" data-i18n="iron.sp3.val">Self‑Heal</div>
+          <div class="spec-label" data-i18n="iron.sp3.lbl">معالجة ذاتية بالحرارة — تختفي الخدوش الدقيقة تلقائيًا</div>
         </div>
 
         <div class="spec-card glass">
@@ -637,8 +611,8 @@
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
             </svg>
           </div>
-          <div class="spec-value">لمعة+</div>
-          <div class="spec-label">لمعة إضافية — تُعزّز وضوح ولمعان طلاء السيارة الأصلي</div>
+          <div class="spec-value" data-i18n="iron.sp4.val">لمعة+</div>
+          <div class="spec-label" data-i18n="iron.sp4.lbl">لمعة إضافية — تُعزّز وضوح ولمعان طلاء السيارة الأصلي</div>
         </div>
 
         <div class="spec-card glass">
@@ -647,8 +621,8 @@
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
-          <div class="spec-value">كل 6 أشهر</div>
-          <div class="spec-label">سيرفس دوري مجاني — فحص الحماية للحفاظ على الكفالة</div>
+          <div class="spec-value" data-i18n="iron.sp5.val">كل 6 أشهر</div>
+          <div class="spec-label" data-i18n="iron.sp5.lbl">سيرفس دوري مجاني — فحص الحماية للحفاظ على الكفالة</div>
         </div>
 
         <div class="spec-card glass">
@@ -657,8 +631,8 @@
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
           </div>
-          <div class="spec-value">100%</div>
-          <div class="spec-label">منتج أصلي معتمد — متوفر في الكويت مع ضمان الجودة</div>
+          <div class="spec-value" data-i18n="iron.sp6.val">100%</div>
+          <div class="spec-label" data-i18n="iron.sp6.lbl">منتج أصلي معتمد — متوفر في الكويت مع ضمان الجودة</div>
         </div>
 
       </div>
@@ -667,32 +641,32 @@
     <!-- ═══════════════ FINISH TYPES ═══════════════ -->
     <div class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">FINISH TYPES — أنواع الحماية</div>
-        <h2>اختر الحماية المناسبة لسيارتك</h2>
+        <div class="tag" data-i18n="iron.finish.tag">FINISH TYPES — أنواع الحماية</div>
+        <h2 data-i18n="iron.finish.h2">اختر الحماية المناسبة لسيارتك</h2>
       </div>
       <div class="finish-grid">
 
         <div class="finish-card glass">
-          <img class="finish-img" src="assets/services/body-protection/lam3a-1.jpg" alt="شفاف" />
+          <img loading="lazy" class="finish-img" src="assets/services/body-protection/lam3a-1.jpg" alt="شفاف" />
           <div class="finish-body">
-            <h3>شفاف</h3>
-            <p>حماية شفافة تُعزّز لمعة السيارة الأصلية وتحافظ على مظهرها مع حمايتها الكاملة.</p>
+            <h3 data-i18n="iron.f1.h3">شفاف</h3>
+            <p data-i18n="iron.f1.p">حماية شفافة تُعزّز لمعة السيارة الأصلية وتحافظ على مظهرها مع حمايتها الكاملة.</p>
           </div>
         </div>
 
         <div class="finish-card glass">
-          <img class="finish-img" src="assets/services/body-protection/mate.png" alt="مطفي" />
+          <img loading="lazy" class="finish-img" src="assets/services/body-protection/mate.png" alt="مطفي" />
           <div class="finish-body">
-            <h3>مطفي</h3>
-            <p>لمسة عصرية وأنيقة؛ الخيار الأمثل لو بتدوّر على مظهر فريد وجذاب مع حماية كاملة للطلاء.</p>
+            <h3 data-i18n="iron.f2.h3">مطفي</h3>
+            <p data-i18n="iron.f2.p">لمسة عصرية وأنيقة؛ الخيار الأمثل لو بتدوّر على مظهر فريد وجذاب مع حماية كاملة للطلاء.</p>
           </div>
         </div>
 
         <div class="finish-card glass">
-          <img class="finish-img" src="assets/services/body-protection/color.jpg" alt="تغيير لون" />
+          <img loading="lazy" class="finish-img" src="assets/services/body-protection/color.jpg" alt="تغيير لون" />
           <div class="finish-body">
-            <h3>تغيير لون</h3>
-            <p>غيّر لون سيارتك لأي لون حسب اختيارك من حمايات الألوان المتوفرة — الحماية والتجديد في آنٍ واحد.</p>
+            <h3 data-i18n="iron.f3.h3">تغيير لون</h3>
+            <p data-i18n="iron.f3.p">غيّر لون سيارتك لأي لون حسب اختيارك من حمايات الألوان المتوفرة — الحماية والتجديد في آنٍ واحد.</p>
           </div>
         </div>
 
@@ -702,9 +676,9 @@
     <!-- ═══════════════ GALLERY ═══════════════ -->
     <div id="gallery" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">GALLERY — معرض الأعمال</div>
-        <h2>من أعمالنا مع ايرون شيلد</h2>
-        <p>نماذج حقيقية من تركيبات حماية ايرون شيلد الأمريكية في الكويت.</p>
+        <div class="tag" data-i18n="iron.gal.tag">GALLERY — معرض الأعمال</div>
+        <h2 data-i18n="iron.gal.h2">من أعمالنا مع ايرون شيلد</h2>
+        <p data-i18n="iron.gal.p">نماذج حقيقية من تركيبات حماية ايرون شيلد الأمريكية في الكويت.</p>
       </div>
       <div class="bento-grid">
         <div class="bento-item glass" onclick="openLb(this)">
@@ -732,16 +706,16 @@
     <div class="lb-overlay" id="lb" onclick="closeLb(event)">
       <div class="lb-img-wrap">
         <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
-        <img id="lb-img" src="" alt="" />
+        <img loading="lazy" id="lb-img" src="" alt="" />
       </div>
     </div>
 
     <!-- ═══════════════ PACKAGES ═══════════════ -->
     <div id="packages" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">PACKAGES — الباقات والأسعار</div>
-        <h2>الأسعار</h2>
-        <p>اختر الباقة المناسبة لسيارتك — السعر متغير حسب نوع السيارة.</p>
+        <div class="tag" data-i18n="iron.pkg.tag">PACKAGES — الباقات والأسعار</div>
+        <h2 data-i18n="iron.pkg.h2">الأسعار</h2>
+        <p data-i18n="iron.pkg.p">اختر الباقة المناسبة لسيارتك — السعر متغير حسب نوع السيارة.</p>
       </div>
       <div class="packages-grid">
 
@@ -749,71 +723,71 @@
         <div class="pkg-card glass pkg-card--platinum">
           <div class="pkg-badge">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            الأكثر مبيعًا
+            <span data-i18n="iron.pkg.badge">الأكثر مبيعًا</span>
           </div>
           <div class="pkg-tier">PLATINUM</div>
-          <div class="pkg-name">البلاتينية</div>
-          <div class="pkg-price">400 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="iron.pkg1.name">البلاتينية</div>
+          <div class="pkg-price">400 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="iron.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية بدي كامل</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تلبيس دواسات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
-            <li><span class="check">✓</span>خدمة الونش متوفرة لمرة واحدة</li>
+            <li><span class="check">✓</span><span data-i18n="iron.p1f1">حماية بدي كامل</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.p1f6">تلبيس دواسات</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.san">تعقيم عدد 2 سيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.p1f8">خدمة الونش متوفرة لمرة واحدة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=مهتم بباقة البلاتينية لحماية ايرون شيلد، ممكن التفاصيل؟"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
         <!-- ذهبية -->
         <div class="pkg-card glass">
           <div class="pkg-tier">GOLD</div>
-          <div class="pkg-name">الذهبية</div>
-          <div class="pkg-price">210 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="iron.pkg2.name">الذهبية</div>
+          <div class="pkg-price">210 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="iron.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية كبوت كامل</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
+            <li><span class="check">✓</span><span data-i18n="iron.p2f1">حماية كبوت كامل</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.san">تعقيم عدد 2 سيارة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=مهتم بباقة الذهبية لحماية ايرون شيلد، ممكن التفاصيل؟"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
         <!-- فضية -->
         <div class="pkg-card glass">
           <div class="pkg-tier">SILVER</div>
-          <div class="pkg-name">الفضية</div>
-          <div class="pkg-price">160 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="iron.pkg3.name">الفضية</div>
+          <div class="pkg-price">160 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="iron.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية نص كبوت</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
+            <li><span class="check">✓</span><span data-i18n="iron.p3f1">حماية نص كبوت</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="iron.feat.san">تعقيم عدد 2 سيارة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=مهتم بباقة الفضية لحماية ايرون شيلد، ممكن التفاصيل؟"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
@@ -823,57 +797,57 @@
     <!-- ═══════════════ FAQ ═══════════════ -->
     <div id="faq" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">FAQ — أسئلة شائعة</div>
-        <h2>كل ما تحتاج معرفته عن ايرون شيلد</h2>
+        <div class="tag" data-i18n="iron.faq.tag">FAQ — أسئلة شائعة</div>
+        <h2 data-i18n="iron.faq.h2">كل ما تحتاج معرفته عن ايرون شيلد</h2>
       </div>
       <div class="svc-faq">
 
         <details class="faq-item glass">
           <summary>
-            ما سمك حماية ايرون شيلد؟
+            <span data-i18n="iron.faq.1.q">ما سمك حماية ايرون شيلد؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">سمك الحماية 8.7 ميكروميلي — حماية متينة توفر دفاعًا قويًا ضد الخدوش وضربات الحصى المتطاير وعوامل الطريق.</div>
+          <div class="answer" data-i18n="iron.faq.1.a">سمك الحماية 8.7 ميكروميلي — حماية متينة توفر دفاعًا قويًا ضد الخدوش وضربات الحصى المتطاير وعوامل الطريق.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما مدة الكفالة؟
+            <span data-i18n="iron.faq.2.q">ما مدة الكفالة؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">10 سنوات على عيوب التركيب — كفالة شاملة تعكس ثقة ايرون شيلد في جودة منتجها الأمريكي.</div>
+          <div class="answer" data-i18n="iron.faq.2.a">10 سنوات على عيوب التركيب — كفالة شاملة تعكس ثقة ايرون شيلد في جودة منتجها الأمريكي.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            كيف يتم التركيب؟
+            <span data-i18n="iron.faq.3.q">كيف يتم التركيب؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">يتم التركيب بقطع احترافية مكتملة بدون درزات مرئية، مع التركيب الداخلي للأطراف في بيئة مُعقّمة خالية من الغبار لضمان أعلى جودة.</div>
+          <div class="answer" data-i18n="iron.faq.3.a">يتم التركيب بقطع احترافية مكتملة بدون درزات مرئية، مع التركيب الداخلي للأطراف في بيئة مُعقّمة خالية من الغبار لضمان أعلى جودة.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل تحتوي على خاصية المعالجة الذاتية؟
+            <span data-i18n="iron.faq.4.q">هل تحتوي على خاصية المعالجة الذاتية؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نعم، ايرون شيلد مزوّدة بتقنية المعالجة الذاتية؛ الخدوش الدقيقة تختفي تلقائيًا عند تعريضها للحرارة (الشمس أو مجفف شعر).</div>
+          <div class="answer" data-i18n="iron.faq.4.a">نعم، ايرون شيلد مزوّدة بتقنية المعالجة الذاتية؛ الخدوش الدقيقة تختفي تلقائيًا عند تعريضها للحرارة (الشمس أو مجفف شعر).</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما نسبة اللمعة الإضافية؟
+            <span data-i18n="iron.faq.5.q">ما نسبة اللمعة الإضافية؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">تضيف حماية ايرون شيلد لمعة إضافية تُعزّز وضوح ولمعان طلاء السيارة الأصلي وتحافظ عليه لسنوات طويلة.</div>
+          <div class="answer" data-i18n="iron.faq.5.a">تضيف حماية ايرون شيلد لمعة إضافية تُعزّز وضوح ولمعان طلاء السيارة الأصلي وتحافظ عليه لسنوات طويلة.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل يتوفر سيرفس دوري؟
+            <span data-i18n="iron.faq.6.q">هل يتوفر سيرفس دوري؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نعم، نُجري فحصًا دوريًا مجانيًا كل 6 أشهر للتأكد من سلامة الحماية وصحة التركيب والحفاظ على الكفالة.</div>
+          <div class="answer" data-i18n="iron.faq.6.a">نعم، نُجري فحصًا دوريًا مجانيًا كل 6 أشهر للتأكد من سلامة الحماية وصحة التركيب والحفاظ على الكفالة.</div>
         </details>
 
       </div>
@@ -881,28 +855,28 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="svc-cta glass">
-      <h2>اطلب حماية ايرون شيلد الأمريكية</h2>
-      <p>تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</p>
+      <h2 data-i18n="iron.cta.h2">اطلب حماية ايرون شيلد الأمريكية</h2>
+      <p data-i18n="iron.cta.p">تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</p>
       <div class="svc-cta-btns">
-        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">تواصل معنا</a>
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.contact">تواصل معنا</a>
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
       </div>
     </div>
 
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -911,6 +885,9 @@
 
   <script src="js/whatsapp-float.js"></script>
   <script src="js/lightbox.js"></script>
+  <script src="js/scroll-anim.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

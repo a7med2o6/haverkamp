@@ -49,29 +49,6 @@
       padding-top: 80px;
     }
 
-    /* ── Back link ── */
-    .svc-back {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--ink-1);
-      text-decoration: none;
-      font-size: 14px;
-      margin: 28px 0 0;
-      padding: 8px 14px;
-      border-radius: var(--r-pill);
-      background: var(--glass-tint);
-      backdrop-filter: blur(var(--blur));
-      -webkit-backdrop-filter: blur(var(--blur));
-      border: 1px solid var(--glass-border);
-      transition: all .25s;
-    }
-
-    .svc-back:hover {
-      color: var(--ink-0);
-      transform: translateX(4px);
-    }
-
     /* ── Hero ── */
     .svc-hero {
       display: grid;
@@ -796,90 +773,86 @@
   <div class="nav-wrap">
     <nav class="nav glass">
       <div class="nav-brand">
-        <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+        <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
       </div>
       <div class="nav-links">
-        <a href="#about">عن هافركامب</a>
-        <a href="#specs">المواصفات</a>
-        <a href="#gallery">معرض الصور</a>
-        <a href="#packages">الباقات</a>
-        <a href="#faq">الأسئلة الشائعة</a>
-        <a href="terms.html">البنود والشروط</a>
+        <a href="#about" data-i18n="hvk.nav.about">عن هافركامب</a>
+        <a href="#specs" data-i18n="hvk.nav.specs">المواصفات</a>
+        <a href="#gallery" data-i18n="nav.gallery">معرض الصور</a>
+        <a href="#packages" data-i18n="hvk.nav.packages">الباقات</a>
+        <a href="#faq" data-i18n="ppf.nav.faq">الأسئلة الشائعة</a>
+        <a href="terms.html" data-i18n="nav.terms">البنود والشروط</a>
       </div>
-      <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
-    </nav>
+      <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+      <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+  </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
   </div>
 
   <main class="svc-page">
 
-    <a href="protication.html" class="svc-back">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 18l6-6-6-6" />
-      </svg>
-      حماية البدي
-    </a>
-
     <!-- ═══════════════ HERO ═══════════════ -->
     <div class="svc-hero">
       <div class="svc-hero-text">
-        <div class="tag">HAVERKAMP — الحماية الألمانية</div>
-        <h1>هافركامب — <span class="em">الحماية الألمانية</span></h1>
-        <p class="subtitle">الوكيل الحصري لحماية هافركامب الألمانية في الشرق الأوسط</p>
-        <p>هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
+        <div class="tag" data-i18n="hvk.hero.tag">HAVERKAMP — الحماية الألمانية</div>
+        <h1 data-i18n="hvk.hero.h1">هافركامب — <span class="em">الحماية الألمانية</span></h1>
+        <p class="subtitle" data-i18n="hvk.hero.sub">الوكيل الحصري لحماية هافركامب الألمانية في الشرق الأوسط</p>
+        <p data-i18n="hvk.hero.p">هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
 
         <div class="trust-badges">
-          <span class="trust-badge"><span class="tb-icon">🏆</span> +40 عام خبرة عالمية</span>
-          <span class="trust-badge"><span class="tb-icon">🛡️</span> كفالة 10 سنوات</span>
-          <span class="trust-badge"><span class="tb-icon">✅</span> وكيل حصري</span>
+          <span class="trust-badge"><span class="tb-icon">🏆</span> <span data-i18n="hvk.tb1">+40 عام خبرة عالمية</span></span>
+          <span class="trust-badge"><span class="tb-icon">🛡️</span> <span data-i18n="hvk.tb2">كفالة 10 سنوات</span></span>
+          <span class="trust-badge"><span class="tb-icon">✅</span> <span data-i18n="hvk.tb3">وكيل حصري</span></span>
         </div>
 
         <div class="svc-hero-actions" style="margin-top:28px;">
-          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">احجز موعدك الآن</a>
+          <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.book">احجز موعدك الآن</a>
           <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
             style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            واتساب
+            <span data-i18n="svc.btn.wa">واتساب</span>
           </a>
         </div>
       </div>
 
       <div class="svc-hero-logo-panel glass">
-        <img src="assets/services/haverkamp/haverkamp.png" alt="هافركامب — الحماية الألمانية" class="hero-brand-logo" style="mix-blend-mode: multiply;" />
+        <img loading="lazy" src="assets/services/haverkamp/haverkamp.png" alt="هافركامب — الحماية الألمانية" class="hero-brand-logo" style="mix-blend-mode: multiply;" />
         <div class="hero-brand-badge">
           <span class="flag">🇩🇪</span>
-          صناعة ألمانية
+          <span data-i18n="hvk.hero.badge">صناعة ألمانية</span>
         </div>
-        <p class="hero-brand-subtitle">حمايات ألمانية متقدمة لأعلى معايير الجودة</p>
+        <p class="hero-brand-subtitle" data-i18n="hvk.hero.bsub">حمايات ألمانية متقدمة لأعلى معايير الجودة</p>
       </div>
     </div>
 
     <!-- ═══════════════ ABOUT ═══════════════ -->
     <div id="about" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">ABOUT — نبذة عن هافركامب</div>
-        <h2>جودة ألمانية بمعايير عالمية</h2>
-        <p>هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
+        <div class="tag" data-i18n="hvk.about.tag">ABOUT — نبذة عن هافركامب</div>
+        <h2 data-i18n="hvk.about.h2">جودة ألمانية بمعايير عالمية</h2>
+        <p data-i18n="hvk.about.p">هافركامب علامة ألمانية رائدة في تقنيات الأفلام والحماية لأكثر من 40 عامًا، بمنتجات مبتكرة ومعتمدة وبأعلى معايير الجودة الألمانية. نوفّرها في الكويت كوكيل حصري لتمنح سيارتك أقوى حماية ممكنة.</p>
       </div>
       <div class="about-block">
         <div class="about-text glass" style="padding: 32px 36px; border-radius: var(--r-xl);">
-          <p>هافركامب (Haverkamp) شركة ألمانية متخصصة في تطوير وتصنيع أفلام الحماية منذ أكثر من أربعة عقود. تُعدّ من أوائل الشركات التي أدخلت تقنية المعالجة الذاتية لأفلام الحماية الشفافة، مما يجعلها الخيار الأمثل لمن يريد حماية فعلية وطويلة الأمد لسيارته.</p>
+          <p data-i18n="hvk.about.p2">هافركامب (Haverkamp) شركة ألمانية متخصصة في تطوير وتصنيع أفلام الحماية منذ أكثر من أربعة عقود. تُعدّ من أوائل الشركات التي أدخلت تقنية المعالجة الذاتية لأفلام الحماية الشفافة، مما يجعلها الخيار الأمثل لمن يريد حماية فعلية وطويلة الأمد لسيارته.</p>
           <br>
-          <p>نحن الوكيل الحصري لهافركامب في الشرق الأوسط، ونضمن لك الحصول على منتج أصلي 100% مع تركيب احترافي في بيئة مُعقّمة وكفالة كاملة.</p>
+          <p data-i18n="hvk.about.p3">نحن الوكيل الحصري لهافركامب في الشرق الأوسط، ونضمن لك الحصول على منتج أصلي 100% مع تركيب احترافي في بيئة مُعقّمة وكفالة كاملة.</p>
         </div>
         <div class="about-stat-row">
           <div class="about-stat glass">
             <div class="about-stat-num">+40</div>
-            <div class="about-stat-label">عامًا من التميز والخبرة في صناعة أفلام الحماية الألمانية</div>
+            <div class="about-stat-label" data-i18n="hvk.st1.lbl">عامًا من التميز والخبرة في صناعة أفلام الحماية الألمانية</div>
           </div>
           <div class="about-stat glass">
             <div class="about-stat-num">9.5μ</div>
-            <div class="about-stat-label">سمك الحماية بتقنية ألمانية متقدمة لأقصى حماية ممكنة</div>
+            <div class="about-stat-label" data-i18n="hvk.st2.lbl">سمك الحماية بتقنية ألمانية متقدمة لأقصى حماية ممكنة</div>
           </div>
           <div class="about-stat glass">
-            <div class="about-stat-num">10 سنوات</div>
-            <div class="about-stat-label">كفالة على عيوب التركيب لراحة البال الكاملة</div>
+            <div class="about-stat-num" data-i18n="hvk.sp2.val">10 سنوات</div>
+            <div class="about-stat-label" data-i18n="hvk.st3.lbl">كفالة على عيوب التركيب لراحة البال الكاملة</div>
           </div>
         </div>
       </div>
@@ -888,8 +861,8 @@
     <!-- ═══════════════ SPECS ═══════════════ -->
     <div id="specs" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">SPECS — المواصفات التقنية</div>
-        <h2>مواصفات هافركامب الألمانية</h2>
+        <div class="tag" data-i18n="hvk.specs.tag">SPECS — المواصفات التقنية</div>
+        <h2 data-i18n="hvk.specs.h2">مواصفات هافركامب الألمانية</h2>
       </div>
       <div class="specs-grid">
 
@@ -899,8 +872,8 @@
               <path d="M3 3h18v18H3z"/><path d="M3 9h18M9 3v18"/>
             </svg>
           </div>
-          <div class="spec-value">9.5μ</div>
-          <div class="spec-label">السمك 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى</div>
+          <div class="spec-value" data-i18n="hvk.sp1.val">9.5μ</div>
+          <div class="spec-label" data-i18n="hvk.sp1.lbl">السمك 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى</div>
         </div>
 
         <div class="spec-card glass">
@@ -909,8 +882,8 @@
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
           </div>
-          <div class="spec-value">10 سنوات</div>
-          <div class="spec-label">كفالة 10 سنوات ضد عيوب التركيب — أطول كفالة في السوق</div>
+          <div class="spec-value" data-i18n="hvk.sp2.val">10 سنوات</div>
+          <div class="spec-label" data-i18n="hvk.sp2.lbl">كفالة 10 سنوات ضد عيوب التركيب — أطول كفالة في السوق</div>
         </div>
 
         <div class="spec-card glass">
@@ -919,8 +892,8 @@
               <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
             </svg>
           </div>
-          <div class="spec-value">Self‑Heal</div>
-          <div class="spec-label">معالجة ذاتية — تختفي الخدوش الدقيقة بالحرارة تلقائيًا</div>
+          <div class="spec-value" data-i18n="hvk.sp3.val">Self‑Heal</div>
+          <div class="spec-label" data-i18n="hvk.sp3.lbl">معالجة ذاتية — تختفي الخدوش الدقيقة بالحرارة تلقائيًا</div>
         </div>
 
         <div class="spec-card glass">
@@ -929,8 +902,8 @@
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
             </svg>
           </div>
-          <div class="spec-value">+70%</div>
-          <div class="spec-label">لمعة إضافية — تصل إلى 70% فوق لمعة السيارة الأصلية</div>
+          <div class="spec-value" data-i18n="hvk.sp4.val">+70%</div>
+          <div class="spec-label" data-i18n="hvk.sp4.lbl">لمعة إضافية — تصل إلى 70% فوق لمعة السيارة الأصلية</div>
         </div>
 
         <div class="spec-card glass">
@@ -939,8 +912,8 @@
               <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
             </svg>
           </div>
-          <div class="spec-value">كل 6 أشهر</div>
-          <div class="spec-label">سيرفس دوري مجاني — فحص الحماية كل 6 أشهر للحفاظ على الكفالة</div>
+          <div class="spec-value" data-i18n="hvk.sp5.val">كل 6 أشهر</div>
+          <div class="spec-label" data-i18n="hvk.sp5.lbl">سيرفس دوري مجاني — فحص الحماية كل 6 أشهر للحفاظ على الكفالة</div>
         </div>
 
         <div class="spec-card glass">
@@ -949,8 +922,8 @@
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
             </svg>
           </div>
-          <div class="spec-value">100%</div>
-          <div class="spec-label">منتج أصلي معتمد من المصنع — وكيل حصري في الشرق الأوسط</div>
+          <div class="spec-value" data-i18n="hvk.sp6.val">100%</div>
+          <div class="spec-label" data-i18n="hvk.sp6.lbl">منتج أصلي معتمد من المصنع — وكيل حصري في الشرق الأوسط</div>
         </div>
 
       </div>
@@ -959,9 +932,9 @@
     <!-- ═══════════════ GALLERY ═══════════════ -->
     <div class="svc-sec" id="gallery" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">GALLERY — معرض الأعمال</div>
-        <h2>من أعمالنا مع هافركامب</h2>
-        <p>نماذج حقيقية من تركيبات حماية هافركامب الألمانية في الكويت.</p>
+        <div class="tag" data-i18n="hvk.gal.tag">GALLERY — معرض الأعمال</div>
+        <h2 data-i18n="hvk.gal.h2">من أعمالنا مع هافركامب</h2>
+        <p data-i18n="hvk.gal.p">نماذج حقيقية من تركيبات حماية هافركامب الألمانية في الكويت.</p>
       </div>
       <div class="bento-grid">
 
@@ -996,16 +969,16 @@
     <div class="lb-overlay" id="lb" onclick="closeLb(event)">
       <div class="lb-img-wrap">
         <button class="lb-close" onclick="closeLb()" aria-label="إغلاق">✕</button>
-        <img id="lb-img" src="" alt="" />
+        <img loading="lazy" id="lb-img" src="" alt="" />
       </div>
     </div>
 
     <!-- ═══════════════ PACKAGES ═══════════════ -->
     <div class="svc-sec" id="packages" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">PACKAGES — الباقات والأسعار</div>
-        <h2>الأسعار</h2>
-        <p>اختر الباقة المناسبة لسيارتك — السعر متغير حسب نوع السيارة.</p>
+        <div class="tag" data-i18n="hvk.pkg.tag">PACKAGES — الباقات والأسعار</div>
+        <h2 data-i18n="hvk.pkg.h2">الأسعار</h2>
+        <p data-i18n="hvk.pkg.p">اختر الباقة المناسبة لسيارتك — السعر متغير حسب نوع السيارة.</p>
       </div>
       <div class="packages-grid">
 
@@ -1015,77 +988,77 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
             </svg>
-            الأكثر مبيعًا
+            <span data-i18n="hvk.pkg1.badge">الأكثر مبيعًا</span>
           </div>
           <div class="pkg-tier">PLATINUM</div>
-          <div class="pkg-name">البلاتينية</div>
-          <div class="pkg-price">580 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="hvk.pkg1.name">البلاتينية</div>
+          <div class="pkg-price">580 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="hvk.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية بدي كامل</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تلبيس دواسات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
-            <li><span class="check">✓</span>خدمة الونش متوفرة لمرة واحدة</li>
+            <li><span class="check">✓</span><span data-i18n="hvk.p1f1">حماية بدي كامل</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.p1f6">تلبيس دواسات</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.san">تعقيم عدد 2 سيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.p1f8">خدمة الونش متوفرة لمرة واحدة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%A8%D9%84%D8%A7%D8%AA%D9%8A%D9%86%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
         <!-- ذهبية -->
         <div class="pkg-card glass">
           <div class="pkg-tier">GOLD</div>
-          <div class="pkg-name">الذهبية</div>
-          <div class="pkg-price">320 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="hvk.pkg2.name">الذهبية</div>
+          <div class="pkg-price">320 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="hvk.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية كبوت كامل</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
+            <li><span class="check">✓</span><span data-i18n="hvk.p2f1">حماية كبوت كامل</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.san">تعقيم عدد 2 سيارة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%B0%D9%87%D8%A8%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
         <!-- فضية -->
         <div class="pkg-card glass">
           <div class="pkg-tier">SILVER</div>
-          <div class="pkg-name">الفضية</div>
-          <div class="pkg-price">230 <span style="font-size:20px;font-weight:400;color:var(--ink-2);">د.ك</span></div>
-          <div class="pkg-price-note">السعر متغير حسب نوع السيارة</div>
+          <div class="pkg-name" data-i18n="hvk.pkg3.name">الفضية</div>
+          <div class="pkg-price">230 <span style="font-size:20px;font-weight:400;color:var(--ink-2);" data-i18n="currency.kd">د.ك</span></div>
+          <div class="pkg-price-note" data-i18n="hvk.pkg.note">السعر متغير حسب نوع السيارة</div>
           <div class="pkg-divider"></div>
           <ul class="pkg-features">
-            <li><span class="check">✓</span>حماية نص كبوت</li>
-            <li><span class="check">✓</span>عازل حراري شامل جميع زجاج السيارة</li>
-            <li><span class="check">✓</span>حماية الجام الأمامي</li>
-            <li><span class="check">✓</span>عمل نانو للمقاعد</li>
-            <li><span class="check">✓</span>عمل نانو للرنجات</li>
-            <li><span class="check">✓</span>تعقيم عدد 2 سيارة</li>
+            <li><span class="check">✓</span><span data-i18n="hvk.p3f1">حماية نص كبوت</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.tint">عازل حراري شامل جميع زجاج السيارة</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.ws">حماية الجام الأمامي</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.seats">عمل نانو للمقاعد</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.nano.rims">عمل نانو للرنجات</span></li>
+            <li><span class="check">✓</span><span data-i18n="hvk.pkg.feat.san">تعقيم عدد 2 سيارة</span></li>
           </ul>
           <a href="https://wa.me/96551111154?text=%D9%85%D9%87%D8%AA%D9%85%20%D8%A8%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D9%81%D8%B6%D9%8A%D8%A9%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A8%D8%AF%D9%8A%D8%8C%20%D9%85%D9%85%D9%83%D9%86%20%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%D8%9F"
             target="_blank" rel="noopener" class="pkg-wa-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            اطلب عبر واتساب
+            <span data-i18n="hvk.pkg.wa">اطلب عبر واتساب</span>
           </a>
         </div>
 
@@ -1095,57 +1068,57 @@
     <!-- ═══════════════ FAQ ═══════════════ -->
     <div id="faq" class="svc-sec" style="padding-top:0;">
       <div class="svc-sec-head">
-        <div class="tag">FAQ — أسئلة شائعة</div>
-        <h2>كل ما تحتاج معرفته عن هافركامب</h2>
+        <div class="tag" data-i18n="hvk.faq.tag">FAQ — أسئلة شائعة</div>
+        <h2 data-i18n="hvk.faq.h2">كل ما تحتاج معرفته عن هافركامب</h2>
       </div>
       <div class="svc-faq">
 
         <details class="faq-item glass">
           <summary>
-            ما هو سمك حماية هافركامب؟
+            <span data-i18n="hvk.faq.1.q">ما هو سمك حماية هافركامب؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">سمك حماية هافركامب 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى والصخر المتطاير على الطريق.</div>
+          <div class="answer" data-i18n="hvk.faq.1.a">سمك حماية هافركامب 9.5 ميكروميلي — سماكة متقدمة توفر أقصى حماية ضد الخدوش وضربات الحصى والصخر المتطاير على الطريق.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما هي مدة الكفالة؟
+            <span data-i18n="hvk.faq.2.q">ما هي مدة الكفالة؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">10 سنوات على عيوب التركيب — من أطول الكفالات المتاحة في السوق الكويتي، مما يعكس ثقة هافركامب في جودة منتجها.</div>
+          <div class="answer" data-i18n="hvk.faq.2.a">10 سنوات على عيوب التركيب — من أطول الكفالات المتاحة في السوق الكويتي، مما يعكس ثقة هافركامب في جودة منتجها.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل تتوفر خاصية المعالجة الذاتية؟
+            <span data-i18n="hvk.faq.3.q">هل تتوفر خاصية المعالجة الذاتية؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نعم، حماية هافركامب تتميز بتقنية المعالجة الذاتية؛ الخدوش الدقيقة تختفي تلقائيًا عند تعريضها للحرارة (الشمس أو مجفف شعر).</div>
+          <div class="answer" data-i18n="hvk.faq.3.a">نعم، حماية هافركامب تتميز بتقنية المعالجة الذاتية؛ الخدوش الدقيقة تختفي تلقائيًا عند تعريضها للحرارة (الشمس أو مجفف شعر).</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما نسبة اللمعة الإضافية؟
+            <span data-i18n="hvk.faq.4.q">ما نسبة اللمعة الإضافية؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">تضيف الحماية الشفافة من هافركامب ما يصل إلى 70% لمعة إضافية فوق لمعة السيارة الأصلية، مما يجعل بدي سيارتك يبدو أكثر إشراقًا من يوم شرائها.</div>
+          <div class="answer" data-i18n="hvk.faq.4.a">تضيف الحماية الشفافة من هافركامب ما يصل إلى 70% لمعة إضافية فوق لمعة السيارة الأصلية، مما يجعل بدي سيارتك يبدو أكثر إشراقًا من يوم شرائها.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            ما هو السيرفس الدوري؟
+            <span data-i18n="hvk.faq.5.q">ما هو السيرفس الدوري؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">كل 6 أشهر نجري فحصًا مجانيًا للحماية للتأكد من سلامة التركيب وحفظ الكفالة، وتقديم أي صيانة وقائية عند الحاجة.</div>
+          <div class="answer" data-i18n="hvk.faq.5.a">كل 6 أشهر نجري فحصًا مجانيًا للحماية للتأكد من سلامة التركيب وحفظ الكفالة، وتقديم أي صيانة وقائية عند الحاجة.</div>
         </details>
 
         <details class="faq-item glass">
           <summary>
-            هل هافركامب معتمدة في الكويت؟
+            <span data-i18n="hvk.faq.6.q">هل هافركامب معتمدة في الكويت؟</span>
             <span class="plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></span>
           </summary>
-          <div class="answer">نعم، نحن الوكيل الحصري لهافركامب في الشرق الأوسط، وجميع منتجاتنا أصلية 100% مستوردة مباشرة من المصنع في ألمانيا.</div>
+          <div class="answer" data-i18n="hvk.faq.6.a">نعم، نحن الوكيل الحصري لهافركامب في الشرق الأوسط، وجميع منتجاتنا أصلية 100% مستوردة مباشرة من المصنع في ألمانيا.</div>
         </details>
 
       </div>
@@ -1153,16 +1126,16 @@
 
     <!-- ═══════════════ CTA ═══════════════ -->
     <div class="svc-cta glass">
-      <h2>اطلب حماية هافركامب الألمانية</h2>
-      <p>تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</p>
+      <h2 data-i18n="hvk.cta.h2">اطلب حماية هافركامب الألمانية</h2>
+      <p data-i18n="svc.cta.desc">تواصل معنا اليوم للحصول على كشف مجاني وعرض سعر واضح بدون أي التزام.</p>
       <div class="svc-cta-btns">
-        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;">تواصل معنا</a>
+        <a href="contactus.html" class="btn btn-primary" style="text-decoration:none;" data-i18n="svc.btn.contact">تواصل معنا</a>
         <a href="https://wa.me/96551111154" target="_blank" rel="noopener" class="btn btn-glass"
           style="text-decoration:none; color:#25D366; border-color:rgba(37,211,102,.35);">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          راسلنا على واتساب
+          <span data-i18n="svc.btn.wa2">راسلنا على واتساب</span>
         </a>
       </div>
     </div>
@@ -1170,12 +1143,12 @@
     <!-- FOOTER -->
     <footer class="footer" style="padding: 32px 0;">
       <div class="footer-row">
-        <div class="copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+        <div class="copy" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
         <div class="links">
           <a href="tel:+96551111154" dir="ltr">‎+965 5111 1154</a>
-          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;">واتساب</a>
-          <a href="terms.html">الشروط</a>
-          <a href="index.html">الرئيسية</a>
+          <a href="https://wa.me/96551111154" target="_blank" rel="noopener" style="color:#25D366;" data-i18n="footer.wa">واتساب</a>
+          <a href="terms.html" data-i18n="footer.terms">الشروط</a>
+          <a href="index.html" data-i18n="footer.home">الرئيسية</a>
         </div>
       </div>
     </footer>
@@ -1183,7 +1156,10 @@
   </main>
 
   <script src="js/whatsapp-float.js"></script>
+  <script src="js/scroll-anim.js"></script>
   <script src="js/lightbox.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 
 </html>

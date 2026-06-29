@@ -44,23 +44,6 @@
     padding: 120px 24px 80px;
   }
 
-  .terms-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink-1);
-    text-decoration: none;
-    font-size: 14px;
-    margin-bottom: 32px;
-    padding: 8px 14px;
-    border-radius: var(--r-pill);
-    background: var(--glass-tint);
-    backdrop-filter: blur(var(--blur));
-    -webkit-backdrop-filter: blur(var(--blur));
-    border: 1px solid var(--glass-border);
-    transition: all 0.25s;
-  }
-  .terms-back:hover { color: var(--ink-0); transform: translateX(4px); }
 
   .terms-hero {
     margin-bottom: 48px;
@@ -317,28 +300,27 @@
 <div class="nav-wrap">
   <nav class="nav glass">
     <div class="nav-brand">
-      <a href="index.html"><img src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
+      <a href="index.html"><img loading="lazy" src="assets/logo.png?v=2" alt="هافركامب — HAVERCAMP" class="brand-mark" /></a>
     </div>
     <div class="nav-links">
-      <a href="#terms-conditions">البنود والشروط</a>
-      <a href="#post-install">إرشادات ما بعد التركيب</a>
-      <a href="#warranty">الكفالة</a>
+      <a href="#terms-conditions" data-i18n="terms.nav.terms">البنود والشروط</a>
+      <a href="#post-install" data-i18n="terms.nav.post">إرشادات ما بعد التركيب</a>
+      <a href="#warranty" data-i18n="terms.nav.warranty">الكفالة</a>
     </div>
-    <a href="contactus.html" class="nav-cta" style="text-decoration:none; display:inline-block;">تواصل معنا</a>
+    <a href="contactus.html" class="nav-cta"  data-i18n="nav.cta">تواصل معنا</a>
+    <button class="lang-btn" id="lang-btn" aria-label="تبديل اللغة">&#x1F1EC;&#x1F1E7;</button>
+    <button class="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
   </nav>
+  <div class="nav-drawer" id="nav-drawer"></div>
 </div>
 
 <main class="terms-page">
 
-  <a href="index.html" class="terms-back">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-    العودة للرئيسية
-  </a>
 
   <div class="terms-hero">
-    <div class="tag">TERMS &amp; CONDITIONS — البنود والشروط</div>
-    <h1>البنود والشروط</h1>
-    <p>يُرجى قراءة هذه البنود بعناية قبل تسليم سيارتك لفريق هافركامب.</p>
+    <div class="tag" data-i18n="terms.hero.tag">TERMS &amp; CONDITIONS — البنود والشروط</div>
+    <h1 data-i18n="terms.hero.h1">البنود والشروط</h1>
+    <p data-i18n="terms.hero.p">يُرجى قراءة هذه البنود بعناية قبل تسليم سيارتك لفريق هافركامب.</p>
   </div>
 
   <!-- == القسم 1: البنود والشروط == -->
@@ -346,18 +328,18 @@
     <div class="terms-card glass">
       <div class="terms-card-head">
         <span class="terms-card-num">01</span>
-        <h2>البنود والشروط</h2>
+        <h2 data-i18n="terms.s1.h2">البنود والشروط</h2>
       </div>
       <ul class="terms-list">
-        <li><span class="bullet"></span><span>عدم ترك أي ممتلكات شخصية داخل السيارة.</span></li>
-        <li><span class="bullet"></span><span>في حالة إرسال السيارة مع السائق أو من ينوب عن مالك السيارة، يُرجى إرسال نوع الخدمة المطلوبة.</span></li>
-        <li><span class="bullet"></span><span>يجب فحص السيارة من الداخل والخارج قبل مغادرة شركة هافركامب، ولن نقبل أي شكوى بعد ذلك.</span></li>
-        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن الإصابات أو الأضرار الناتجة عن ظروف خارجة عن إرادتها (الأمطار، السيول، الزلازل، الحروب، العوامل الجوية وغيرها).</span></li>
-        <li><span class="bullet"></span><span>في حال قدوم السيارة وبها شرخ أو كسر في الزجاج وازداد داخل المحل أو ظهرت شروخ جديدة، فإن شركة هافركامب غير مسؤولة عن ذلك.</span></li>
-        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن تلف البطارية أو أي قطع إلكترونية عند ترك السيارة لتقديم الخدمة.</span></li>
-        <li><span class="bullet"></span><span>شركة هافركامب لا تتحمل أي مسؤولية في حال كانت السيارة مصبوغة.</span></li>
-        <li><span class="bullet"></span><span>شركة هافركامب غير مسؤولة عن حالات سوء الاستخدام من قبل العميل.</span></li>
-        <li><span class="bullet"></span><span>يستفيد من الكفالة المالك الأول فقط.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li1">عدم ترك أي ممتلكات شخصية داخل السيارة.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li2">في حالة إرسال السيارة مع السائق أو من ينوب عن مالك السيارة، يُرجى إرسال نوع الخدمة المطلوبة.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li3">يجب فحص السيارة من الداخل والخارج قبل مغادرة شركة هافركامب، ولن نقبل أي شكوى بعد ذلك.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li4">شركة هافركامب غير مسؤولة عن الإصابات أو الأضرار الناتجة عن ظروف خارجة عن إرادتها (الأمطار، السيول، الزلازل، الحروب، العوامل الجوية وغيرها).</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li5">في حال قدوم السيارة وبها شرخ أو كسر في الزجاج وازداد داخل المحل أو ظهرت شروخ جديدة، فإن شركة هافركامب غير مسؤولة عن ذلك.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li6">شركة هافركامب غير مسؤولة عن تلف البطارية أو أي قطع إلكترونية عند ترك السيارة لتقديم الخدمة.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li7">شركة هافركامب لا تتحمل أي مسؤولية في حال كانت السيارة مصبوغة.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li8">شركة هافركامب غير مسؤولة عن حالات سوء الاستخدام من قبل العميل.</span></li>
+        <li><span class="bullet"></span><span data-i18n="terms.s1.li9">يستفيد من الكفالة المالك الأول فقط.</span></li>
       </ul>
     </div>
   </div>
@@ -367,16 +349,16 @@
     <div class="terms-card glass">
       <div class="terms-card-head">
         <span class="terms-card-num">02</span>
-        <h2>إرشادات ما بعد التركيب</h2>
+        <h2 data-i18n="terms.s2.h2">إرشادات ما بعد التركيب</h2>
       </div>
       <div class="terms-sub">
         <div class="terms-sub-block">
-          <div class="sub-label">تركيب حماية طلاء السيارة</div>
-          <p>يُرجى عدم غسل السيارة لمدة (3) أيام وتركها قدر الإمكان في الشمس، ومراجعة شركة هافركامب بعدها للفحص النهائي للحماية.</p>
+          <div class="sub-label" data-i18n="terms.s2a.lbl">تركيب حماية طلاء السيارة</div>
+          <p data-i18n="terms.s2a.p">يُرجى عدم غسل السيارة لمدة (3) أيام وتركها قدر الإمكان في الشمس، ومراجعة شركة هافركامب بعدها للفحص النهائي للحماية.</p>
         </div>
         <div class="terms-sub-block">
-          <div class="sub-label">تركيب العزل الحراري أو حماية الجام الأمامي</div>
-          <p>يُرجى عدم إنزال أو غسل الزجاج لمدة لا تقل عن 48 ساعة.</p>
+          <div class="sub-label" data-i18n="terms.s2b.lbl">تركيب العزل الحراري أو حماية الجام الأمامي</div>
+          <p data-i18n="terms.s2b.p">يُرجى عدم إنزال أو غسل الزجاج لمدة لا تقل عن 48 ساعة.</p>
         </div>
       </div>
     </div>
@@ -387,32 +369,34 @@
     <div class="terms-card glass">
       <div class="terms-card-head">
         <span class="terms-card-num">03</span>
-        <h2>الكفالة</h2>
+        <h2 data-i18n="terms.s3.h2">الكفالة</h2>
       </div>
       <div class="warranty-grid">
         <div class="warranty-block">
-          <div class="w-title">كفالة حماية البدي</div>
+          <div class="w-title" data-i18n="terms.w1.title">كفالة حماية البدي</div>
           <ul>
-            <li><span class="bullet"></span><span>كفالة (10) سنوات ضد عيوب التركيب مع التقيّد بالسيرفيس كل (3) أشهر.</span></li>
-            <li><span class="bullet"></span><span>الكفالة لا تشمل الحوادث والزلقات والحكّات.</span></li>
+            <li><span class="bullet"></span><span data-i18n="terms.w1.li1">كفالة (10) سنوات ضد عيوب التركيب مع التقيّد بالسيرفيس كل (3) أشهر.</span></li>
+            <li><span class="bullet"></span><span data-i18n="terms.w1.li2">الكفالة لا تشمل الحوادث والزلقات والحكّات.</span></li>
           </ul>
-          <div class="note">تسقط الكفالة في حالة عدم التقيّد بالسيرفيس الدوري.</div>
+          <div class="note" data-i18n="terms.w1.note">تسقط الكفالة في حالة عدم التقيّد بالسيرفيس الدوري.</div>
         </div>
         <div class="warranty-block">
-          <div class="w-title">كفالة العازل الحراري</div>
+          <div class="w-title" data-i18n="terms.w2.title">كفالة العازل الحراري</div>
           <ul>
-            <li><span class="bullet"></span><span>كفالة (5) سنوات ضد عيوب التركيب.</span></li>
-            <li><span class="bullet"></span><span>حماية الجام الأمامي بدون كفالة.</span></li>
+            <li><span class="bullet"></span><span data-i18n="terms.w2.li1">كفالة (5) سنوات ضد عيوب التركيب.</span></li>
+            <li><span class="bullet"></span><span data-i18n="terms.w2.li2">حماية الجام الأمامي بدون كفالة.</span></li>
           </ul>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="footer-note">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
+  <div class="footer-note" data-i18n="footer.copy">© ٢٠٢٦ هافركامب — جميع الحقوق محفوظة.</div>
 
 </main>
 
 <script src="js/whatsapp-float.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/nav.js"></script>
 </body>
 </html>

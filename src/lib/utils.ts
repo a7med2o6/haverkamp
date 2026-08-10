@@ -93,6 +93,45 @@ export function formatDateOnly(
   }).format(date);
 }
 
+/** عدد السنوات المكتملة منذ تاريخ — للعمر ومدة الخدمة */
+export function yearsSince(date: Date | string | null | undefined): number | null {
+  if (!date) return null;
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return null;
+
+  const now = new Date();
+  let years = now.getUTCFullYear() - d.getUTCFullYear();
+  const monthDiff = now.getUTCMonth() - d.getUTCMonth();
+  // لم يمرّ عيد الميلاد/الذكرى بعد هذا العام
+  if (monthDiff < 0 || (monthDiff === 0 && now.getUTCDate() < d.getUTCDate())) years--;
+  return years < 0 ? null : years;
+}
+
+export type ExpiryTone = 'ok' | 'warn' | 'danger' | 'neutral';
+
+/**
+ * حالة تاريخ انتهاء وثيقة: منتهية / توشك / سارية.
+ * العتبات: 30 يوم = خطر، 90 يوم = تنبيه.
+ */
+export function expiryStatus(date: Date | string | null | undefined): {
+  days: number | null;
+  tone: ExpiryTone;
+  label: string;
+} {
+  if (!date) return { days: null, tone: 'neutral', label: 'غير مسجّل' };
+
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return { days: null, tone: 'neutral', label: 'غير مسجّل' };
+
+  const days = Math.round((d.getTime() - todayDateOnly().getTime()) / 86400000);
+
+  if (days < 0) return { days, tone: 'danger', label: `منتهية منذ ${Math.abs(days)} يوم` };
+  if (days === 0) return { days, tone: 'danger', label: 'تنتهي اليوم' };
+  if (days <= 30) return { days, tone: 'danger', label: `${days} يوم متبقٍ` };
+  if (days <= 90) return { days, tone: 'warn', label: `${days} يوم متبقٍ` };
+  return { days, tone: 'ok', label: 'سارية' };
+}
+
 /** يحوّل Date إلى صيغة <input type="datetime-local"> بالتوقيت المحلي */
 export function toLocalInput(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d) : d;

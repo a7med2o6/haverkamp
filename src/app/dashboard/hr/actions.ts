@@ -6,6 +6,14 @@ import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { action, moneySchema, optionalDate, optionalString, phoneSchema } from '@/lib/action-utils';
 import { dateOnlyFromInput, todayDateOnly } from '@/lib/utils';
+// نشتق قوائم القيم من enums بريزما مباشرة — تكرارها يدوياً يجعلها تنحرف بصمت
+import {
+  AttendanceStatus,
+  DocumentType,
+  EmployeeStatus,
+  LeaveType,
+  PayrollStatus,
+} from '@/generated/prisma/enums';
 
 // ═══════════════════════════════════════════════════════════
 //  الموظفون
@@ -24,9 +32,13 @@ const employeeSchema = z.object({
   birthDate: optionalDate,
   hireDate: z.union([z.string(), z.date()]).transform((v) => new Date(v)),
   contractEnd: optionalDate,
-  status: z.enum(['ACTIVE', 'ON_LEAVE', 'SUSPENDED', 'TERMINATED']),
+  sponsor: optionalString,
+  photo: optionalString,
+  status: z.enum(EmployeeStatus),
   baseSalary: moneySchema,
   allowance: moneySchema,
+  bankName: optionalString,
+  bankAccount: optionalString,
   bankIban: optionalString,
   emergencyContact: optionalString,
   annualLeaveDays: z
@@ -103,7 +115,7 @@ const attendanceSchema = z.object({
     .transform((v) => (v instanceof Date ? v : dateOnlyFromInput(v))),
   checkIn: optionalString,
   checkOut: optionalString,
-  status: z.enum(['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE', 'HOLIDAY']),
+  status: z.enum(AttendanceStatus),
   notes: optionalString,
 });
 
@@ -209,7 +221,7 @@ const leaveSchema = z
   .object({
     id: z.string().optional(),
     employeeId: z.string().min(1, 'الموظف مطلوب'),
-    type: z.enum(['ANNUAL', 'SICK', 'UNPAID', 'EMERGENCY', 'MATERNITY', 'HAJJ']),
+    type: z.enum(LeaveType),
     fromDate: z
       .union([z.string(), z.date()])
       .transform((v) => (v instanceof Date ? v : dateOnlyFromInput(v))),
@@ -320,15 +332,7 @@ export const decideLeave = action({
 const documentSchema = z.object({
   id: z.string().optional(),
   employeeId: z.string().min(1, 'الموظف مطلوب'),
-  type: z.enum([
-    'RESIDENCY',
-    'PASSPORT',
-    'CIVIL_ID',
-    'CONTRACT',
-    'LICENSE',
-    'HEALTH_CERT',
-    'OTHER',
-  ]),
+  type: z.enum(DocumentType),
   number: optionalString,
   issueDate: optionalDate,
   expiryDate: optionalDate,
@@ -348,11 +352,29 @@ export const saveDocument = action({
     if (id) {
       await db.employeeDocument.update({ where: { id }, data });
       revalidatePath('/dashboard/hr/documents');
+      revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
       return { id, message: 'تم تحديث المستند' };
+    }
+
+    // بدون معرّف: نحدّث الوثيقة القائمة من نفس النوع بدل إنشاء نسخة مكرّرة
+    const existing = await db.employeeDocument.findFirst({
+      where: { employeeId: data.employeeId, type: data.type },
+    });
+
+    if (existing) {
+      // لا نمسح القيم القائمة بحقول فارغة قادمة من نموذج مختصر (كتجديد التواريخ)
+      const merged = Object.fromEntries(
+        Object.entries(data).filter(([, v]) => v !== null && v !== undefined)
+      );
+      await db.employeeDocument.update({ where: { id: existing.id }, data: merged });
+      revalidatePath('/dashboard/hr/documents');
+      revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
+      return { id: existing.id, message: 'تم تحديث المستند' };
     }
 
     const created = await db.employeeDocument.create({ data });
     revalidatePath('/dashboard/hr/documents');
+    revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
     return { id: created.id, message: 'تمت إضافة المستند' };
   },
 });
@@ -495,7 +517,7 @@ export const generatePayroll = action({
 
 export const setPayrollStatus = action({
   permission: 'hr:write',
-  schema: z.object({ id: z.string(), status: z.enum(['DRAFT', 'APPROVED', 'PAID']) }),
+  schema: z.object({ id: z.string(), status: z.enum(PayrollStatus) }),
   audit: { entity: 'PayrollRun', action: 'STATUS' },
   handler: async ({ id, status }) => {
     await db.payrollRun.update({

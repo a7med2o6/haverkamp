@@ -403,9 +403,12 @@ model Employee {
   birthDate    DateTime?
   hireDate     DateTime
   contractEnd  DateTime?
+  sponsor      String? // الكفيل — الجهة التي تحمل الإقامة
   status       EmployeeStatus @default(ACTIVE)
   baseSalary   Decimal        @db.Decimal(12, 3)
   allowance    Decimal        @default(0) @db.Decimal(12, 3)
+  bankName     String? // اسم البنك (KIB، NBK …)
+  bankAccount  String? // رقم الحساب
   bankIban     String?
   emergencyContact String?
   annualLeaveDays  Int        @default(30)
@@ -548,10 +551,13 @@ model PayslipItem {
 }
 
 enum DocumentType {
-  RESIDENCY // إقامة
-  PASSPORT // جواز
-  CIVIL_ID // بطاقة مدنية
-  CONTRACT // عقد عمل
+  CIVIL_ID // البطاقة المدنية
+  PASSPORT // الجواز
+  WORK_PERMIT // إذن العمل
+  RESIDENCY // الإقامة
+  RESIDENCY_APPLICATION // طلب الإقامة
+  CONTRACT // عقد العمل
+  INSURANCE // التأمين
   LICENSE // رخصة قيادة
   HEALTH_CERT // شهادة صحية
   OTHER

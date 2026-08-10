@@ -232,6 +232,71 @@ async function seedBookings() {
   console.log(`  ✔ الحجوزات: ${created}`);
 }
 
+/** يُكمل بروفايل أول موظف ببيانات كاملة لمعاينة صفحة البروفايل */
+async function enrichFirstProfile() {
+  const e = await db.employee.findFirst({ where: { code: 'HK-E-001' } });
+  if (!e) return;
+
+  const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
+
+  await db.employee.update({
+    where: { id: e.id },
+    data: {
+      fullNameEn: 'mohamed sayed ibrahim',
+      position: 'غسال سيارات',
+      sponsor: 'هافركامب',
+      bankName: 'KIB',
+      bankAccount: '0123456789',
+      bankIban: 'KW81CBKU0000000000001234560101',
+      civilId: '285010192124',
+      birthDate: d('1985-03-14'),
+      phone: '66272648',
+    },
+  });
+
+  const docs = [
+    { type: 'CIVIL_ID' as const, number: '285010192124', expiryDate: d('2026-09-02') },
+    { type: 'PASSPORT' as const, number: 'A12345678', expiryDate: d('2034-08-24') },
+    { type: 'WORK_PERMIT' as const, number: 'WP-9931', expiryDate: d('2026-09-02') },
+  ];
+
+  for (const doc of docs) {
+    const existing = await db.employeeDocument.findFirst({
+      where: { employeeId: e.id, type: doc.type },
+    });
+    if (existing) await db.employeeDocument.update({ where: { id: existing.id }, data: doc });
+    else await db.employeeDocument.create({ data: { employeeId: e.id, ...doc } });
+  }
+
+  const leaves = [
+    {
+      fromDate: d('2021-09-17'),
+      toDate: d('2021-12-08'),
+      days: 83,
+      type: 'ANNUAL' as const,
+      reason: 'سنوية',
+      status: 'APPROVED' as const,
+    },
+    {
+      fromDate: d('2024-06-06'),
+      toDate: d('2024-08-14'),
+      days: 70,
+      type: 'UNPAID' as const,
+      reason: 'تغير من خادم الي اهلي',
+      status: 'APPROVED' as const,
+    },
+  ];
+
+  for (const l of leaves) {
+    const existing = await db.leaveRequest.findFirst({
+      where: { employeeId: e.id, fromDate: l.fromDate },
+    });
+    if (!existing) await db.leaveRequest.create({ data: { employeeId: e.id, ...l } });
+  }
+
+  console.log('  ✔ بروفايل كامل للموظف HK-E-001');
+}
+
 async function main() {
   console.log('▶ تعبئة بيانات تجريبية…');
   await seedEmployees();
@@ -239,6 +304,7 @@ async function main() {
   await seedProducts();
   await seedCustomers();
   await seedBookings();
+  await enrichFirstProfile();
   console.log('✔ اكتملت البيانات التجريبية.');
 }
 

@@ -77,14 +77,27 @@ export const PAYROLL_STATUS = {
 } satisfies Record<string, Label>;
 
 export const DOCUMENT_TYPE = {
-  RESIDENCY: { label: 'إقامة', tone: 'accent' },
-  PASSPORT: { label: 'جواز سفر', tone: 'info' },
-  CIVIL_ID: { label: 'بطاقة مدنية', tone: 'accent' },
-  CONTRACT: { label: 'عقد عمل', tone: 'neutral' },
+  CIVIL_ID: { label: 'البطاقة', tone: 'accent' },
+  PASSPORT: { label: 'الجواز', tone: 'info' },
+  WORK_PERMIT: { label: 'إذن العمل', tone: 'accent' },
+  RESIDENCY: { label: 'الإقامة', tone: 'accent' },
+  RESIDENCY_APPLICATION: { label: 'طلب الإقامة', tone: 'neutral' },
+  CONTRACT: { label: 'العقد', tone: 'neutral' },
+  INSURANCE: { label: 'التأمين', tone: 'ok' },
   LICENSE: { label: 'رخصة قيادة', tone: 'info' },
   HEALTH_CERT: { label: 'شهادة صحية', tone: 'ok' },
   OTHER: { label: 'أخرى', tone: 'neutral' },
 } satisfies Record<string, Label>;
+
+/** بطاقات الوثائق في بروفايل الموظف — بالترتيب المعروض */
+export const DOCUMENT_TILES = [
+  { type: 'CIVIL_ID', label: 'البطاقة', icon: 'ContactRound' },
+  { type: 'PASSPORT', label: 'الجواز', icon: 'Globe' },
+  { type: 'WORK_PERMIT', label: 'إذن العمل', icon: 'FileBadge' },
+  { type: 'CONTRACT', label: 'العقد', icon: 'FileSignature' },
+  { type: 'RESIDENCY_APPLICATION', label: 'طلب الإقامة', icon: 'FileInput' },
+  { type: 'INSURANCE', label: 'التأمين', icon: 'HeartPulse' },
+] as const;
 
 export const STOCK_MOVEMENT = {
   IN: { label: 'وارد', tone: 'ok' },

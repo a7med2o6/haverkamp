@@ -1,156 +1,57 @@
-import type { Metadata } from 'next';
-import type { Prisma } from '@/generated/prisma/client';
+import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
-import { can } from '@/lib/rbac';
-import { PageHeader } from '@/components/dashboard/page-header';
-import { SearchBar } from '@/components/dashboard/search-bar';
-import { Pagination } from '@/components/dashboard/pagination';
-import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { EMPLOYEE_STATUS } from '@/lib/labels';
-import { PAGE_SIZE } from '@/lib/constants';
-import { formatDateOnly, formatKWD, toNumber } from '@/lib/utils';
-import { EmployeeFormButton } from './employee-form';
+import { StatCard } from '@/components/dashboard/stat-card';
+import { formatKWD, toNumber } from '@/lib/utils';
+import { EXPIRY_ALERT_DAYS } from '@/lib/constants';
+import { todayDateOnly } from '@/lib/utils';
 
-export const metadata: Metadata = { title: 'الموظفون' };
 export const dynamic = 'force-dynamic';
 
-export default async function EmployeesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; page?: string; status?: string }>;
-}) {
-  const session = await requirePermission('hr:read');
-  const { q, page: pageParam, status } = await searchParams;
-  const page = Math.max(1, Number(pageParam) || 1);
+export default async function EmployeesIndexPage() {
+  await requirePermission('hr:read');
 
-  const where: Prisma.EmployeeWhereInput = {
-    ...(q
-      ? {
-          OR: [
-            { fullName: { contains: q, mode: 'insensitive' as const } },
-            { code: { contains: q, mode: 'insensitive' as const } },
-            { phone: { contains: q } },
-            { position: { contains: q, mode: 'insensitive' as const } },
-          ],
-        }
-      : {}),
-    ...(status && status in EMPLOYEE_STATUS
-      ? { status: status as keyof typeof EMPLOYEE_STATUS }
-      : {}),
-  };
+  const first = await db.employee.findFirst({
+    where: { status: 'ACTIVE' },
+    orderBy: { fullName: 'asc' },
+    select: { id: true },
+  });
 
-  const [employees, total, departments, payrollTotal] = await Promise.all([
-    db.employee.findMany({
-      where,
-      orderBy: { code: 'asc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: { department: { select: { nameAr: true } } },
-    }),
-    db.employee.count({ where }),
-    db.department.findMany({ orderBy: { nameAr: 'asc' }, select: { id: true, nameAr: true } }),
-    db.employee.aggregate({
-      _sum: { baseSalary: true, allowance: true },
-      where: { status: 'ACTIVE' },
-    }),
+  // نفتح بروفايل أول موظف مباشرة — الصفحة الفارغة بلا فائدة
+  if (first) redirect(`/dashboard/hr/employees/${first.id}`);
+
+  const today = todayDateOnly();
+  const alertDate = new Date(today.getTime() + EXPIRY_ALERT_DAYS * 86400000);
+
+  const [total, payroll, expiring] = await Promise.all([
+    db.employee.count(),
+    db.employee.aggregate({ _sum: { baseSalary: true, allowance: true } }),
+    db.employeeDocument.count({ where: { expiryDate: { gte: today, lte: alertDate } } }),
   ]);
 
-  const canWrite = can(session.user.role, 'hr:write');
-  const monthlyCost =
-    toNumber(payrollTotal._sum.baseSalary) + toNumber(payrollTotal._sum.allowance);
-
   return (
-    <>
-      <PageHeader
-        title="الموظفون"
-        description={`${total} موظف · التكلفة الشهرية للرواتب ${formatKWD(monthlyCost)}`}
-        actions={canWrite ? <EmployeeFormButton departments={departments} /> : null}
-      />
+    <div className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-8">
+      <h1 className="text-xl font-bold text-[var(--text-0)]">الموظفون</h1>
+      <p className="mt-1.5 text-[13px] text-[var(--text-2)]">
+        لا يوجد موظفون نشطون بعد — أضف أول موظف من الزر في القائمة الجانبية.
+      </p>
 
-      <SearchBar placeholder="ابحث بالاسم أو الكود أو الوظيفة…" className="mb-4 max-w-md" />
-
-      <TableWrap>
-        <Table>
-          <thead>
-            <tr>
-              <Th>الكود</Th>
-              <Th>الاسم</Th>
-              <Th>الوظيفة</Th>
-              <Th>القسم</Th>
-              <Th>الهاتف</Th>
-              <Th>التعيين</Th>
-              <Th>الراتب</Th>
-              <Th>الحالة</Th>
-              {canWrite && <Th />}
-            </tr>
-          </thead>
-          <tbody>
-            {employees.length === 0 ? (
-              <EmptyState
-                title={q ? 'لا توجد نتائج مطابقة' : 'لا يوجد موظفون بعد'}
-                description={q ? 'جرّب مصطلح بحث آخر' : 'ابدأ بإضافة أول موظف'}
-                colSpan={9}
-              />
-            ) : (
-              employees.map((e) => (
-                <Tr key={e.id}>
-                  <Td className="tnum text-[12px]" dir="ltr">
-                    {e.code}
-                  </Td>
-                  <Td className="font-medium text-[var(--text-0)]">{e.fullName}</Td>
-                  <Td>{e.position}</Td>
-                  <Td className="text-[12px]">{e.department?.nameAr ?? '—'}</Td>
-                  <Td className="tnum text-[12px]" dir="ltr">
-                    {e.phone}
-                  </Td>
-                  <Td className="tnum text-[12px]">{formatDateOnly(e.hireDate)}</Td>
-                  <Td className="tnum">
-                    {formatKWD(toNumber(e.baseSalary) + toNumber(e.allowance))}
-                  </Td>
-                  <Td>
-                    <Badge tone={EMPLOYEE_STATUS[e.status].tone}>
-                      {EMPLOYEE_STATUS[e.status].label}
-                    </Badge>
-                  </Td>
-                  {canWrite && (
-                    <Td>
-                      <EmployeeFormButton
-                        variant="ghost"
-                        departments={departments}
-                        employee={{
-                          id: e.id,
-                          fullName: e.fullName,
-                          fullNameEn: e.fullNameEn,
-                          position: e.position,
-                          departmentId: e.departmentId,
-                          phone: e.phone,
-                          email: e.email,
-                          nationality: e.nationality,
-                          civilId: e.civilId,
-                          birthDate: e.birthDate?.toISOString().slice(0, 10) ?? '',
-                          hireDate: e.hireDate.toISOString().slice(0, 10),
-                          contractEnd: e.contractEnd?.toISOString().slice(0, 10) ?? '',
-                          status: e.status,
-                          baseSalary: toNumber(e.baseSalary),
-                          allowance: toNumber(e.allowance),
-                          bankIban: e.bankIban,
-                          emergencyContact: e.emergencyContact,
-                          annualLeaveDays: e.annualLeaveDays,
-                          notes: e.notes,
-                        }}
-                      />
-                    </Td>
-                  )}
-                </Tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-      </TableWrap>
-
-      <Pagination page={page} total={total} />
-    </>
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard label="إجمالي الموظفين" value={total} icon="Users" />
+        <StatCard
+          label="التكلفة الشهرية"
+          value={formatKWD(
+            toNumber(payroll._sum.baseSalary) + toNumber(payroll._sum.allowance)
+          )}
+          icon="Banknote"
+        />
+        <StatCard
+          label={`وثائق تنتهي خلال ${EXPIRY_ALERT_DAYS} يوم`}
+          value={expiring}
+          icon="FileWarning"
+          tone={expiring ? 'warn' : 'neutral'}
+        />
+      </div>
+    </div>
   );
 }

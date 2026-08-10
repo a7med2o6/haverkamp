@@ -7,7 +7,9 @@ import { Loader2, Pencil, Plus } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
+import { FileUpload } from '@/components/ui/file-upload';
 import { EMPLOYEE_STATUS, toOptions } from '@/lib/labels';
+import { Avatar } from './employee-list';
 import { saveEmployee } from '../actions';
 
 export interface EmployeeValues {
@@ -23,10 +25,14 @@ export interface EmployeeValues {
   birthDate?: string | null;
   hireDate: string;
   contractEnd?: string | null;
+  sponsor?: string | null;
   status: string;
   baseSalary: number | string;
   allowance: number | string;
+  bankName?: string | null;
+  bankAccount?: string | null;
   bankIban?: string | null;
+  photo?: string | null;
   emergencyContact?: string | null;
   annualLeaveDays: number | string;
   notes?: string | null;
@@ -44,10 +50,14 @@ const EMPTY: EmployeeValues = {
   birthDate: '',
   hireDate: new Date().toISOString().slice(0, 10),
   contractEnd: '',
+  sponsor: 'هافركامب',
   status: 'ACTIVE',
   baseSalary: '',
   allowance: '0',
+  bankName: '',
+  bankAccount: '',
   bankIban: '',
+  photo: '',
   emergencyContact: '',
   annualLeaveDays: 30,
   notes: '',
@@ -57,17 +67,24 @@ export function EmployeeFormButton({
   employee,
   departments,
   variant = 'primary',
+  className,
 }: {
   employee?: EmployeeValues;
   departments: Array<{ id: string; nameAr: string }>;
   variant?: 'primary' | 'secondary' | 'ghost';
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const isEdit = !!employee?.id;
 
   return (
     <>
-      <Button variant={variant} size={isEdit ? 'sm' : 'md'} onClick={() => setOpen(true)}>
+      <Button
+        variant={variant}
+        size={isEdit ? 'sm' : 'md'}
+        className={className}
+        onClick={() => setOpen(true)}
+      >
         {isEdit ? <Pencil /> : <Plus />}
         {isEdit ? 'تعديل' : 'موظف جديد'}
       </Button>
@@ -135,6 +152,17 @@ function EmployeeModal({
       }
     >
       <form id="employee-form" onSubmit={onSubmit} className="space-y-5">
+        <div className="flex items-center gap-4 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-4">
+          <Avatar src={values.photo ?? null} name={values.fullName || 'موظف'} size={64} />
+          <div className="min-w-0 flex-1">
+            <FileUpload
+              value={values.photo ?? ''}
+              folder="employees"
+              onChange={(url) => set('photo', url)}
+            />
+          </div>
+        </div>
+
         <Section title="البيانات الشخصية">
           <Field label="الاسم الكامل" error={errors.fullName?.[0]}>
             <Input
@@ -243,6 +271,13 @@ function EmployeeModal({
               className="text-start tnum"
             />
           </Field>
+          <Field label="الكفيل" hint="الجهة التي تحمل الإقامة">
+            <Input
+              value={values.sponsor ?? ''}
+              onChange={(e) => set('sponsor', e.target.value)}
+              placeholder="هافركامب"
+            />
+          </Field>
           <Field label="الحالة">
             <Select value={values.status} onChange={(e) => set('status', e.target.value)}>
               {toOptions(EMPLOYEE_STATUS).map((o) => (
@@ -287,6 +322,21 @@ function EmployeeModal({
               dir="ltr"
               className="text-start tnum"
               placeholder="0.000"
+            />
+          </Field>
+          <Field label="البنك">
+            <Input
+              value={values.bankName ?? ''}
+              onChange={(e) => set('bankName', e.target.value)}
+              placeholder="KIB، NBK، بيتك…"
+            />
+          </Field>
+          <Field label="رقم الحساب">
+            <Input
+              value={values.bankAccount ?? ''}
+              onChange={(e) => set('bankAccount', e.target.value)}
+              dir="ltr"
+              className="text-start tnum"
             />
           </Field>
           <Field label="رقم الآيبان">

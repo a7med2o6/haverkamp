@@ -166,6 +166,36 @@
   }
 }
 
+/* ── الطباعة (الفواتير والتقارير) ── */
+@media print {
+  /* نُخفي هيكل اللوحة ونطبع المحتوى فقط */
+  aside,
+  header,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .card,
+  [class*="surface-1"] {
+    background: #fff !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

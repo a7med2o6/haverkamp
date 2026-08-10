@@ -101,6 +101,9 @@ export const createPosOrder = action({
         },
       });
 
+      // الفاتورة المعلّقة لم تُبَع بعد — لا نخصم مخزونها حتى تُدفع
+      if (status === 'DRAFT') return created;
+
       // خصم المخزون للأصناف الملموسة فقط
       for (const item of items) {
         const product = await tx.product.findUnique({ where: { id: item.productId } });
@@ -206,5 +209,148 @@ export const closeRegister = action({
           : `عجز ${Math.abs(variance).toFixed(3)} د.ك`;
 
     return { id, message: `تم إغلاق الوردية — ${verdict}` };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  الفواتير المعلّقة
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * يحذف فاتورة معلّقة بعد استرجاع بنودها إلى السلة.
+ * المعلّقة لا تخصم مخزوناً، فالحذف لا يحتاج إرجاع أرصدة.
+ */
+export const discardParkedOrder = action({
+  permission: 'pos:write',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'Order', action: 'DISCARD_PARKED' },
+  handler: async ({ id }) => {
+    const order = await db.order.findUnique({
+      where: { id },
+      select: { status: true, number: true, jobOrderId: true },
+    });
+
+    if (!order) throw new AppError('الفاتورة غير موجودة');
+    if (order.status !== 'DRAFT') {
+      throw new AppError('لا يمكن حذف فاتورة مدفوعة — استخدم المرتجع بدلاً من ذلك');
+    }
+    if (order.jobOrderId) {
+      throw new AppError('هذه فاتورة أمر شغل — تُدار من صفحة أمر الشغل');
+    }
+
+    await db.order.delete({ where: { id } });
+
+    revalidatePath('/dashboard/pos');
+    revalidatePath('/dashboard/invoices');
+    return { id, message: `تم استرجاع الفاتورة ${order.number}` };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  تحصيل لاحق على فاتورة (الآجل والدفع الجزئي)
+// ═══════════════════════════════════════════════════════════
+
+export const collectPayment = action({
+  permission: 'pos:write',
+  schema: z.object({
+    orderId: z.string(),
+    method: z.enum(['CASH', 'KNET', 'VISA', 'TRANSFER', 'LINK', 'CREDIT']),
+    amount: z.union([z.string(), z.number()]).transform(Number),
+    reference: optionalString,
+  }),
+  audit: { entity: 'Payment', action: 'COLLECT' },
+  handler: async ({ orderId, method, amount, reference }, { userId }) => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new AppError('المبلغ يجب أن يكون أكبر من صفر');
+    }
+
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: { total: true, paidAmount: true, status: true, number: true },
+    });
+    if (!order) throw new AppError('الفاتورة غير موجودة');
+    if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
+      throw new AppError('لا يمكن التحصيل على فاتورة ملغاة أو مرتجعة');
+    }
+
+    const remaining = fils(Number(order.total) - Number(order.paidAmount));
+    if (remaining <= 0) throw new AppError('الفاتورة مسدّدة بالكامل');
+    if (amount > remaining) {
+      throw new AppError(`المتبقي ${remaining.toFixed(3)} د.ك فقط`);
+    }
+
+    const wasUnpaidDraft = order.status === 'DRAFT';
+    const paidAmount = fils(Number(order.paidAmount) + amount);
+    const settled = paidAmount >= Number(order.total);
+
+    // وردية الصندوق المفتوحة — لتدخل المقبوضات النقدية في تسوية اليوم
+    const session = await db.registerSession.findFirst({
+      where: { openedById: userId, closedAt: null },
+      orderBy: { openedAt: 'desc' },
+    });
+
+    await db.$transaction(async (tx) => {
+      await tx.payment.create({
+        data: { orderId, method, amount, reference },
+      });
+
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          paidAmount,
+          status: settled ? 'COMPLETED' : 'PARTIAL',
+          // نربط الفاتورة بوردية التحصيل إن لم تكن مرتبطة بواحدة
+          ...(session ? { registerSessionId: session.id } : {}),
+        },
+      });
+
+      // مسودة لم تُخصم من المخزون بعد — نخصمه الآن عند أول تحصيل
+      if (wasUnpaidDraft) {
+        const items = await tx.orderItem.findMany({
+          where: { orderId },
+          select: { productId: true, qty: true },
+        });
+
+        for (const item of items) {
+          if (!item.productId) continue;
+          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          if (!product?.trackStock) continue;
+
+          const balance = Number(product.stockQty) - Number(item.qty);
+          if (balance < 0) {
+            throw new AppError(
+              `الرصيد غير كافٍ لـ "${product.nameAr}" — المتاح ${product.stockQty} ${product.unit}`
+            );
+          }
+
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stockQty: balance },
+          });
+          await tx.stockMovement.create({
+            data: {
+              productId: item.productId,
+              type: 'OUT',
+              qty: item.qty,
+              balance,
+              reference: order.number,
+              note: 'تحصيل فاتورة معلّقة',
+              userId,
+            },
+          });
+        }
+      }
+    });
+
+    revalidatePath('/dashboard/invoices');
+    revalidatePath(`/dashboard/invoices/${orderId}`);
+    revalidatePath('/dashboard/products');
+
+    return {
+      id: orderId,
+      message: settled
+        ? `تم التحصيل — الفاتورة ${order.number} مسدّدة بالكامل`
+        : `تم تحصيل ${amount.toFixed(3)} د.ك — المتبقي ${(remaining - amount).toFixed(3)}`,
+    };
   },
 });

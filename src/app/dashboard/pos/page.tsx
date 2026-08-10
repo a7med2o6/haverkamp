@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
-import { formatKWD, toNumber } from '@/lib/utils';
+import { formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { PosTerminal, type PosProduct } from './pos-terminal';
 import { CloseRegisterButton, OpenRegisterButton } from './register-controls';
 
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function PosPage() {
   const session = await requirePermission('pos:write');
 
-  const [products, categories, customers, register] = await Promise.all([
+  const [products, categories, customers, parked, register] = await Promise.all([
     db.product.findMany({
       where: { isActive: true },
       orderBy: [{ type: 'asc' }, { nameAr: 'asc' }],
@@ -36,6 +36,18 @@ export default async function PosPage() {
       orderBy: { name: 'asc' },
       take: 500,
       select: { id: true, name: true, phone: true },
+    }),
+    // الفواتير المعلّقة القابلة للاستكمال — لا نعرض فواتير أوامر الشغل
+    db.order.findMany({
+      where: { status: 'DRAFT', channel: 'POS', jobOrderId: null },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      include: {
+        customer: { select: { name: true } },
+        items: {
+          select: { productId: true, label: true, qty: true, unitPrice: true, discount: true },
+        },
+      },
     }),
     db.registerSession.findFirst({
       where: { openedById: session.user.id, closedAt: null },
@@ -89,6 +101,20 @@ export default async function PosPage() {
         products={posProducts}
         categories={categories}
         customers={customers}
+        parkedOrders={parked.map((o) => ({
+          id: o.id,
+          number: o.number,
+          createdAt: formatDateTime(o.createdAt),
+          customerName: o.customer?.name ?? null,
+          total: toNumber(o.total),
+          items: o.items.map((i) => ({
+            productId: i.productId,
+            label: i.label,
+            qty: toNumber(i.qty),
+            unitPrice: toNumber(i.unitPrice),
+            discount: toNumber(i.discount),
+          })),
+        }))}
         hasOpenRegister={!!register}
       />
     </>

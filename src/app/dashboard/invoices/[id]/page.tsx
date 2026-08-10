@@ -4,12 +4,14 @@ import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
+import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { ORDER_STATUS, PAYMENT_METHOD } from '@/lib/labels';
 import { formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { PrintButton } from './print-button';
+import { CollectPaymentButton } from './collect-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +30,7 @@ export default async function InvoiceDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requirePermission('pos:read');
+  const session = await requirePermission('pos:read');
   const { id } = await params;
 
   const [order, settings] = await Promise.all([
@@ -53,6 +55,10 @@ export default async function InvoiceDetailPage({
     (settings.find((s) => s.key === key)?.value as string | undefined) ?? '';
 
   const remaining = toNumber(order.total) - toNumber(order.paidAmount);
+  const canCollect =
+    can(session.user.role, 'pos:write') &&
+    order.status !== 'CANCELLED' &&
+    order.status !== 'REFUNDED';
 
   return (
     <>
@@ -64,7 +70,12 @@ export default async function InvoiceDetailPage({
           <ArrowRight className="size-4" />
           العودة إلى الفواتير
         </Link>
-        <PrintButton />
+        <div className="flex items-center gap-2">
+          {canCollect && remaining > 0 && (
+            <CollectPaymentButton orderId={order.id} remaining={remaining} />
+          )}
+          <PrintButton />
+        </div>
       </div>
 
       <div className="mx-auto max-w-2xl">

@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
   Loader2,
   Minus,
   Plus,
+  ReceiptText,
   Search,
   ShoppingCart,
   Trash2,
@@ -18,7 +19,7 @@ import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import { PAYMENT_METHOD, toOptions } from '@/lib/labels';
 import { cn, formatKWD } from '@/lib/utils';
-import { createPosOrder } from './actions';
+import { createPosOrder, discardParkedOrder } from './actions';
 
 export interface PosProduct {
   id: string;
@@ -48,15 +49,26 @@ function fils(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
+export interface ParkedOrder {
+  id: string;
+  number: string;
+  createdAt: string;
+  customerName: string | null;
+  total: number;
+  items: Array<{ productId: string | null; label: string; qty: number; unitPrice: number; discount: number }>;
+}
+
 export function PosTerminal({
   products,
   categories,
   customers,
+  parkedOrders,
   hasOpenRegister,
 }: {
   products: PosProduct[];
   categories: Array<{ id: string; nameAr: string }>;
   customers: Array<{ id: string; name: string; phone: string }>;
+  parkedOrders: ParkedOrder[];
   hasOpenRegister: boolean;
 }) {
   const router = useRouter();
@@ -67,6 +79,34 @@ export function PosTerminal({
   const [orderDiscount, setOrderDiscount] = useState(0);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false); // درج السلة على الجوال
+  const [parkedOpen, setParkedOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [recalling, startRecall] = useTransition();
+
+  /** قارئ الباركود يكتب الرمز ثم Enter — نضيف الصنف فوراً ونفرّغ الحقل */
+  function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+
+    const exact = products.find(
+      (p) => p.barcode?.toLowerCase() === q || p.sku.toLowerCase() === q
+    );
+    const match = exact ?? (filtered.length === 1 ? filtered[0] : null);
+
+    if (!match) {
+      toast.error(
+        filtered.length === 0 ? 'لا يوجد صنف بهذا الرمز' : 'أكثر من صنف مطابق — اختر يدوياً'
+      );
+      return;
+    }
+
+    addToCart(match);
+    setQuery('');
+    searchRef.current?.focus();
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -139,6 +179,52 @@ export function PosTerminal({
     setCart((prev) => prev.filter((l) => l.productId !== productId));
   }
 
+  /** يحمّل بنود فاتورة معلّقة في السلة ثم يحذف المسودة */
+  function recallParked(order: ParkedOrder) {
+    const lines: CartLine[] = [];
+    const missing: string[] = [];
+
+    for (const item of order.items) {
+      const product = products.find((p) => p.id === item.productId);
+      if (!product) {
+        missing.push(item.label);
+        continue;
+      }
+      lines.push({
+        productId: product.id,
+        label: item.label,
+        unitPrice: item.unitPrice,
+        qty: item.qty,
+        discount: item.discount,
+        unit: product.unit,
+        trackStock: product.trackStock,
+        stockQty: product.stockQty,
+      });
+    }
+
+    if (lines.length === 0) {
+      toast.error('تعذّر استرجاع الفاتورة — أصنافها لم تعد متاحة');
+      return;
+    }
+
+    startRecall(async () => {
+      const res = await discardParkedOrder({ id: order.id });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+
+      setCart(lines);
+      setParkedOpen(false);
+      if (missing.length > 0) {
+        toast.warning(`تم الاسترجاع — تعذّر إرجاع: ${missing.join('، ')}`);
+      } else {
+        toast.success(res.message ?? 'تم استرجاع الفاتورة');
+      }
+      router.refresh();
+    });
+  }
+
   function resetCart() {
     setCart([]);
     setCustomerId('');
@@ -178,14 +264,31 @@ export function PosTerminal({
         <div className="relative mb-3">
           <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-[var(--text-2)]" />
           <input
+            ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onSearchKeyDown}
             placeholder="ابحث بالاسم أو الباركود… (امسح الباركود مباشرة)"
             aria-label="بحث عن منتج"
             autoFocus
             className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-1)] ps-10 pe-4 text-sm text-[var(--text-0)] placeholder:text-[var(--text-2)] focus:border-accent focus:outline-none"
           />
         </div>
+
+        {parkedOrders.length > 0 && (
+          <button
+            onClick={() => setParkedOpen(true)}
+            className="mb-3 flex items-center justify-between gap-2 rounded-[var(--radius-md)] border border-accent/35 bg-accent/[0.07] px-3.5 py-2.5 text-[13px] font-medium text-accent-soft hover:bg-accent/15"
+          >
+            <span className="flex items-center gap-2">
+              <ReceiptText className="size-4" />
+              فواتير معلّقة بانتظار الاستكمال
+            </span>
+            <span className="tnum rounded-full bg-accent/20 px-2 py-0.5">
+              {parkedOrders.length}
+            </span>
+          </button>
+        )}
 
         <div className="mb-3 flex flex-wrap gap-1.5">
           <CategoryChip
@@ -301,6 +404,43 @@ export function PosTerminal({
             <div className="h-[calc(100%-3rem)]">{cartPanel}</div>
           </div>
         </div>
+      )}
+
+      {parkedOpen && (
+        <Modal
+          open
+          onClose={() => setParkedOpen(false)}
+          title="الفواتير المعلّقة"
+          description="اختر فاتورة لإرجاع بنودها إلى السلة — سيُحذف الحفظ المعلّق"
+          size="lg"
+        >
+          <ul className="space-y-2">
+            {parkedOrders.map((o) => (
+              <li key={o.id}>
+                <button
+                  onClick={() => recallParked(o)}
+                  disabled={recalling}
+                  className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-3.5 text-start transition-colors hover:border-accent disabled:opacity-50"
+                >
+                  <span className="min-w-0">
+                    <span className="tnum block text-[13px] font-bold text-accent" dir="ltr">
+                      {o.number}
+                    </span>
+                    <span className="block text-[12px] text-[var(--text-1)]">
+                      {o.customerName ?? 'عميل نقدي'} · {o.items.length} صنف
+                    </span>
+                    <span className="tnum block text-[11px] text-[var(--text-2)]">
+                      {o.createdAt}
+                    </span>
+                  </span>
+                  <span className="tnum shrink-0 text-[15px] font-bold text-[var(--text-0)]">
+                    {formatKWD(o.total)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Modal>
       )}
 
       {checkoutOpen && (
@@ -543,27 +683,58 @@ function CheckoutModal({
   onClose: () => void;
   onConfirm: (payments: PaymentLine[], notes: string, park: boolean) => Promise<boolean>;
 }) {
+  const [lines, setLines] = useState<PaymentLine[]>([]);
   const [method, setMethod] = useState<PaymentLine['method']>('CASH');
   const [amount, setAmount] = useState<string>(total.toFixed(3));
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
   const [pending, startTransition] = useTransition();
 
-  const paid = Number(amount) || 0;
-  const change = fils(paid - total);
-  const remaining = fils(total - paid);
+  const settled = fils(lines.reduce((s, l) => s + l.amount, 0));
+  const due = fils(Math.max(0, total - settled));
+  const entered = Number(amount) || 0;
+  // النقدي وحده يقبل الزيادة — الباقي يُعاد للعميل
+  const change = method === 'CASH' ? fils(Math.max(0, entered - due)) : 0;
+
+  function addLine() {
+    if (entered <= 0) {
+      toast.error('أدخل مبلغاً أكبر من صفر');
+      return;
+    }
+    if (method !== 'CASH' && entered > due) {
+      toast.error(`المتبقي ${due.toFixed(3)} د.ك فقط — الزيادة تُقبل نقداً فقط`);
+      return;
+    }
+
+    // لا نسجّل أكثر من المستحق: الزيادة النقدية باقٍ للعميل لا دخل
+    const recorded = fils(Math.min(entered, due));
+    setLines((prev) => [...prev, { method, amount: recorded, reference: reference || null }]);
+    setReference('');
+
+    const nextDue = fils(due - recorded);
+    setAmount(nextDue > 0 ? nextDue.toFixed(3) : '0.000');
+  }
+
+  function removeLine(index: number) {
+    setLines((prev) => prev.filter((_, i) => i !== index));
+  }
 
   function submit(park: boolean) {
+    // دفعة واحدة لم تُضَف بعد؟ نحتسبها لتفادي ضياعها بالسهو
+    const pendingLine =
+      !park && lines.length === 0 && entered > 0
+        ? [{ method, amount: fils(Math.min(entered, total)), reference: reference || null }]
+        : [];
+
+    const all = [...lines, ...pendingLine];
+
     startTransition(async () => {
-      // النقدي قد يزيد عن الإجمالي (باقي للعميل) — نسجّل المستحق فقط
-      const recorded = park ? [] : [{ method, amount: Math.min(paid, total), reference }];
-      await onConfirm(
-        recorded.filter((p) => p.amount > 0),
-        notes,
-        park
-      );
+      await onConfirm(park ? [] : all, notes, park);
     });
   }
+
+  const fullyPaid = due === 0 && lines.length > 0;
+  const canConfirm = lines.length > 0 || entered > 0;
 
   return (
     <Modal
@@ -579,7 +750,7 @@ function CheckoutModal({
           <Button variant="secondary" onClick={() => submit(true)} disabled={pending}>
             تعليق الفاتورة
           </Button>
-          <Button onClick={() => submit(false)} disabled={pending || paid <= 0}>
+          <Button onClick={() => submit(false)} disabled={pending || !canConfirm}>
             {pending && <Loader2 className="animate-spin" />}
             تأكيد الدفع
           </Button>
@@ -604,60 +775,115 @@ function CheckoutModal({
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="طريقة الدفع">
-            <Select
-              value={method}
-              onChange={(e) => setMethod(e.target.value as PaymentLine['method'])}
-            >
-              {toOptions(PAYMENT_METHOD).map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
-          <Field label="المبلغ المستلم">
-            <Input
-              type="number"
-              step="0.001"
-              min={0}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              dir="ltr"
-              className="tnum text-start"
-              autoFocus
-            />
-          </Field>
-        </div>
-
-        {method !== 'CASH' && (
-          <Field label="رقم العملية / المرجع">
-            <Input
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              dir="ltr"
-              className="text-start"
-              placeholder="رقم إيصال الشبكة…"
-            />
-          </Field>
+        {/* الدفعات المسجّلة */}
+        {lines.length > 0 && (
+          <ul className="space-y-1.5">
+            {lines.map((l, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2"
+              >
+                <span className="flex items-center gap-2">
+                  <Badge tone={PAYMENT_METHOD[l.method].tone}>
+                    {PAYMENT_METHOD[l.method].label}
+                  </Badge>
+                  {l.reference && (
+                    <span className="tnum text-[11px] text-[var(--text-2)]" dir="ltr">
+                      {l.reference}
+                    </span>
+                  )}
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="tnum text-[13px] font-semibold text-[var(--text-0)]">
+                    {formatKWD(l.amount)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeLine(i)}
+                    aria-label="حذف الدفعة"
+                    className="text-[var(--text-2)] hover:text-danger"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
 
-        {/* أزرار سريعة للفئات النقدية الشائعة */}
-        {method === 'CASH' && (
-          <div className="flex flex-wrap gap-1.5">
-            {[total, 5, 10, 20, 50].map((v, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setAmount(v.toFixed(3))}
-                className="tnum rounded-full border border-[var(--line)] px-3 py-1.5 text-[12px] text-[var(--text-1)] hover:border-accent hover:text-accent"
-              >
-                {i === 0 ? 'المبلغ بالضبط' : `${v} د.ك`}
-              </button>
-            ))}
-          </div>
+        {due > 0 && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="طريقة الدفع">
+                <Select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentLine['method'])}
+                >
+                  {toOptions(PAYMENT_METHOD).map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              <Field label="المبلغ المستلم">
+                <Input
+                  type="number"
+                  step="0.001"
+                  min={0}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  dir="ltr"
+                  className="tnum text-start"
+                  autoFocus
+                />
+              </Field>
+            </div>
+
+            {method !== 'CASH' && (
+              <Field label="رقم العملية / المرجع">
+                <Input
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  dir="ltr"
+                  className="text-start"
+                  placeholder="رقم إيصال الشبكة…"
+                />
+              </Field>
+            )}
+
+            {method === 'CASH' && (
+              <div className="flex flex-wrap gap-1.5">
+                {[due, 5, 10, 20, 50].map((v, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setAmount(v.toFixed(3))}
+                    className="tnum rounded-full border border-[var(--line)] px-3 py-1.5 text-[12px] text-[var(--text-1)] hover:border-accent hover:text-accent"
+                  >
+                    {i === 0 ? 'المبلغ بالضبط' : `${v} د.ك`}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-[var(--line)] px-3.5 py-2.5">
+              <span className="text-[13px] text-[var(--text-1)]">
+                المتبقي على الفاتورة:{' '}
+                <span className="tnum font-bold text-warn">{formatKWD(due)}</span>
+              </span>
+              <Button type="button" variant="secondary" size="sm" onClick={addLine}>
+                <Plus />
+                إضافة دفعة
+              </Button>
+            </div>
+
+            <p className="text-[11px] text-[var(--text-2)]">
+              لتقسيم الدفع (نقدي + كي نت مثلاً): أدخل مبلغ الأولى واضغط «إضافة دفعة»، ثم كرّر
+              للباقي.
+            </p>
+          </>
         )}
 
         {change > 0 && (
@@ -667,10 +893,17 @@ function CheckoutModal({
           </div>
         )}
 
-        {remaining > 0 && paid > 0 && (
-          <div className="rounded-[var(--radius-sm)] border border-warn/30 bg-warn/10 px-3.5 py-2.5">
-            <span className="text-[13px] text-warn">دفعة جزئية — المتبقي: </span>
-            <span className="tnum text-base font-bold text-warn">{formatKWD(remaining)}</span>
+        {fullyPaid && (
+          <div className="rounded-[var(--radius-sm)] border border-ok/30 bg-ok/10 px-3.5 py-2.5 text-[13px] font-semibold text-ok">
+            ✓ الفاتورة مسدّدة بالكامل — اضغط تأكيد الدفع
+          </div>
+        )}
+
+        {!fullyPaid && lines.length > 0 && (
+          <div className="rounded-[var(--radius-sm)] border border-warn/30 bg-warn/10 px-3.5 py-2.5 text-[13px] text-warn">
+            دفعة جزئية — سيبقى{' '}
+            <span className="tnum font-bold">{formatKWD(due)}</span> مستحقاً على العميل، ويمكن
+            تحصيله لاحقاً من صفحة الفاتورة.
           </div>
         )}
 

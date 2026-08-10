@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { action, optionalString } from '@/lib/action-utils';
+import { AppError, action, optionalString } from '@/lib/action-utils';
 
 const ROLES = [
   'OWNER',
@@ -37,7 +37,7 @@ export const saveUser = action({
       // تغيير كلمة المرور اختياري عند التعديل
       const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
       if (password && password.length < 8) {
-        throw new Error('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
+        throw new AppError('كلمة المرور يجب أن تكون 8 أحرف على الأقل');
       }
 
       await db.user.update({
@@ -49,7 +49,7 @@ export const saveUser = action({
     }
 
     if (!password || password.length < 8) {
-      throw new Error('كلمة المرور مطلوبة و8 أحرف على الأقل');
+      throw new AppError('كلمة المرور مطلوبة و8 أحرف على الأقل');
     }
 
     const created = await db.user.create({
@@ -67,7 +67,7 @@ export const toggleUserActive = action({
   audit: { entity: 'User', action: 'TOGGLE' },
   handler: async ({ id, isActive }, { userId }) => {
     if (id === userId && !isActive) {
-      throw new Error('لا يمكنك إيقاف حسابك الشخصي');
+      throw new AppError('لا يمكنك إيقاف حسابك الشخصي');
     }
 
     // لا نسمح بإيقاف آخر مالك نشط — وإلا يُقفل النظام على الجميع
@@ -76,7 +76,7 @@ export const toggleUserActive = action({
       if (target?.role === 'OWNER') {
         const activeOwners = await db.user.count({ where: { role: 'OWNER', isActive: true } });
         if (activeOwners <= 1) {
-          throw new Error('لا يمكن إيقاف آخر حساب مالك نشط في النظام');
+          throw new AppError('لا يمكن إيقاف آخر حساب مالك نشط في النظام');
         }
       }
     }

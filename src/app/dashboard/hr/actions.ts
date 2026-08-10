@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { action, moneySchema, optionalDate, optionalString, phoneSchema } from '@/lib/action-utils';
+import { AppError, action, moneySchema, optionalDate, optionalString, phoneSchema } from '@/lib/action-utils';
 import { dateOnlyFromInput, todayDateOnly } from '@/lib/utils';
 // نشتق قوائم القيم من enums بريزما مباشرة — تكرارها يدوياً يجعلها تنحرف بصمت
 import {
@@ -80,7 +80,7 @@ export const deleteEmployee = action({
   handler: async ({ id }) => {
     const payslips = await db.payslip.count({ where: { employeeId: id } });
     if (payslips > 0) {
-      throw new Error('لا يمكن حذف موظف له مسيّرات رواتب — غيّر حالته إلى "منتهي الخدمة"');
+      throw new AppError('لا يمكن حذف موظف له مسيّرات رواتب — غيّر حالته إلى "منتهي الخدمة"');
     }
     await db.employee.delete({ where: { id } });
     revalidatePath('/dashboard/hr/employees');
@@ -140,7 +140,7 @@ export const saveAttendance = action({
     const outAt = withTime(checkOut);
 
     if (inAt && outAt && outAt <= inAt) {
-      throw new Error('وقت الانصراف يجب أن يكون بعد وقت الحضور');
+      throw new AppError('وقت الانصراف يجب أن يكون بعد وقت الحضور');
     }
 
     const lateMins = inAt ? await computeLateMinutes(inAt) : 0;
@@ -181,7 +181,7 @@ export const quickCheck = action({
     });
 
     if (kind === 'IN') {
-      if (existing?.checkIn) throw new Error('تم تسجيل الحضور لهذا اليوم مسبقاً');
+      if (existing?.checkIn) throw new AppError('تم تسجيل الحضور لهذا اليوم مسبقاً');
       const lateMins = await computeLateMinutes(now);
       const record = await db.attendance.upsert({
         where: { employeeId_date: { employeeId, date } },
@@ -201,8 +201,8 @@ export const quickCheck = action({
       };
     }
 
-    if (!existing?.checkIn) throw new Error('لا يوجد تسجيل حضور لهذا اليوم');
-    if (existing.checkOut) throw new Error('تم تسجيل الانصراف مسبقاً');
+    if (!existing?.checkIn) throw new AppError('لا يوجد تسجيل حضور لهذا اليوم');
+    if (existing.checkOut) throw new AppError('تم تسجيل الانصراف مسبقاً');
 
     const worked = Math.round((now.getTime() - existing.checkIn.getTime()) / 60000);
     const record = await db.attendance.update({
@@ -251,21 +251,30 @@ export const saveLeave = action({
         select: { annualLeaveDays: true },
       });
 
-      const year = fromDate.getFullYear();
+      // الطلبات المعلّقة تُحجَز من الرصيد أيضاً — وإلا مرّت عدة طلبات
+      // كلٌّ منها ضمن الرصيد، ثم تجاوزته مجتمعةً عند الموافقة عليها
+      const year = fromDate.getUTCFullYear();
       const used = await db.leaveRequest.aggregate({
         _sum: { days: true },
         where: {
           employeeId,
           type: 'ANNUAL',
-          status: 'APPROVED',
-          fromDate: { gte: new Date(year, 0, 1), lt: new Date(year + 1, 0, 1) },
+          status: { in: ['APPROVED', 'PENDING'] },
+          fromDate: {
+            gte: new Date(Date.UTC(year, 0, 1)),
+            lt: new Date(Date.UTC(year + 1, 0, 1)),
+          },
           ...(id ? { NOT: { id } } : {}),
         },
       });
 
       const balance = (employee?.annualLeaveDays ?? 30) - (used._sum.days ?? 0);
       if (days > balance) {
-        throw new Error(`الرصيد المتبقي ${balance} يوم فقط — الطلب ${days} يوم`);
+        throw new AppError(
+          balance <= 0
+            ? `لا يوجد رصيد إجازات سنوية متبقٍ لسنة ${year} (المحجوز يشمل الطلبات المعلّقة)`
+            : `الرصيد المتبقي ${balance} يوم فقط — الطلب ${days} يوم`
+        );
       }
     }
 
@@ -348,7 +357,7 @@ export const saveDocument = action({
   audit: { entity: 'EmployeeDocument', action: 'SAVE' },
   handler: async ({ id, ...data }) => {
     if (data.issueDate && data.expiryDate && data.expiryDate <= data.issueDate) {
-      throw new Error('تاريخ انتهاء المستند يجب أن يكون بعد تاريخ الإصدار');
+      throw new AppError('تاريخ انتهاء المستند يجب أن يكون بعد تاريخ الإصدار');
     }
 
     if (id) {
@@ -405,6 +414,36 @@ const DAY_INDEX: Record<string, number> = {
   SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
 };
 
+/** أنواع الإجازات التي تُخصم من الراتب — تُضبط من الإعدادات */
+async function getUnpaidLeaveTypes(): Promise<string[]> {
+  const setting = await db.siteSetting.findUnique({
+    where: { key: 'hr.unpaidLeaveTypes' },
+  });
+  return Array.isArray(setting?.value) ? (setting.value as string[]) : ['UNPAID'];
+}
+
+/**
+ * يحسب أيام إجازة غير مدفوعة تقع داخل فترة المسيّر.
+ * الإجازة قد تمتد عبر حدود الشهر، فنقصّها على الفترة.
+ */
+function daysWithinPeriod(
+  leaves: Array<{ fromDate: Date; toDate: Date }>,
+  periodStart: Date,
+  periodEnd: Date
+): number {
+  const lastDay = new Date(periodEnd.getTime() - 86400000);
+  let total = 0;
+
+  for (const leave of leaves) {
+    const start = leave.fromDate < periodStart ? periodStart : leave.fromDate;
+    const end = leave.toDate > lastDay ? lastDay : leave.toDate;
+    if (end < start) continue;
+    total += Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
+  }
+
+  return total;
+}
+
 async function getDoubleDeductionDays(): Promise<Set<number>> {
   const setting = await db.siteSetting.findUnique({
     where: { key: 'hr.doubleDeductionDays' },
@@ -427,20 +466,23 @@ export const generatePayroll = action({
   }),
   audit: { entity: 'PayrollRun', action: 'GENERATE' },
   handler: async ({ month, year }) => {
-    if (month < 1 || month > 12) throw new Error('الشهر غير صالح');
+    if (month < 1 || month > 12) throw new AppError('الشهر غير صالح');
 
     const existing = await db.payrollRun.findUnique({ where: { month_year: { month, year } } });
     if (existing && existing.status !== 'DRAFT') {
-      throw new Error('مسيّر هذا الشهر معتمد بالفعل — لا يمكن إعادة توليده');
+      throw new AppError('مسيّر هذا الشهر معتمد بالفعل — لا يمكن إعادة توليده');
     }
 
     const employees = await db.employee.findMany({
       where: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
     });
 
-    if (employees.length === 0) throw new Error('لا يوجد موظفون نشطون لتوليد المسيّر');
+    if (employees.length === 0) throw new AppError('لا يوجد موظفون نشطون لتوليد المسيّر');
 
-    const doubleDays = await getDoubleDeductionDays();
+    const [doubleDays, unpaidTypes] = await Promise.all([
+      getDoubleDeductionDays(),
+      getUnpaidLeaveTypes(),
+    ]);
 
     // حدود الشهر بـ UTC لتطابق تواريخ الحضور المخزّنة كـ @db.Date
     const periodStart = new Date(Date.UTC(year, month - 1, 1));
@@ -474,7 +516,7 @@ export const generatePayroll = action({
       let totalNet = 0;
 
       for (const emp of employees) {
-        const [absences, overtime, advances] = await Promise.all([
+        const [absences, overtime, advances, unpaidLeaves] = await Promise.all([
           tx.attendance.findMany({
             where: {
               employeeId: emp.id,
@@ -491,6 +533,17 @@ export const generatePayroll = action({
             where: { employeeId: emp.id, status: 'ACTIVE' },
             include: { repayments: { select: { amount: true } } },
             orderBy: { grantedAt: 'asc' },
+          }),
+          // الإجازات غير المدفوعة المتقاطعة مع فترة المسيّر
+          tx.leaveRequest.findMany({
+            where: {
+              employeeId: emp.id,
+              status: 'APPROVED',
+              type: { in: unpaidTypes as never },
+              fromDate: { lt: periodEnd },
+              toDate: { gte: periodStart },
+            },
+            select: { fromDate: true, toDate: true },
           }),
         ]);
 
@@ -515,6 +568,10 @@ export const generatePayroll = action({
           Math.round(((overtime._sum.overtimeMins ?? 0) / 60) * hourlyRate * 1.25 * 1000) / 1000;
         const absenceDeduction = Math.round(chargedDays * dailyRate * 1000) / 1000;
 
+        // الإجازة بدون راتب تُخصم بأيامها الفعلية (بلا مضاعفة — فهي إجازة معتمدة)
+        const unpaidLeaveDays = daysWithinPeriod(unpaidLeaves, periodStart, periodEnd);
+        const unpaidLeaveDeduction = Math.round(unpaidLeaveDays * dailyRate * 1000) / 1000;
+
         const empManual = manualByEmployee.get(emp.id) ?? [];
         const manualEarnings = empManual
           .filter((i) => i.type === 'EARNING')
@@ -538,7 +595,9 @@ export const generatePayroll = action({
           Math.round(advanceInstallments.reduce((s, a) => s + a.amount, 0) * 1000) / 1000;
 
         const deductions =
-          Math.round((absenceDeduction + advanceTotal + manualDeductions) * 1000) / 1000;
+          Math.round(
+            (absenceDeduction + unpaidLeaveDeduction + advanceTotal + manualDeductions) * 1000
+          ) / 1000;
         const netPay =
           Math.round((base + allowances + overtimePay + manualEarnings - deductions) * 1000) / 1000;
 
@@ -574,6 +633,16 @@ export const generatePayroll = action({
                       ? `خصم غياب — ${absences.length} يوم (${doubledCount} خميس/سبت بخصم مضاعف = ${chargedDays} يوم)`
                       : `خصم غياب (${absences.length} يوم)`,
                   amount: absenceDeduction,
+                  isManual: false,
+                },
+              ]
+            : []),
+          ...(unpaidLeaveDeduction > 0
+            ? [
+                {
+                  type: 'DEDUCTION' as const,
+                  label: `إجازة بدون راتب (${unpaidLeaveDays} يوم)`,
+                  amount: unpaidLeaveDeduction,
                   isManual: false,
                 },
               ]
@@ -705,10 +774,10 @@ export const saveAdvance = action({
   }),
   audit: { entity: 'EmployeeAdvance', action: 'SAVE' },
   handler: async ({ id, ...data }) => {
-    if (data.amount <= 0) throw new Error('قيمة السلفة يجب أن تكون أكبر من صفر');
-    if (data.monthlyDeduction <= 0) throw new Error('القسط الشهري يجب أن يكون أكبر من صفر');
+    if (data.amount <= 0) throw new AppError('قيمة السلفة يجب أن تكون أكبر من صفر');
+    if (data.monthlyDeduction <= 0) throw new AppError('القسط الشهري يجب أن يكون أكبر من صفر');
     if (data.monthlyDeduction > data.amount) {
-      throw new Error('القسط الشهري لا يمكن أن يتجاوز إجمالي السلفة');
+      throw new AppError('القسط الشهري لا يمكن أن يتجاوز إجمالي السلفة');
     }
 
     // لا نسمح بقسط يبتلع الراتب كاملاً
@@ -716,11 +785,11 @@ export const saveAdvance = action({
       where: { id: data.employeeId },
       select: { baseSalary: true, allowance: true, fullName: true },
     });
-    if (!employee) throw new Error('الموظف غير موجود');
+    if (!employee) throw new AppError('الموظف غير موجود');
 
     const salary = Number(employee.baseSalary) + Number(employee.allowance);
     if (data.monthlyDeduction > salary * 0.5) {
-      throw new Error(
+      throw new AppError(
         `القسط الشهري لا يجوز أن يتجاوز نصف الراتب (${(salary / 2).toFixed(3)} د.ك)`
       );
     }
@@ -732,7 +801,7 @@ export const saveAdvance = action({
       });
       const paidAmount = Number(paid._sum.amount ?? 0);
       if (paidAmount > 0 && data.amount < paidAmount) {
-        throw new Error(`تم سداد ${paidAmount.toFixed(3)} د.ك — لا يمكن تخفيض السلفة دونها`);
+        throw new AppError(`تم سداد ${paidAmount.toFixed(3)} د.ك — لا يمكن تخفيض السلفة دونها`);
       }
 
       await db.employeeAdvance.update({ where: { id }, data });
@@ -769,19 +838,19 @@ export const repayAdvance = action({
   }),
   audit: { entity: 'AdvanceRepayment', action: 'MANUAL' },
   handler: async ({ advanceId, amount, note }) => {
-    if (amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+    if (amount <= 0) throw new AppError('المبلغ يجب أن يكون أكبر من صفر');
 
     const advance = await db.employeeAdvance.findUnique({
       where: { id: advanceId },
       include: { repayments: { select: { amount: true } } },
     });
-    if (!advance) throw new Error('السلفة غير موجودة');
+    if (!advance) throw new AppError('السلفة غير موجودة');
 
     const paid = advance.repayments.reduce((sum, r) => sum + Number(r.amount), 0);
     const remaining = Math.round((Number(advance.amount) - paid) * 1000) / 1000;
 
     if (amount > remaining) {
-      throw new Error(`المتبقي ${remaining.toFixed(3)} د.ك فقط`);
+      throw new AppError(`المتبقي ${remaining.toFixed(3)} د.ك فقط`);
     }
 
     await db.$transaction(async (tx) => {
@@ -844,9 +913,9 @@ async function assertPayrollEditable(payslipId: string) {
     where: { id: payslipId },
     include: { payrollRun: { select: { id: true, status: true } } },
   });
-  if (!payslip) throw new Error('القسيمة غير موجودة');
+  if (!payslip) throw new AppError('القسيمة غير موجودة');
   if (payslip.payrollRun.status !== 'DRAFT') {
-    throw new Error('المسيّر معتمد — أعِده إلى مسودة قبل التعديل');
+    throw new AppError('المسيّر معتمد — أعِده إلى مسودة قبل التعديل');
   }
   return payslip;
 }
@@ -861,7 +930,7 @@ export const addPayslipItem = action({
   }),
   audit: { entity: 'PayslipItem', action: 'ADD' },
   handler: async ({ payslipId, type, label, amount }) => {
-    if (amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+    if (amount <= 0) throw new AppError('المبلغ يجب أن يكون أكبر من صفر');
     const payslip = await assertPayrollEditable(payslipId);
 
     await db.payslipItem.create({
@@ -880,8 +949,8 @@ export const deletePayslipItem = action({
   audit: { entity: 'PayslipItem', action: 'DELETE' },
   handler: async ({ id }) => {
     const item = await db.payslipItem.findUnique({ where: { id } });
-    if (!item) throw new Error('البند غير موجود');
-    if (!item.isManual) throw new Error('البنود المحسوبة آلياً لا تُحذف — عدّل مصدرها');
+    if (!item) throw new AppError('البند غير موجود');
+    if (!item.isManual) throw new AppError('البنود المحسوبة آلياً لا تُحذف — عدّل مصدرها');
 
     const payslip = await assertPayrollEditable(item.payslipId);
     await db.payslipItem.delete({ where: { id } });

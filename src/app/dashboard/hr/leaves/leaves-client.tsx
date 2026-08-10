@@ -13,7 +13,7 @@ import { decideLeave, saveLeave } from '../actions';
 export function LeaveFormButton({
   employees,
 }: {
-  employees: Array<{ id: string; fullName: string; code: string }>;
+  employees: Array<{ id: string; fullName: string; code: string; annualBalance: number }>;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -31,6 +31,11 @@ export function LeaveFormButton({
     Math.round(
       (new Date(values.toDate).getTime() - new Date(values.fromDate).getTime()) / 86400000
     ) + 1;
+
+  const employee = employees.find((e) => e.id === values.employeeId);
+  const isAnnual = values.type === 'ANNUAL';
+  const balance = employee?.annualBalance ?? 0;
+  const exceedsBalance = isAnnual && employee != null && days > balance;
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -127,6 +132,26 @@ export function LeaveFormButton({
                 required
               />
             </Field>
+
+            {isAnnual && employee && (
+              <div
+                className={
+                  exceedsBalance
+                    ? 'rounded-[var(--radius-sm)] border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-[13px] text-danger sm:col-span-2'
+                    : 'rounded-[var(--radius-sm)] border border-accent/30 bg-accent/[0.07] px-3.5 py-2.5 text-[13px] text-accent-soft sm:col-span-2'
+                }
+              >
+                الرصيد السنوي المتبقي: <span className="tnum font-bold">{balance}</span> يوم
+                {exceedsBalance && (
+                  <span className="mt-1 block">
+                    ⚠ الطلب <span className="tnum font-bold">{days}</span> يوم — يتجاوز الرصيد
+                  </span>
+                )}
+                <span className="mt-1 block text-[11px] opacity-80">
+                  يشمل المحجوز في الطلبات المعلّقة
+                </span>
+              </div>
+            )}
 
             <Field label="السبب" className="sm:col-span-2">
               <Textarea

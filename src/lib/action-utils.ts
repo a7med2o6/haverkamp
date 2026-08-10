@@ -13,8 +13,22 @@ const ERRORS: Record<string, string> = {
   FORBIDDEN: 'ليس لديك صلاحية لتنفيذ هذا الإجراء',
 };
 
+/**
+ * خطأ مقصود من قواعد العمل — رسالته مكتوبة للمستخدم وتُعرض كما هي.
+ * نميّزه عن الأخطاء غير المتوقعة حتى لا نسرّب تفاصيل داخلية للواجهة،
+ * ولا نُخفي في المقابل سبب الرفض الحقيقي خلف رسالة عامة.
+ */
+export class AppError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
 /** يحوّل الأخطاء المعروفة إلى رسالة عربية مفهومة */
 export function toErrorState(e: unknown): ActionState {
+  if (e instanceof AppError) return { ok: false, error: e.message };
+
   if (e instanceof Error) {
     if (ERRORS[e.message]) return { ok: false, error: ERRORS[e.message] };
     // قيد التفرّد في Postgres

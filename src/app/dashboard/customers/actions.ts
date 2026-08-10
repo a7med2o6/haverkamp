@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { action, optionalString, phoneSchema } from '@/lib/action-utils';
+import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
 
 const customerSchema = z.object({
   id: z.string().optional(),
@@ -62,7 +62,7 @@ export const deleteCustomer = action({
     ]);
 
     if (orders > 0 || jobs > 0) {
-      throw new Error(
+      throw new AppError(
         'لا يمكن حذف عميل له فواتير أو أوامر شغل — استخدم خيار الحظر بدلاً من ذلك'
       );
     }
@@ -131,7 +131,7 @@ export const deleteVehicle = action({
   audit: { entity: 'Vehicle', action: 'DELETE' },
   handler: async ({ id, customerId }) => {
     const jobs = await db.jobOrder.count({ where: { vehicleId: id } });
-    if (jobs > 0) throw new Error('لا يمكن حذف سيارة مرتبطة بأوامر شغل');
+    if (jobs > 0) throw new AppError('لا يمكن حذف سيارة مرتبطة بأوامر شغل');
 
     await db.vehicle.delete({ where: { id } });
     revalidatePath(`/dashboard/customers/${customerId}`);

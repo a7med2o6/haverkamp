@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { action, optionalString } from '@/lib/action-utils';
+import { AppError, action, optionalString } from '@/lib/action-utils';
 
 /** يقرّب إلى 3 خانات عشرية (فلس) لتفادي أخطاء الفاصلة العائمة */
 function fils(n: number) {
@@ -45,11 +45,11 @@ export const createPosOrder = action({
     );
     const total = fils(subtotal - discountAmount);
 
-    if (total < 0) throw new Error('قيمة الخصم أكبر من إجمالي الفاتورة');
+    if (total < 0) throw new AppError('قيمة الخصم أكبر من إجمالي الفاتورة');
 
     const paidAmount = fils(payments.reduce((sum, p) => sum + p.amount, 0));
     if (!park && paidAmount > total) {
-      throw new Error('المبلغ المدفوع أكبر من إجمالي الفاتورة');
+      throw new AppError('المبلغ المدفوع أكبر من إجمالي الفاتورة');
     }
 
     const status = park
@@ -108,7 +108,7 @@ export const createPosOrder = action({
 
         const balance = Number(product.stockQty) - item.qty;
         if (balance < 0) {
-          throw new Error(
+          throw new AppError(
             `الرصيد غير كافٍ لـ "${product.nameAr}" — المتاح ${product.stockQty} ${product.unit}`
           );
         }
@@ -155,7 +155,7 @@ export const openRegister = action({
     const open = await db.registerSession.findFirst({
       where: { openedById: userId, closedAt: null },
     });
-    if (open) throw new Error('لديك وردية مفتوحة بالفعل — أغلقها أولاً');
+    if (open) throw new AppError('لديك وردية مفتوحة بالفعل — أغلقها أولاً');
 
     const session = await db.registerSession.create({
       data: { openedById: userId, openingFloat },
@@ -179,8 +179,8 @@ export const closeRegister = action({
       where: { id },
       include: { orders: { include: { payments: true } } },
     });
-    if (!session) throw new Error('الوردية غير موجودة');
-    if (session.closedAt) throw new Error('الوردية مغلقة بالفعل');
+    if (!session) throw new AppError('الوردية غير موجودة');
+    if (session.closedAt) throw new AppError('الوردية مغلقة بالفعل');
 
     // المتوقع = رصيد البداية + كل المقبوضات النقدية خلال الوردية
     const cashReceived = session.orders

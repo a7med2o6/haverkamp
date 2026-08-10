@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { action, optionalString } from '@/lib/action-utils';
+import { AppError, action, optionalString } from '@/lib/action-utils';
 
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
@@ -82,8 +82,8 @@ export const saveJobItem = action({
   }),
   audit: { entity: 'JobOrderItem', action: 'SAVE' },
   handler: async ({ id, jobOrderId, productId, serviceId, label, qty, unitPrice }) => {
-    if (!Number.isFinite(qty) || qty <= 0) throw new Error('الكمية غير صالحة');
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error('السعر غير صالح');
+    if (!Number.isFinite(qty) || qty <= 0) throw new AppError('الكمية غير صالحة');
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new AppError('السعر غير صالح');
 
     const data = {
       jobOrderId,
@@ -164,9 +164,9 @@ export const createInvoiceFromJob = action({
       include: { items: true, order: true },
     });
 
-    if (!job) throw new Error('أمر الشغل غير موجود');
-    if (job.order) throw new Error('توجد فاتورة مرتبطة بأمر الشغل بالفعل');
-    if (job.items.length === 0) throw new Error('لا يمكن إصدار فاتورة بدون بنود');
+    if (!job) throw new AppError('أمر الشغل غير موجود');
+    if (job.order) throw new AppError('توجد فاتورة مرتبطة بأمر الشغل بالفعل');
+    if (job.items.length === 0) throw new AppError('لا يمكن إصدار فاتورة بدون بنود');
 
     const subtotal = fils(job.items.reduce((sum, i) => sum + Number(i.total), 0));
 
@@ -209,11 +209,11 @@ export const issueWarranty = action({
   }),
   audit: { entity: 'Warranty', action: 'ISSUE' },
   handler: async ({ jobOrderId, serviceId, months, terms }) => {
-    if (!Number.isFinite(months) || months <= 0) throw new Error('مدة الكفالة غير صالحة');
+    if (!Number.isFinite(months) || months <= 0) throw new AppError('مدة الكفالة غير صالحة');
 
     const job = await db.jobOrder.findUnique({ where: { id: jobOrderId } });
-    if (!job) throw new Error('أمر الشغل غير موجود');
-    if (!job.vehicleId) throw new Error('لا يمكن إصدار كفالة بدون سيارة مرتبطة');
+    if (!job) throw new AppError('أمر الشغل غير موجود');
+    if (!job.vehicleId) throw new AppError('لا يمكن إصدار كفالة بدون سيارة مرتبطة');
 
     const startDate = new Date();
     const endDate = new Date(startDate);

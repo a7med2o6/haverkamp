@@ -35,7 +35,7 @@ export default async function LeavesPage({
   const where: Prisma.LeaveRequestWhereInput =
     status === 'all' ? {} : { status: status as keyof typeof LEAVE_STATUS };
 
-  const [leaves, total, employees] = await Promise.all([
+  const [leaves, total, employees, annualUsed] = await Promise.all([
     db.leaveRequest.findMany({
       where,
       orderBy: [{ status: 'asc' }, { fromDate: 'desc' }],
@@ -50,9 +50,24 @@ export default async function LeavesPage({
     db.employee.findMany({
       where: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
       orderBy: { code: 'asc' },
-      select: { id: true, fullName: true, code: true },
+      select: { id: true, fullName: true, code: true, annualLeaveDays: true },
+    }),
+    // المستهلك من الرصيد السنوي هذا العام — المعتمد والمعلّق معاً
+    db.leaveRequest.groupBy({
+      by: ['employeeId'],
+      _sum: { days: true },
+      where: {
+        type: 'ANNUAL',
+        status: { in: ['APPROVED', 'PENDING'] },
+        fromDate: {
+          gte: new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1)),
+          lt: new Date(Date.UTC(new Date().getUTCFullYear() + 1, 0, 1)),
+        },
+      },
     }),
   ]);
+
+  const usedByEmployee = new Map(annualUsed.map((r) => [r.employeeId, r._sum.days ?? 0]));
 
   const canWrite = can(session.user.role, 'hr:write');
 
@@ -61,7 +76,18 @@ export default async function LeavesPage({
       <PageHeader
         title="الإجازات"
         description={`${total} طلب`}
-        actions={canWrite ? <LeaveFormButton employees={employees} /> : null}
+        actions={
+          canWrite ? (
+            <LeaveFormButton
+              employees={employees.map((e) => ({
+                id: e.id,
+                fullName: e.fullName,
+                code: e.code,
+                annualBalance: e.annualLeaveDays - (usedByEmployee.get(e.id) ?? 0),
+              }))}
+            />
+          ) : null
+        }
       />
 
       <div className="mb-4 flex flex-wrap gap-1.5">

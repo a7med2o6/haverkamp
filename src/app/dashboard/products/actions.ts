@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { action, moneySchema, optionalString } from '@/lib/action-utils';
+import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
 
 const productSchema = z.object({
   id: z.string().optional(),
@@ -78,8 +78,8 @@ export const recordStockMovement = action({
   handler: async ({ productId, type, qty, unitCost, reference, note }, { userId }) => {
     const movement = await db.$transaction(async (tx) => {
       const product = await tx.product.findUnique({ where: { id: productId } });
-      if (!product) throw new Error('المنتج غير موجود');
-      if (!product.trackStock) throw new Error('هذا الصنف غير خاضع لمتابعة المخزون');
+      if (!product) throw new AppError('المنتج غير موجود');
+      if (!product.trackStock) throw new AppError('هذا الصنف غير خاضع لمتابعة المخزون');
 
       const current = Number(product.stockQty);
       // ADJUST يضبط الرصيد على القيمة المُدخلة بدل إضافتها
@@ -91,7 +91,7 @@ export const recordStockMovement = action({
             : current - qty;
 
       if (balance < 0) {
-        throw new Error(`الرصيد الحالي ${current} ${product.unit} — لا يكفي لصرف ${qty}`);
+        throw new AppError(`الرصيد الحالي ${current} ${product.unit} — لا يكفي لصرف ${qty}`);
       }
 
       await tx.product.update({ where: { id: productId }, data: { stockQty: balance } });

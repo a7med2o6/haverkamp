@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { action, optionalString, phoneSchema } from '@/lib/action-utils';
+import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
 
 const bookingSchema = z.object({
   id: z.string().optional(),
@@ -34,7 +34,7 @@ export const saveBooking = action({
     const { id, ...data } = input;
 
     if (!data.customerId && !data.guestName) {
-      throw new Error('اختر عميلاً مسجّلاً أو أدخل اسم الزائر');
+      throw new AppError('اختر عميلاً مسجّلاً أو أدخل اسم الزائر');
     }
 
     if (id) {
@@ -88,15 +88,15 @@ export const convertBookingToJob = action({
       },
     });
 
-    if (!booking) throw new Error('الحجز غير موجود');
-    if (booking.jobOrder) throw new Error('تم تحويل هذا الحجز إلى أمر شغل مسبقاً');
+    if (!booking) throw new AppError('الحجز غير موجود');
+    if (booking.jobOrder) throw new AppError('تم تحويل هذا الحجز إلى أمر شغل مسبقاً');
 
     let customerId = booking.customerId;
 
     // إنشاء عميل من بيانات الزائر إن لم يكن مسجّلاً
     if (!customerId) {
       if (!booking.guestPhone) {
-        throw new Error('لا يمكن التحويل — الحجز بدون عميل مسجّل ولا رقم هاتف');
+        throw new AppError('لا يمكن التحويل — الحجز بدون عميل مسجّل ولا رقم هاتف');
       }
       const phone = phoneSchema.parse(booking.guestPhone);
       const existing = await db.customer.findFirst({ where: { phone } });

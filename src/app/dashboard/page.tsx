@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { TriangleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/guard';
 import { can } from '@/lib/rbac';
@@ -7,8 +8,9 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { formatKWD, formatDateTime, toNumber } from '@/lib/utils';
-import { BOOKING_STATUS, JOB_STATUS } from '@/lib/labels';
+import { expiryStatus, formatDateOnly, formatDateTime, formatKWD, toNumber, todayDateOnly } from '@/lib/utils';
+import { BOOKING_STATUS, DOCUMENT_TYPE, JOB_STATUS } from '@/lib/labels';
+import { RESIDENCY_ALERT_DAYS, RESIDENCY_DOC_TYPES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +29,11 @@ export default async function DashboardHome() {
   const in30Days = new Date();
   in30Days.setDate(in30Days.getDate() + 30);
 
+  // عتبة تنبيه الإقامات — تشمل المنتهية بالفعل (بلا حدّ أدنى)
+  const residencyDeadline = new Date(
+    todayDateOnly().getTime() + RESIDENCY_ALERT_DAYS * 86400000
+  );
+
   const [
     todaySales,
     todayBookings,
@@ -34,7 +41,7 @@ export default async function DashboardHome() {
     lowStock,
     presentToday,
     pendingLeaves,
-    expiringDocs,
+    expiringResidencies,
     expiringWarranties,
     upcomingBookings,
     recentJobs,
@@ -54,8 +61,17 @@ export default async function DashboardHome() {
       where: { date: { gte: start, lt: end }, status: { in: ['PRESENT', 'LATE', 'HALF_DAY'] } },
     }),
     db.leaveRequest.count({ where: { status: 'PENDING' } }),
-    db.employeeDocument.count({
-      where: { expiryDate: { not: null, lte: in30Days, gte: new Date() } },
+    // الإقامات وأذونات العمل المنتهية أو التي تنتهي خلال 15 يوم — الأقرب أولاً
+    db.employeeDocument.findMany({
+      where: {
+        type: { in: [...RESIDENCY_DOC_TYPES] },
+        expiryDate: { not: null, lte: residencyDeadline },
+        employee: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
+      },
+      orderBy: { expiryDate: 'asc' },
+      include: {
+        employee: { select: { id: true, fullName: true, code: true, position: true } },
+      },
     }),
     db.warranty.count({
       where: { isVoid: false, endDate: { lte: in30Days, gte: new Date() } },
@@ -144,11 +160,11 @@ export default async function DashboardHome() {
               href="/dashboard/hr/leaves"
             />
             <StatCard
-              label="مستندات تنتهي خلال ٣٠ يوم"
-              value={expiringDocs}
+              label={`إقامات تنتهي خلال ${RESIDENCY_ALERT_DAYS} يوم`}
+              value={expiringResidencies.length}
               icon="FileWarning"
-              tone={expiringDocs > 0 ? 'danger' : 'neutral'}
-              href="/dashboard/hr/documents"
+              tone={expiringResidencies.length > 0 ? 'danger' : 'neutral'}
+              href="/dashboard/hr/employees?expiring=1"
             />
           </>
         )}
@@ -162,6 +178,69 @@ export default async function DashboardHome() {
           />
         )}
       </div>
+
+      {/* ── تنبيه الإقامات — يظهر فقط عند وجود ما يحتاج إجراء ── */}
+      {can(role, 'hr:read') && expiringResidencies.length > 0 && (
+        <Card className="mt-6 border-danger/35">
+          <CardHeader className="bg-danger/[0.07]">
+            <CardTitle className="flex items-center gap-2 text-danger">
+              <TriangleAlert className="size-4" />
+              إقامات تحتاج تجديد عاجل
+            </CardTitle>
+            <Link
+              href="/dashboard/hr/employees?expiring=1"
+              className="text-[12px] text-accent hover:underline"
+            >
+              عرض الموظفين
+            </Link>
+          </CardHeader>
+          <TableWrap className="rounded-none border-0">
+            <Table>
+              <thead>
+                <tr>
+                  <Th>الموظف</Th>
+                  <Th>الوظيفة</Th>
+                  <Th>الوثيقة</Th>
+                  <Th>تاريخ الانتهاء</Th>
+                  <Th>المتبقي</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {expiringResidencies.map((doc) => {
+                  const status = expiryStatus(doc.expiryDate);
+                  return (
+                    <Tr key={doc.id}>
+                      <Td>
+                        <Link
+                          href={`/dashboard/hr/employees/${doc.employee.id}`}
+                          className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                        >
+                          {doc.employee.fullName}
+                        </Link>
+                        <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
+                          {doc.employee.code}
+                        </span>
+                      </Td>
+                      <Td className="text-[12px]">{doc.employee.position}</Td>
+                      <Td>
+                        <Badge tone={DOCUMENT_TYPE[doc.type].tone}>
+                          {DOCUMENT_TYPE[doc.type].label}
+                        </Badge>
+                      </Td>
+                      <Td className="tnum text-[12px]">{formatDateOnly(doc.expiryDate)}</Td>
+                      <Td>
+                        <Badge tone={status.tone === 'neutral' ? 'neutral' : status.tone}>
+                          {status.label}
+                        </Badge>
+                      </Td>
+                    </Tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </TableWrap>
+        </Card>
+      )}
 
       <div className="mt-6 grid gap-4 xl:grid-cols-2">
         {can(role, 'crm:read') && (

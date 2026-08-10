@@ -8,8 +8,13 @@ import { todayDateOnly } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EmployeesIndexPage() {
+export default async function EmployeesIndexPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ expiring?: string }>;
+}) {
   await requirePermission('hr:read');
+  const { expiring } = await searchParams;
 
   const first = await db.employee.findFirst({
     where: { status: 'ACTIVE' },
@@ -17,13 +22,18 @@ export default async function EmployeesIndexPage() {
     select: { id: true },
   });
 
-  // نفتح بروفايل أول موظف مباشرة — الصفحة الفارغة بلا فائدة
-  if (first) redirect(`/dashboard/hr/employees/${first.id}`);
+  // نفتح بروفايل أول موظف مباشرة — الصفحة الفارغة بلا فائدة.
+  // نمرّر expiring حتى تصل إلى القائمة الجانبية فتُفعّل التصفية.
+  if (first) {
+    redirect(
+      `/dashboard/hr/employees/${first.id}${expiring === '1' ? '?expiring=1' : ''}`
+    );
+  }
 
   const today = todayDateOnly();
   const alertDate = new Date(today.getTime() + EXPIRY_ALERT_DAYS * 86400000);
 
-  const [total, payroll, expiring] = await Promise.all([
+  const [total, payroll, expiringCount] = await Promise.all([
     db.employee.count(),
     db.employee.aggregate({ _sum: { baseSalary: true, allowance: true } }),
     db.employeeDocument.count({ where: { expiryDate: { gte: today, lte: alertDate } } }),
@@ -47,9 +57,9 @@ export default async function EmployeesIndexPage() {
         />
         <StatCard
           label={`وثائق تنتهي خلال ${EXPIRY_ALERT_DAYS} يوم`}
-          value={expiring}
+          value={expiringCount}
           icon="FileWarning"
-          tone={expiring ? 'warn' : 'neutral'}
+          tone={expiringCount ? 'warn' : 'neutral'}
         />
       </div>
     </div>

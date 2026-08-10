@@ -351,7 +351,6 @@ export const saveDocument = action({
 
     if (id) {
       await db.employeeDocument.update({ where: { id }, data });
-      revalidatePath('/dashboard/hr/documents');
       revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
       return { id, message: 'تم تحديث المستند' };
     }
@@ -367,13 +366,11 @@ export const saveDocument = action({
         Object.entries(data).filter(([, v]) => v !== null && v !== undefined)
       );
       await db.employeeDocument.update({ where: { id: existing.id }, data: merged });
-      revalidatePath('/dashboard/hr/documents');
       revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
       return { id: existing.id, message: 'تم تحديث المستند' };
     }
 
     const created = await db.employeeDocument.create({ data });
-    revalidatePath('/dashboard/hr/documents');
     revalidatePath(`/dashboard/hr/employees/${data.employeeId}`);
     return { id: created.id, message: 'تمت إضافة المستند' };
   },
@@ -385,7 +382,6 @@ export const deleteDocument = action({
   audit: { entity: 'EmployeeDocument', action: 'DELETE' },
   handler: async ({ id }) => {
     await db.employeeDocument.delete({ where: { id } });
-    revalidatePath('/dashboard/hr/documents');
     return { id, message: 'تم حذف المستند' };
   },
 });

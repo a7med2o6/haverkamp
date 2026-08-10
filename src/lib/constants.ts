@@ -9,3 +9,12 @@ export const PAGE_SIZE = 25;
 
 /** أيام التنبيه قبل انتهاء المستندات والكفالات */
 export const EXPIRY_ALERT_DAYS = 30;
+
+/**
+ * الإقامة وإذن العمل — تنبيه مبكّر قبل 15 يوم.
+ * تجديد الإقامة في الكويت يحتاج إجراءات، وتأخيرها يعرّض المنشأة لغرامات.
+ */
+export const RESIDENCY_ALERT_DAYS = 15;
+
+/** أنواع الوثائق التي تُراقَب في تنبيه لوحة التحكم */
+export const RESIDENCY_DOC_TYPES = ['RESIDENCY', 'WORK_PERMIT', 'CIVIL_ID'] as const;

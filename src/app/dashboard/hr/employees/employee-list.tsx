@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import { Search, User } from 'lucide-react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { Search, TriangleAlert, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface EmployeeListItem {
@@ -15,23 +15,34 @@ export interface EmployeeListItem {
   photo: string | null;
   position: string;
   isActive: boolean;
+  /** أقرب وثيقة على وشك الانتهاء — null إن كانت كلها سارية */
+  expiry: { tone: 'warn' | 'danger'; label: string } | null;
 }
 
 export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
   const params = useParams<{ id?: string }>();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState('');
+  const [onlyExpiring, setOnlyExpiring] = useState(searchParams.get('expiring') === '1');
+
+  const expiringCount = useMemo(
+    () => employees.filter((e) => e.expiry).length,
+    [employees]
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return employees;
-    return employees.filter(
-      (e) =>
+    return employees.filter((e) => {
+      if (onlyExpiring && !e.expiry) return false;
+      if (!q) return true;
+      return (
         e.fullName.toLowerCase().includes(q) ||
         (e.civilId ?? '').includes(q) ||
         e.code.toLowerCase().includes(q) ||
         e.position.toLowerCase().includes(q)
-    );
-  }, [employees, query]);
+      );
+    });
+  }, [employees, query, onlyExpiring]);
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -46,10 +57,32 @@ export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
         />
       </div>
 
+      {/* تنبيه الوثائق — يحلّ محل صفحة المستندات المنفصلة */}
+      {expiringCount > 0 && (
+        <button
+          onClick={() => setOnlyExpiring((v) => !v)}
+          aria-pressed={onlyExpiring}
+          className={cn(
+            'flex items-center justify-between gap-2 rounded-[var(--radius-md)] border px-3 py-2.5 text-[12px] font-medium transition-colors',
+            onlyExpiring
+              ? 'border-warn bg-warn/15 text-warn'
+              : 'border-warn/30 bg-warn/[0.07] text-warn hover:bg-warn/15'
+          )}
+        >
+          <span className="flex items-center gap-2">
+            <TriangleAlert className="size-4 shrink-0" />
+            وثائق تحتاج تجديد
+          </span>
+          <span className="tnum rounded-full bg-warn/20 px-2 py-0.5">{expiringCount}</span>
+        </button>
+      )}
+
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2">
         {filtered.length === 0 ? (
           <li className="rounded-[var(--radius-md)] border border-[var(--line)] p-6 text-center">
-            <p className="text-[13px] text-[var(--text-2)]">لا توجد نتائج مطابقة</p>
+            <p className="text-[13px] text-[var(--text-2)]">
+              {onlyExpiring ? 'لا توجد وثائق تحتاج تجديد' : 'لا توجد نتائج مطابقة'}
+            </p>
           </li>
         ) : (
           filtered.map((e) => {
@@ -78,7 +111,27 @@ export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
                     <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
                       {e.civilId ?? e.code}
                     </span>
+                    {e.expiry && (
+                      <span
+                        className={cn(
+                          'mt-0.5 block text-[10px] font-medium',
+                          e.expiry.tone === 'danger' ? 'text-danger' : 'text-warn'
+                        )}
+                      >
+                        {e.expiry.label}
+                      </span>
+                    )}
                   </span>
+
+                  {e.expiry && (
+                    <span
+                      title={e.expiry.label}
+                      className={cn(
+                        'size-2 shrink-0 rounded-full',
+                        e.expiry.tone === 'danger' ? 'bg-danger' : 'bg-warn'
+                      )}
+                    />
+                  )}
                   {!e.isActive && (
                     <span className="shrink-0 rounded-full bg-[var(--glass-strong)] px-2 py-0.5 text-[10px] text-[var(--text-2)]">
                       موقوف

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
+import { expiryStatus, todayDateOnly } from '@/lib/utils';
+import { RESIDENCY_ALERT_DAYS, RESIDENCY_DOC_TYPES } from '@/lib/constants';
 import { EmployeeList } from './employee-list';
 import { EmployeeFormButton } from './employee-form';
 
@@ -15,7 +17,11 @@ export default async function EmployeesLayout({
 }) {
   const session = await requirePermission('hr:read');
 
-  const [employees, departments] = await Promise.all([
+  const alertDeadline = new Date(
+    todayDateOnly().getTime() + RESIDENCY_ALERT_DAYS * 86400000
+  );
+
+  const [employees, departments, documents] = await Promise.all([
     db.employee.findMany({
       orderBy: [{ status: 'asc' }, { fullName: 'asc' }],
       select: {
@@ -29,7 +35,24 @@ export default async function EmployeesLayout({
       },
     }),
     db.department.findMany({ orderBy: { nameAr: 'asc' }, select: { id: true, nameAr: true } }),
+    // نفس نطاق تنبيه لوحة التحكم بالضبط، حتى يتطابق العدد بين البطاقة وهذه القائمة
+    db.employeeDocument.findMany({
+      where: {
+        type: { in: [...RESIDENCY_DOC_TYPES] },
+        expiryDate: { not: null, lte: alertDeadline },
+      },
+      select: { employeeId: true, expiryDate: true },
+    }),
   ]);
+
+  const soonestByEmployee = new Map<string, Date>();
+  for (const doc of documents) {
+    if (!doc.expiryDate) continue;
+    const current = soonestByEmployee.get(doc.employeeId);
+    if (!current || doc.expiryDate < current) {
+      soonestByEmployee.set(doc.employeeId, doc.expiryDate);
+    }
+  }
 
   const canWrite = can(session.user.role, 'hr:write');
 
@@ -43,15 +66,26 @@ export default async function EmployeesLayout({
         )}
         <div className="min-h-0 flex-1">
           <EmployeeList
-            employees={employees.map((e) => ({
-              id: e.id,
-              code: e.code,
-              fullName: e.fullName,
-              civilId: e.civilId,
-              photo: e.photo,
-              position: e.position,
-              isActive: e.status === 'ACTIVE',
-            }))}
+            employees={employees.map((e) => {
+              const soonest = soonestByEmployee.get(e.id) ?? null;
+              const status = expiryStatus(soonest);
+              return {
+                id: e.id,
+                code: e.code,
+                fullName: e.fullName,
+                civilId: e.civilId,
+                photo: e.photo,
+                position: e.position,
+                isActive: e.status === 'ACTIVE',
+                // الاستعلام مُقيَّد أصلاً بالنطاق، فوجود تاريخ يعني حاجة للتجديد
+                expiry: soonest
+                  ? {
+                      tone: status.tone === 'warn' ? ('warn' as const) : ('danger' as const),
+                      label: status.label,
+                    }
+                  : null,
+              };
+            })}
           />
         </div>
       </aside>

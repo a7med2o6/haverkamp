@@ -51,6 +51,48 @@ export function formatDateTime(d: Date | string | null | undefined, locale = 'ar
   }).format(date);
 }
 
+/* ── تواريخ بدون وقت (@db.Date) ──────────────────────────────
+   Postgres يخزّن هذه الحقول كتاريخ فقط، و Prisma يعيدها كـ Date عند
+   منتصف ليل UTC. أي استخدام لـ setHours(0,0,0,0) المحلي ثم toISOString
+   يُنقص يوماً كاملاً في الكويت (UTC+3) — لذلك نتعامل معها بـ UTC دائماً. */
+
+/** منتصف ليل UTC لليوم الحالي حسب التقويم المحلي */
+export function todayDateOnly(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+}
+
+/** يحوّل قيمة <input type="date"> إلى Date عند منتصف ليل UTC */
+export function dateOnlyFromInput(value?: string | null): Date {
+  if (!value) return todayDateOnly();
+  const [y, m, d] = value.split('-').map(Number);
+  if (!y || !m || !d) return todayDateOnly();
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+/** يحوّل Date إلى صيغة YYYY-MM-DD المطلوبة لحقل <input type="date"> */
+export function dateOnlyToInput(d: Date | string | null | undefined): string {
+  if (!d) return '';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+/** عرض تاريخ بدون وقت — يُقرأ بـ UTC حتى لا ينزاح يوماً */
+export function formatDateOnly(
+  d: Date | string | null | undefined,
+  locale = 'ar-KW-u-nu-latn'
+) {
+  if (!d) return '—';
+  const date = typeof d === 'string' ? new Date(d) : d;
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
 /** تحويل Decimal من Prisma إلى number بأمان للـ client components */
 export function toNumber(v: unknown): number {
   if (v === null || v === undefined) return 0;

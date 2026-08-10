@@ -26,7 +26,7 @@ export function Sidebar({
 
   const groups = NAV.map((g) => ({
     ...g,
-    links: g.links.filter((l) => canAccessModule(role, l.module)),
+    links: g.links.filter((l) => !l.soon && canAccessModule(role, l.module)),
   })).filter((g) => g.links.length > 0);
 
   return (

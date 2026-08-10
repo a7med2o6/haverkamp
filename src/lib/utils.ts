@@ -93,6 +93,15 @@ export function formatDateOnly(
   }).format(date);
 }
 
+/** يحوّل Date إلى صيغة <input type="datetime-local"> بالتوقيت المحلي */
+export function toLocalInput(d: Date | string): string {
+  const date = typeof d === 'string' ? new Date(d) : d;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
 /** تحويل Decimal من Prisma إلى number بأمان للـ client components */
 export function toNumber(v: unknown): number {
   if (v === null || v === undefined) return 0;

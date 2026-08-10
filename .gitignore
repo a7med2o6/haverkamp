@@ -48,3 +48,11 @@ next-env.d.ts
 
 # ملفات مرفوعة
 /public/uploads
+
+# نسخ الموقع الثابت القديم داخل public/ — المصدر legacy/ ويُنسخ بـ scripts/sync-legacy.mjs
+/public/*.html
+/public/css/
+/public/js/
+/public/robots.txt
+/public/sitemap.xml
+/public/site.webmanifest

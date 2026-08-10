@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,10 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // الـ portal يحتاج document — غير متاح أثناء التصيير على الخادم
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -36,7 +41,7 @@ export function Modal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const widths = {
     sm: 'max-w-sm',
@@ -45,7 +50,13 @@ export function Modal({
     xl: 'max-w-4xl',
   };
 
-  return (
+  /**
+   * نعرض النافذة عبر portal على body.
+   * بدونه يظل z-50 محبوساً داخل أقرب stacking context — وقائمة الموظفين
+   * مثلاً داخل <aside> بـ position: sticky التي تُنشئ واحداً — فيرتسم
+   * محتوى الصفحة فوق النافذة.
+   */
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:p-6">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
       <div
@@ -83,6 +94,7 @@ export function Modal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

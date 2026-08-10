@@ -76,6 +76,17 @@ export const PAYROLL_STATUS = {
   PAID: { label: 'مدفوع', tone: 'ok' },
 } satisfies Record<string, Label>;
 
+export const ADVANCE_STATUS = {
+  ACTIVE: { label: 'قيد السداد', tone: 'warn' },
+  SETTLED: { label: 'مسدّدة', tone: 'ok' },
+  CANCELLED: { label: 'ملغاة', tone: 'neutral' },
+} satisfies Record<string, Label>;
+
+export const PAYSLIP_ITEM_TYPE = {
+  EARNING: { label: 'استحقاق', tone: 'ok' },
+  DEDUCTION: { label: 'خصم', tone: 'danger' },
+} satisfies Record<string, Label>;
+
 export const DOCUMENT_TYPE = {
   CIVIL_ID: { label: 'البطاقة', tone: 'accent' },
   PASSPORT: { label: 'الجواز', tone: 'info' },

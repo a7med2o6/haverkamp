@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
+import { ChartColumn } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
@@ -59,7 +61,18 @@ export default async function AttendancePage({
       <PageHeader
         title="الحضور والانصراف"
         description={isToday ? 'سجل اليوم' : `سجل يوم ${formatDateOnly(date)}`}
-        actions={<DatePicker date={dateStr} />}
+        actions={
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/dashboard/hr/attendance/report?month=${date.getUTCMonth() + 1}&year=${date.getUTCFullYear()}`}
+              className="inline-flex h-10 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] px-3.5 text-[13px] font-medium text-[var(--text-1)] hover:border-accent hover:text-accent"
+            >
+              <ChartColumn className="size-4" />
+              التقرير الشهري
+            </Link>
+            <DatePicker date={dateStr} />
+          </div>
+        }
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5">

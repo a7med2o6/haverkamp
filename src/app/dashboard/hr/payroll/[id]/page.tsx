@@ -126,7 +126,14 @@ export default async function PayrollDetailPage({
                   <Td className="tnum text-[12px]" dir="ltr">
                     {p.employee.code}
                   </Td>
-                  <Td className="font-medium text-[var(--text-0)]">{p.employee.fullName}</Td>
+                  <Td>
+                    <Link
+                      href={`/dashboard/hr/payslips/${p.id}`}
+                      className="font-medium text-accent hover:underline"
+                    >
+                      {p.employee.fullName}
+                    </Link>
+                  </Td>
                   <Td className="text-[12px]">{p.employee.position}</Td>
                   <Td className="tnum">{formatKWD(toNumber(p.baseSalary))}</Td>
                   <Td className="tnum">{formatKWD(toNumber(p.allowances))}</Td>

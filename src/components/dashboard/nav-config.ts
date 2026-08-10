@@ -50,6 +50,7 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/hr/attendance', label: 'الحضور والانصراف', icon: 'Clock', module: 'hr' },
       { href: '/dashboard/hr/leaves', label: 'الإجازات', icon: 'CalendarOff', module: 'hr' },
       { href: '/dashboard/hr/payroll', label: 'الرواتب', icon: 'Banknote', module: 'hr' },
+      { href: '/dashboard/hr/advances', label: 'السلف', icon: 'HandCoins', module: 'hr' },
       { href: '/dashboard/hr/reviews', label: 'تقييم الأداء', icon: 'Star', module: 'hr' },
     ],
   },

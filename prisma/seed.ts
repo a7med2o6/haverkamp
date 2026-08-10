@@ -207,6 +207,8 @@ const SITE_SETTINGS: Array<{ key: string; value: unknown; group: string }> = [
   { key: 'hr.workDayEnd', value: '20:00', group: 'hr' },
   { key: 'hr.lateGraceMins', value: 15, group: 'hr' },
   { key: 'hr.weekend', value: ['FRI'], group: 'hr' },
+  // الغياب في هذه الأيام يُخصم بيومين — الخميس والسبت يحيطان بعطلة الجمعة
+  { key: 'hr.doubleDeductionDays', value: ['THU', 'SAT'], group: 'hr' },
 ];
 
 const DEPARTMENTS = [

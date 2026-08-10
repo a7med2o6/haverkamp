@@ -422,6 +422,7 @@ model Employee {
   documents    EmployeeDocument[]
   reviews      PerformanceReview[]
   jobOrders    JobOrderAssignee[]
+  advances     EmployeeAdvance[]
 
   @@index([status])
   @@index([departmentId])
@@ -508,7 +509,8 @@ model PayrollRun {
   processedAt DateTime?
   createdAt   DateTime      @default(now())
 
-  payslips Payslip[]
+  payslips   Payslip[]
+  repayments AdvanceRepayment[]
 
   @@unique([month, year])
   @@map("payroll_runs")
@@ -546,8 +548,53 @@ model PayslipItem {
   type      PayslipItemType
   label     String
   amount    Decimal         @db.Decimal(12, 3)
+  /// بنود يضيفها المستخدم يدوياً — لا يمسحها إعادة توليد المسيّر
+  isManual  Boolean         @default(false)
 
   @@map("payslip_items")
+}
+
+// ── السلف ──────────────────────────────────────────────────
+
+enum AdvanceStatus {
+  ACTIVE // قيد السداد
+  SETTLED // مسدّدة بالكامل
+  CANCELLED // ملغاة
+}
+
+/// سلفة على الراتب تُخصم على أقساط شهرية
+model EmployeeAdvance {
+  id               String        @id @default(cuid())
+  employeeId       String
+  employee         Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  amount           Decimal       @db.Decimal(12, 3) // إجمالي السلفة
+  monthlyDeduction Decimal       @db.Decimal(12, 3) // القسط الشهري
+  reason           String?
+  status           AdvanceStatus @default(ACTIVE)
+  grantedAt        DateTime      @default(now())
+  notes            String?
+  createdAt        DateTime      @default(now())
+
+  repayments AdvanceRepayment[]
+
+  @@index([employeeId, status])
+  @@map("employee_advances")
+}
+
+/// قسط مسدّد من سلفة — مرتبط بمسيّر الرواتب ليُعاد حسابه عند إعادة التوليد
+model AdvanceRepayment {
+  id           String          @id @default(cuid())
+  advanceId    String
+  advance      EmployeeAdvance @relation(fields: [advanceId], references: [id], onDelete: Cascade)
+  payrollRunId String?
+  payrollRun   PayrollRun?     @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  amount       Decimal         @db.Decimal(12, 3)
+  paidAt       DateTime        @default(now())
+  note         String?
+
+  @@index([advanceId])
+  @@index([payrollRunId])
+  @@map("advance_repayments")
 }
 
 enum DocumentType {

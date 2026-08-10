@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: hk_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-haverkamp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haverkamp_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-haverkamp}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-haverkamp} -d ${POSTGRES_DB:-haverkamp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:

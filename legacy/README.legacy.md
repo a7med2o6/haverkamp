@@ -24,6 +24,7 @@
 | `iron.html` | حماية أيرون شيلد الأمريكية | `/iron.html` |
 | `tint.html` | عازل حراري وتظليل | `/tint.html` |
 | `paint.html` | صبغ السيارات | `/paint.html` |
+| `glass.html` | إصلاح وتبديل جام السيارات | `/glass.html` |
 | `polish.html` | بوليش وتلميع | `/polish.html` |
 | `wash.html` | غسيل متنقل | `/wash.html` |
 | `accessories.html` | متجر الإكسسوارات | `/accessories.html` |

@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════
+   هافركامب — نظام التصميم
+   الهوية: زجاجي داكن للموقع العام · لوحة تحكم عالية الكثافة
+   ═══════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── ألوان العلامة ── */
+  --color-ink-0: #f4f8ff;
+  --color-ink-1: #b8c8de;
+  --color-ink-2: #6c7e9a;
+
+  --color-base-0: #050912;
+  --color-base-1: #0a1424;
+  --color-base-2: #0d1f33;
+  --color-base-3: #14293f;
+
+  --color-accent: #5eb8ff;
+  --color-accent-soft: #8ad4ff;
+  --color-accent-deep: #2a7fc4;
+
+  /* ── ألوان الحالة ── */
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
+
+  /* ── الخطوط ── */
+  --font-sans: var(--font-arabic), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-latin: var(--font-latin), "Plus Jakarta Sans", system-ui, sans-serif;
+
+  /* ── الأنصاف ── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+/* ── متغيّرات السطح (تتبدّل مع الثيم) ── */
+:root {
+  --surface-0: #050912;
+  --surface-1: #0a1424;
+  --surface-2: #0f1d30;
+  --surface-3: #16293f;
+  --text-0: #f4f8ff;
+  --text-1: #b8c8de;
+  --text-2: #6c7e9a;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.07);
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 20px 50px -20px rgba(0, 0, 0, 0.6), 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] {
+  --surface-0: #f2f5fa;
+  --surface-1: #ffffff;
+  --surface-2: #f7f9fd;
+  --surface-3: #eaeff7;
+  --text-0: #0a1424;
+  --text-1: #3b4d68;
+  --text-2: #6c7e9a;
+  --line: rgba(13, 31, 51, 0.10);
+  --line-strong: rgba(13, 31, 51, 0.20);
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-strong: rgba(255, 255, 255, 0.9);
+  --shadow-card: 0 1px 2px rgba(13, 31, 51, 0.06), 0 8px 24px -12px rgba(13, 31, 51, 0.14);
+}
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--surface-0);
+    color: var(--text-0);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  html[dir="ltr"] body {
+    font-family: var(--font-latin);
+  }
+
+  /* الأرقام دائماً لاتينية ومحاذاة جدولية للمبالغ */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #04121f;
+  }
+
+  /* شريط تمرير رفيع */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-2);
+    background-clip: content-box;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  /* بطاقة زجاجية — تُستخدم في الموقع العام واللوحة */
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid var(--line);
+  }
+
+  /* عنصر قائمة جانبية */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-1);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-item:hover {
+    background: var(--glass-strong);
+    color: var(--text-0);
+  }
+  .nav-item[data-active="true"] {
+    background: color-mix(in oklab, var(--color-accent) 16%, transparent);
+    color: var(--color-accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

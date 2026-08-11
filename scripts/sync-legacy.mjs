@@ -10,6 +10,12 @@ import { cp, mkdir, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+/**
+ * صفحات انتقلت إلى Next — لا تُنسخ، وإلا سبقها الملف الثابت في public/
+ * إلى المسار وحجب الصفحة الديناميكية.
+ */
+const MIGRATED = new Set(['index.html', 'glass.html', 'polish.html', 'paint.html']);
+
 const root = process.cwd();
 const legacy = path.join(root, 'legacy');
 const publicDir = path.join(root, 'public');
@@ -26,6 +32,7 @@ async function main() {
   for (const entry of entries) {
     // نتجاهل ملفات المرجع التي لا تُخدَم كجزء من الموقع
     if (entry.name.startsWith('.') || entry.name.endsWith('.md')) continue;
+    if (MIGRATED.has(entry.name)) continue;
 
     const isHtml = entry.isFile() && entry.name.endsWith('.html');
     const isAsset = entry.isDirectory() && (entry.name === 'css' || entry.name === 'js');

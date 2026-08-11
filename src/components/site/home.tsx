@@ -6,6 +6,7 @@ import {
   getTestimonials,
   type Locale,
 } from '@/lib/site-data';
+import { Rich } from './rich';
 import { SiteNav } from './nav';
 import { SiteFooter } from './footer';
 
@@ -35,15 +36,6 @@ function Stars({ size = 16 }: { size?: number }) {
       ))}
     </>
   );
-}
-
-/** نصوص الترجمة تحتوي وسوماً (<br/>, <b>) فنعرضها كـ HTML موثوق من قاعدتنا */
-function Rich({
-  html,
-  as: Tag = 'span',
-  ...props
-}: { html: string; as?: 'span' | 'p' | 'h1' | 'h3' | 'div' } & React.HTMLAttributes<HTMLElement>) {
-  return <Tag {...props} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export async function SiteHome({ locale }: { locale: Locale }) {

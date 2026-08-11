@@ -1,16 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return {
-      // مؤقت: الجذر يعرض الصفحة الرئيسية للموقع الثابت القديم من public/
-      // (ينسخها scripts/sync-legacy.mjs عند تشغيل npm run dev).
-      // احذف هذه القاعدة بمجرد بناء الصفحة الرئيسية في Next.js.
-      beforeFiles: [{ source: '/', destination: '/index.html' }],
-      afterFiles: [],
-      fallback: [],
-    };
-  },
+  // الجذر صار صفحة Next حقيقية — لم يعد يحتاج rewrite للموقع الثابت.
+  // صفحات الخدمات (protication.html …) ما زالت تُخدَم من public/
+  // عبر scripts/sync-legacy.mjs حتى يكتمل نقلها.
 };
 
 export default nextConfig;

@@ -166,6 +166,28 @@
   }
 }
 
+/* ── مدخل الموظفين في تذييل الموقع العام ──
+   يرث ألوان روابط التذييل من styles.css ويضيف إطاراً خفيفاً
+   ليقرأ كمدخل داخلي لا كرابط تسويقي. */
+.footer .links a.staff-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 5px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  opacity: 0.65;
+  transition: opacity 0.15s, color 0.15s;
+}
+.footer .links a.staff-login:hover {
+  opacity: 1;
+  color: var(--accent, #5eb8ff);
+}
+.footer .links a.staff-login svg {
+  flex-shrink: 0;
+}
+
 /* ── الطباعة (الفواتير والتقارير) ── */
 @media print {
   /* نُخفي هيكل اللوحة ونطبع المحتوى فقط */

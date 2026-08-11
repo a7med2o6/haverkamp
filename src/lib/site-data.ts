@@ -6,6 +6,30 @@ export type Locale = 'ar' | 'en';
 export const LOCALES: Locale[] = ['ar', 'en'];
 
 /**
+ * كيانات HTML للمحارف المطبعية الموروثة من الموقع الثابت.
+ * كان يعرضها عبر innerHTML فتُفكّ تلقائياً، أما React فيعرض النص حرفياً —
+ * لذا نفكّها عند القراءة. لا نفكّ &lt; و &gt; عمداً حتى لا يتحوّل نصٌّ
+ * مهروب إلى وسوم فعلية عند تمريره لعرض HTML.
+ */
+const ENTITIES: Record<string, string> = {
+  '&ldquo;': '“',
+  '&rdquo;': '”',
+  '&lsquo;': '‘',
+  '&rsquo;': '’',
+  '&quot;': '"',
+  '&mdash;': '—',
+  '&ndash;': '–',
+  '&hellip;': '…',
+  '&nbsp;': ' ',
+  '&amp;': '&',
+};
+
+function decodeEntities(value: string): string {
+  if (!value.includes('&')) return value;
+  return value.replace(/&[a-zA-Z]+;/g, (m) => ENTITIES[m] ?? m);
+}
+
+/**
  * قاموس الترجمة من قاعدة البيانات.
  * `cache` يمنع تكرار الاستعلام بين مكوّنات نفس الطلب.
  */
@@ -17,7 +41,8 @@ export const getDictionary = cache(async (locale: Locale) => {
   const dict = new Map<string, string>();
   for (const row of rows) {
     // الإنجليزية غير المترجَمة ترجع للعربية بدل أن تظهر فارغة
-    dict.set(row.key, (locale === 'en' ? row.en || row.ar : row.ar) ?? '');
+    const value = (locale === 'en' ? row.en || row.ar : row.ar) ?? '';
+    dict.set(row.key, decodeEntities(value));
   }
 
   /** يعيد نص المفتاح، أو المفتاح نفسه إن لم يوجد ليسهل رصد النقص */
@@ -64,7 +89,7 @@ export const getTestimonials = cache(async (locale: Locale) => {
 
   if (rows.length > 0) {
     return rows.map((r) => ({
-      body: locale === 'en' ? r.bodyEn || r.bodyAr : r.bodyAr,
+      body: decodeEntities(locale === 'en' ? r.bodyEn || r.bodyAr : r.bodyAr),
       author: r.author,
       carModel: r.carModel ?? '',
       avatar: r.avatar,

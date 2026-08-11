@@ -6,6 +6,7 @@ import {
   getTestimonials,
   type Locale,
 } from '@/lib/site-data';
+import { ContactForm } from './contact-form';
 import { Rich } from './rich';
 import { SiteNav } from './nav';
 import { SiteFooter } from './footer';
@@ -427,6 +428,23 @@ export async function SiteHome({ locale }: { locale: Locale }) {
                 {t('contact.wa.btn')}
               </a>
             </div>
+
+            <ContactForm
+              locale={locale}
+              whatsapp={whatsapp}
+              services={services.map((s) => ({ slug: s.slug, name: s.name }))}
+              labels={{
+                name: t('form.name.label'),
+                phone: t('form.phone.label'),
+                service: t('form.service.label'),
+                car: t('form.car.label'),
+                notes: t('form.notes.label'),
+                submit: t('form.submit'),
+                phName: t('ph.name'),
+                phCar: t('ph.car'),
+                phNotes: t('ph.notes'),
+              }}
+            />
           </div>
         </section>
       </main>

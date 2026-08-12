@@ -114,9 +114,11 @@ export const saveTranslation = action({
     });
 
     revalidatePath('/dashboard/cms/translations');
-    // النص قد يظهر في أي صفحة — نُبطل الرئيسية وصفحات الخدمات المنقولة
+    // النص قد يظهر في أي صفحة — نُبطل الرئيسية والصفحات المنقولة كلها
     revalidateSite();
     for (const slug of Object.keys(MIGRATED_SERVICES)) revalidatePath(`/${slug}.html`);
+    revalidatePath('/terms.html');
+    revalidatePath('/en/terms.html');
 
     return { id: key, message: 'تم حفظ النص' };
   },

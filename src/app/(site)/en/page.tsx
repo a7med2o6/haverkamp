@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SiteHome } from '@/components/site/home';
+import { LtrBoot } from '@/components/site/ltr-boot';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,17 +17,7 @@ export const metadata: Metadata = {
 export default function HomePageEn() {
   return (
     <>
-      {/*
-        الجذر <html> يُضبط في التخطيط الأعلى على العربية RTL لأنها لغة اللوحة
-        وأغلب الموقع. نقلبه هنا قبل الرسم لأن نظام التصميم يعتمد على
-        html[dir="ltr"]. يُستغنى عن هذا عند نقل كل الصفحات إلى مسارات باللغة.
-      */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html:
-            "document.documentElement.setAttribute('dir','ltr');document.documentElement.setAttribute('lang','en');",
-        }}
-      />
+      <LtrBoot />
       <SiteHome locale="en" />
     </>
   );

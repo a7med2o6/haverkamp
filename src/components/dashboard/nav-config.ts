@@ -62,7 +62,8 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/cms/settings', label: 'إعدادات الموقع', icon: 'Globe', module: 'cms' },
       { href: '/dashboard/cms/gallery', label: 'معرض الصور', icon: 'Images', module: 'cms' },
       { href: '/dashboard/cms/testimonials', label: 'آراء العملاء', icon: 'MessageSquareQuote', module: 'cms' },
-      { href: '/dashboard/cms/pages', label: 'الصفحات', icon: 'FileText', module: 'cms', soon: true },
+      // صفحة البنود والشروط نصوصها مفاتيح terms.* — تُحرَّر من «نصوص الموقع»
+      // فلا داعي لشاشة صفحات منفصلة حتى تظهر صفحة ثابتة ذات محتوى حر
     ],
   },
   {

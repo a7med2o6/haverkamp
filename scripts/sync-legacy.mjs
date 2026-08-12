@@ -14,7 +14,13 @@ import path from 'node:path';
  * صفحات انتقلت إلى Next — لا تُنسخ، وإلا سبقها الملف الثابت في public/
  * إلى المسار وحجب الصفحة الديناميكية.
  */
-const MIGRATED = new Set(['index.html', 'glass.html', 'polish.html', 'paint.html']);
+const MIGRATED = new Set([
+  'index.html',
+  'glass.html',
+  'polish.html',
+  'paint.html',
+  'terms.html',
+]);
 
 const root = process.cwd();
 const legacy = path.join(root, 'legacy');

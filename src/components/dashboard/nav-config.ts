@@ -57,11 +57,12 @@ export const NAV: NavGroup[] = [
   {
     label: 'المحتوى',
     links: [
-      { href: '/dashboard/cms/services', label: 'الخدمات', icon: 'Layers', module: 'cms', soon: true },
+      { href: '/dashboard/cms/services', label: 'الخدمات', icon: 'Layers', module: 'cms' },
+      { href: '/dashboard/cms/translations', label: 'نصوص الموقع', icon: 'Languages', module: 'cms' },
+      { href: '/dashboard/cms/settings', label: 'إعدادات الموقع', icon: 'Globe', module: 'cms' },
       { href: '/dashboard/cms/gallery', label: 'معرض الصور', icon: 'Images', module: 'cms', soon: true },
       { href: '/dashboard/cms/testimonials', label: 'آراء العملاء', icon: 'MessageSquareQuote', module: 'cms', soon: true },
       { href: '/dashboard/cms/pages', label: 'الصفحات', icon: 'FileText', module: 'cms', soon: true },
-      { href: '/dashboard/cms/translations', label: 'الترجمات', icon: 'Languages', module: 'cms', soon: true },
     ],
   },
   {

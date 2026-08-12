@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { db } from '@/lib/db';
+import { GALLERY_SLOTS } from '@/lib/constants';
 
 export type Locale = 'ar' | 'en';
 
@@ -177,6 +178,23 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
       book: t(`${p}.cta.book`),
     },
   };
+});
+
+/** صور معرض الأعمال المعروضة في الصفحة الرئيسية */
+export const getFeaturedGallery = cache(async (locale: Locale) => {
+  const items = await db.galleryItem.findMany({
+    where: { isActive: true, isFeatured: true },
+    orderBy: { sortOrder: 'asc' },
+    // شبكة المعرض في styles.css مصمّمة على خمس خانات (الأولى بارتفاع مضاعف) —
+    // أي صورة سادسة تنزل في صف ناقص وتكسر التوازن
+    take: GALLERY_SLOTS,
+  });
+
+  return items.map((g) => ({
+    id: g.id,
+    src: g.imageUrl,
+    caption: (locale === 'en' ? g.captionEn || g.captionAr : g.captionAr) ?? '',
+  }));
 });
 
 /** آراء العملاء — من الجدول إن وُجدت، وإلا من مفاتيح الترجمة المستوردة */

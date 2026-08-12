@@ -1,12 +1,14 @@
 import Image from 'next/image';
 import {
   getDictionary,
+  getFeaturedGallery,
   getNavServices,
   getSettings,
   getTestimonials,
   type Locale,
 } from '@/lib/site-data';
 import { ContactForm } from './contact-form';
+import { GalleryGrid } from './gallery';
 import { Rich } from './rich';
 import { SiteNav } from './nav';
 import { SiteFooter } from './footer';
@@ -27,11 +29,19 @@ const TESTIMONIAL_PEOPLE = [
 const WHY_ITEMS = ['01', '02', '03', '04', '05', '06'];
 const FAQ_ITEMS = ['1', '2', '3', '4', '5'];
 
-function Stars({ size = 16 }: { size?: number }) {
+/** النجوم المطفأة تبقى ظاهرة حتى لا يتغيّر عرض السطر باختلاف التقييم */
+function Stars({ size = 16, filled = 5 }: { size?: number; filled?: number }) {
   return (
     <>
       {Array.from({ length: 5 }, (_, i) => (
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+        <svg
+          key={i}
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          style={i < filled ? undefined : { opacity: 0.22 }}
+        >
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
         </svg>
       ))}
@@ -40,11 +50,12 @@ function Stars({ size = 16 }: { size?: number }) {
 }
 
 export async function SiteHome({ locale }: { locale: Locale }) {
-  const [t, setting, services, testimonials] = await Promise.all([
+  const [t, setting, services, testimonials, gallery] = await Promise.all([
     getDictionary(locale),
     getSettings(),
     getNavServices(locale),
     getTestimonials(locale),
+    getFeaturedGallery(locale),
   ]);
 
   const phone = setting('contact.phone', '+965 5111 1154');
@@ -210,6 +221,23 @@ export async function SiteHome({ locale }: { locale: Locale }) {
           </div>
         </section>
 
+        {/* ═══════════ معرض الأعمال ═══════════ */}
+        {gallery.length > 0 && (
+          <section className="section" id="gallery">
+            <div className="section-head">
+              <div>
+                <div className="tag" style={{ color: 'rgb(10, 20, 36)' }}>
+                  {t('sec.gallery.tag')}
+                </div>
+                <h2>{t('sec.gallery.h2')}</h2>
+              </div>
+              <p className="desc">{t('sec.gallery.desc')}</p>
+            </div>
+
+            <GalleryGrid items={gallery} />
+          </section>
+        )}
+
         {/* ═══════════ لماذا نحن ═══════════ */}
         <section className="section" id="why" style={{ padding: '90px 0 45px' }}>
           <div className="section-head">
@@ -261,8 +289,8 @@ export async function SiteHome({ locale }: { locale: Locale }) {
           <div className="testi-grid">
             {reviews.map((r, i) => (
               <article key={i} className="testi-card glass">
-                <div className="stars">
-                  <Stars />
+                <div className="stars" aria-label={`${r.rating} من 5`}>
+                  <Stars filled={r.rating} />
                 </div>
                 <blockquote>{r.body}</blockquote>
                 <div className="who">

@@ -15,7 +15,8 @@
     "db:reset": "prisma migrate reset",
     "i18n:import": "tsx prisma/import-translations.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
-    "legacy:sync": "node scripts/sync-legacy.mjs"
+    "legacy:sync": "node scripts/sync-legacy.mjs",
+    "db:import:testimonials": "tsx prisma/import-testimonials.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

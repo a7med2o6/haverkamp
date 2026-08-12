@@ -18,3 +18,10 @@ export const RESIDENCY_ALERT_DAYS = 15;
 
 /** أنواع الوثائق التي تُراقَب في تنبيه لوحة التحكم */
 export const RESIDENCY_DOC_TYPES = ['RESIDENCY', 'WORK_PERMIT', 'CIVIL_ID'] as const;
+
+/**
+ * خانات شبكة معرض الصفحة الرئيسية.
+ * التصميم في css/styles.css: ثلاثة أعمدة × صفّين، والصورة الأولى بارتفاع
+ * مضاعف — فتستوعب الشبكة خمس صور بالضبط.
+ */
+export const GALLERY_SLOTS = 5;

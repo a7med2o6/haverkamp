@@ -150,3 +150,106 @@ export const saveSetting = action({
     return { id: key, message: 'تم حفظ الإعداد' };
   },
 });
+
+// ═══════════════════════════════════════════════════════════
+//  معرض الصور
+// ═══════════════════════════════════════════════════════════
+
+const gallerySchema = z.object({
+  id: z.string().optional(),
+  imageUrl: z.string().trim().min(1, 'الصورة مطلوبة'),
+  captionAr: optionalString,
+  captionEn: optionalString,
+  serviceId: optionalString,
+  sortOrder: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
+  isActive: z.boolean(),
+  isFeatured: z.boolean(),
+});
+
+export const saveGalleryItem = action({
+  permission: 'cms:write',
+  schema: gallerySchema,
+  audit: { entity: 'GalleryItem', action: 'SAVE' },
+  handler: async ({ id, ...data }) => {
+    if (id) {
+      await db.galleryItem.update({ where: { id }, data });
+      revalidatePath('/dashboard/cms/gallery');
+      revalidateSite();
+      return { id, message: 'تم تحديث الصورة' };
+    }
+
+    const created = await db.galleryItem.create({ data });
+    revalidatePath('/dashboard/cms/gallery');
+    revalidateSite();
+    return { id: created.id, message: 'تمت إضافة الصورة' };
+  },
+});
+
+export const deleteGalleryItem = action({
+  permission: 'cms:delete',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'GalleryItem', action: 'DELETE' },
+  handler: async ({ id }) => {
+    await db.galleryItem.delete({ where: { id } });
+    revalidatePath('/dashboard/cms/gallery');
+    revalidateSite();
+    return { id, message: 'تم حذف الصورة' };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  آراء العملاء
+// ═══════════════════════════════════════════════════════════
+
+const testimonialSchema = z.object({
+  id: z.string().optional(),
+  author: z.string().trim().min(2, 'اسم العميل مطلوب'),
+  bodyAr: z.string().trim().min(5, 'نص الرأي مطلوب'),
+  bodyEn: optionalString,
+  carModel: optionalString,
+  avatar: optionalString,
+  rating: z
+    .union([z.string(), z.number()])
+    .transform(Number)
+    .refine((n) => n >= 1 && n <= 5, 'التقييم من 1 إلى 5'),
+  sortOrder: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
+  isActive: z.boolean(),
+});
+
+export const saveTestimonial = action({
+  permission: 'cms:write',
+  schema: testimonialSchema,
+  audit: { entity: 'Testimonial', action: 'SAVE' },
+  handler: async ({ id, ...data }) => {
+    if (id) {
+      await db.testimonial.update({ where: { id }, data });
+      revalidatePath('/dashboard/cms/testimonials');
+      revalidateSite();
+      return { id, message: 'تم تحديث الرأي' };
+    }
+
+    const created = await db.testimonial.create({ data });
+    revalidatePath('/dashboard/cms/testimonials');
+    revalidateSite();
+    return { id: created.id, message: `تمت إضافة رأي ${data.author}` };
+  },
+});
+
+export const deleteTestimonial = action({
+  permission: 'cms:delete',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'Testimonial', action: 'DELETE' },
+  handler: async ({ id }) => {
+    const remaining = await db.testimonial.count({ where: { isActive: true, NOT: { id } } });
+    if (remaining === 0) {
+      throw new AppError(
+        'هذا آخر رأي منشور — حذفه يُرجع الموقع إلى الآراء الافتراضية. أوقفه بدل حذفه إن أردت إخفاءه'
+      );
+    }
+
+    await db.testimonial.delete({ where: { id } });
+    revalidatePath('/dashboard/cms/testimonials');
+    revalidateSite();
+    return { id, message: 'تم حذف الرأي' };
+  },
+});

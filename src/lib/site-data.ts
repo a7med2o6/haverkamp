@@ -592,6 +592,99 @@ export const getWashPage = cache(async (locale: Locale) => {
   };
 });
 
+/* ═══════════════════ صفحة التواصل ═══════════════════ */
+
+/** أيام الأسبوع بترقيم Date.getDay مرتّبة من السبت كما في الصفحة الأصلية */
+const WEEK = [
+  { day: 6, key: 'sat', code: 'SAT' },
+  { day: 0, key: 'sun', code: 'SUN' },
+  { day: 1, key: 'mon', code: 'MON' },
+  { day: 2, key: 'tue', code: 'TUE' },
+  { day: 3, key: 'wed', code: 'WED' },
+  { day: 4, key: 'thu', code: 'THU' },
+  { day: 5, key: 'fri', code: 'FRI' },
+];
+
+/** «20:00» → 20 */
+function hourOf(time: string, fallback: number) {
+  const n = Number(time.split(':')[0]);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** «20:00» → «8:00 PM» */
+function to12h(time: string) {
+  const [h, m = '00'] = time.split(':');
+  const hour = Number(h);
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display}:${m} ${suffix}`;
+}
+
+export type ContactPage = Awaited<ReturnType<typeof getContactPage>>;
+
+/**
+ * صفحة التواصل.
+ * ساعات العمل تُقرأ من نفس إعدادات الدوام التي يستعملها الحضور والانصراف —
+ * تغيير الدوام من اللوحة ينعكس على الموقع بلا تحرير منفصل.
+ */
+export const getContactPage = cache(async (locale: Locale) => {
+  const [t, setting] = await Promise.all([getDictionary(locale), getSettings()]);
+
+  const start = String(setting('hr.workDayStart', '10:00'));
+  const end = String(setting('hr.workDayEnd', '20:00'));
+  const weekend = setting('hr.weekend', ['FRI']) as string[];
+  const closedLabel = t('cus.closed.day');
+
+  return {
+    back: t('cus.back'),
+    bio: t('cus.bio'),
+    status: t('cus.status'),
+    siteName: String(setting(`site.name.${locale}`, 'هافركامب')),
+
+    tiles: {
+      phone: { label: t('cus.phone.lbl'), value: String(setting('contact.phone', '+965 5111 1154')) },
+      whatsapp: { label: t('cus.wa.lbl'), value: String(setting('contact.whatsapp', '96551111154')) },
+      instagram: { label: t('cus.ig.lbl'), value: String(setting('social.instagram', '')) },
+      location: {
+        label: t('cus.loc.lbl'),
+        value: t('cus.loc.val'),
+        href: 'https://maps.app.goo.gl/jUvgrQSMBKqiScXJA',
+      },
+    },
+
+    hours: {
+      title: t('cus.hours.h3'),
+      todayLabel: t('cus.today'),
+      openHour: hourOf(start, 10),
+      closeHour: hourOf(end, 20),
+      days: WEEK.map((d) => {
+        const closed = weekend.includes(d.code);
+        return {
+          day: d.day,
+          label: t(`cus.day.${d.key}`),
+          time: closed ? closedLabel : `${to12h(start)} — ${to12h(end)}`,
+          closed,
+        };
+      }),
+      texts: {
+        open: t('cus.open.now'),
+        closed: t('cus.closed.now'),
+        opensIn: t('cus.opens.in'),
+        opensOn: t('cus.opens.on'),
+      },
+    },
+
+    map: {
+      title: t('cus.map.h3'),
+      open: t('cus.map.open'),
+      address: t('cus.map.addr'),
+      href: 'https://maps.app.goo.gl/jUvgrQSMBKqiScXJA',
+      embed:
+        'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3479.081443418696!2d47.94444352461846!3d29.309286553027786!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3fcf9b0799f00dbf%3A0x72f159c8f05d7990!2z2YfYp9mB2LEg2YPYp9mF2Kg!5e0!3m2!1sar!2skw!4v1693736946824!5m2!1sar!2skw',
+    },
+  };
+});
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
@@ -603,6 +696,7 @@ export function migratedPaths(): string[] {
     'tint',
     'protication',
     'wash',
+    'contactus',
   ];
   return [
     '/',

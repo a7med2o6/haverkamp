@@ -26,6 +26,7 @@ const MIGRATED = new Set([
   'tint.html',
   'protication.html',
   'wash.html',
+  'contactus.html',
 ]);
 
 const root = process.cwd();

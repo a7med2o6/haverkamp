@@ -58,6 +58,12 @@ const rows: Row[] = [
   { key: 'wash.rev.4.name', ar: 'إبراهيم القحطاني', en: 'Ibrahim Al-Qahtani', group: 'wash' },
   { key: 'wash.rev.5.name', ar: 'مريم العنبي', en: 'Mariam Al-Anbi', group: 'wash' },
   { key: 'wash.rev.6.name', ar: 'فهد السهلي', en: 'Fahad Al-Sahli', group: 'wash' },
+
+  // ── صفحة التواصل: حالة الفتح كانت مكتوبة داخل سكربت الصفحة ──
+  { key: 'cus.open.now', ar: 'مفتوح الآن', en: 'Open Now', group: 'cus' },
+  { key: 'cus.closed.now', ar: 'مغلق', en: 'Closed', group: 'cus' },
+  { key: 'cus.opens.in', ar: 'يفتح بعد {h} ساعات', en: 'Opens in {h} hours', group: 'cus' },
+  { key: 'cus.opens.on', ar: 'يفتح {d}', en: 'Opens {d}', group: 'cus' },
 ];
 
 async function main() {

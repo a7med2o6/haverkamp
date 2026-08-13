@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/** لا شيء يُغيّر «هل نحن في المتصفح؟» بعد الترطيب */
+const subscribeNoop = () => () => {};
 
 export function Modal({
   open,
@@ -23,10 +26,10 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
 
-  // الـ portal يحتاج document — غير متاح أثناء التصيير على الخادم
-  useEffect(() => setMounted(true), []);
+  // الـ portal يحتاج document — غير متاح أثناء التصيير على الخادم.
+  // نكتشف العميل بلقطة ثابتة بدل ضبط حالة داخل effect.
+  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   useEffect(() => {
     if (!open) return;

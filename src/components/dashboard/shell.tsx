@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { signOut } from 'next-auth/react';
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import { Sidebar } from './sidebar';
@@ -10,21 +10,37 @@ import type { Role } from '@/generated/prisma/enums';
 
 const THEME_KEY = 'hk_theme';
 
+/** المشتركون في تغيّر الوضع — التبديل يحدث من زر واحد فنبلّغهم يدوياً */
+const themeListeners = new Set<() => void>();
+
+function subscribeTheme(cb: () => void) {
+  themeListeners.add(cb);
+  return () => themeListeners.delete(cb);
+}
+
+/**
+ * السمة على <html> هي مصدر الحقيقة لا حالة React: السكربت في التخطيط
+ * الجذري يضعها قبل أول رسم، فقراءتها منه تُبقي أيقونة الزر مطابقة
+ * للمعروض من أول لحظة بلا وميض.
+ */
+function readTheme(): 'dark' | 'light' {
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+
 function useTheme() {
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  // الخادم لا يعرف تفضيل الزائر — الداكن هو الافتراضي في التنسيقات
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => 'dark' as const);
 
-  useEffect(() => {
-    const stored = (localStorage.getItem(THEME_KEY) as 'dark' | 'light' | null) ?? 'dark';
-    setTheme(stored);
-    document.documentElement.setAttribute('data-theme', stored);
-  }, []);
-
-  function toggle() {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem(THEME_KEY, next);
+  const toggle = useCallback(() => {
+    const next = readTheme() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-  }
+    try {
+      localStorage.setItem(THEME_KEY, next);
+    } catch {
+      // التصفّح الخاص قد يمنع التخزين — التبديل يبقى فعّالاً لهذه الجلسة
+    }
+    for (const cb of themeListeners) cb();
+  }, []);
 
   return { theme, toggle };
 }

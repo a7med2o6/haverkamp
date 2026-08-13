@@ -45,6 +45,23 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      {/*
+        الوضع المحفوظ يُطبَّق قبل أول رسم. بدونه تُرسم الصفحة داكنة
+        (الافتراضي) ثم تقلب بعد الترطيب، فيرى مستخدم الوضع الفاتح ومضة
+        سوداء في كل تنقّل.
+        وسم script خام لا next/script: الأخير بـ beforeInteractive يدفع
+        الشيفرة في طابور ينفّذه وقت التشغيل، وهو ما يأتي بعد أول رسم
+        فتعود الومضة. السكربت المتزامن في الترويسة يوقف التحليل ويطبّق
+        السمة قبل رسم أي شيء.
+      */}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('hk_theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}",
+          }}
+        />
+      </head>
       <body className={`${arabic.variable} ${latin.variable}`}>
         {children}
         <Toaster

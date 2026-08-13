@@ -38,7 +38,8 @@ export function BookingFormButton({
   const [pending, startTransition] = useTransition();
   const isEdit = !!booking?.id;
 
-  const [values, setValues] = useState<BookingValues>(
+  // مُهيّئ كسول: الموعد الافتراضي يُحسب مرة عند الفتح لا في كل تصيير
+  const [values, setValues] = useState<BookingValues>(() =>
     booking ?? {
       customerId: '',
       serviceId: '',

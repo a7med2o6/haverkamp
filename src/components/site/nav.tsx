@@ -2,10 +2,38 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Dictionary, Locale } from '@/lib/site-data';
 
-/** شريط التنقّل العلوي — نفس بنية الموقع الثابت ليعمل معه nav.js */
-export function SiteNav({ t, locale }: { t: Dictionary; locale: Locale }) {
+export interface NavLink {
+  href: string;
+  label: string;
+}
+
+/**
+ * شريط التنقّل العلوي — نفس بنية الموقع الثابت ليعمل معه nav.js.
+ *
+ * كل صفحة تمرّر روابط أقسامها: في الموقع الثابت كان لكل صفحة شريطها
+ * الخاص، فروابط الرئيسية على صفحة خدمة تُخرج الزائر منها بدل أن تنقّله
+ * داخلها. الافتراضي روابط الرئيسية.
+ */
+export function SiteNav({
+  t,
+  locale,
+  links,
+}: {
+  t: Dictionary;
+  locale: Locale;
+  links?: NavLink[];
+}) {
   const home = locale === 'en' ? '/en' : '/';
   const other = locale === 'en' ? '/' : '/en';
+
+  const items: NavLink[] = links ?? [
+    { href: `${home}#services`, label: t('nav.services') },
+    { href: `${home}#gallery`, label: t('nav.gallery') },
+    { href: '/contactus.html', label: t('nav.contact') },
+    { href: `${home}#testimonials`, label: t('nav.testimonials') },
+    { href: `${home}#why`, label: t('nav.why') },
+    { href: '/terms.html', label: t('nav.terms') },
+  ];
 
   return (
     <div className="nav-wrap">
@@ -24,12 +52,13 @@ export function SiteNav({ t, locale }: { t: Dictionary; locale: Locale }) {
         </div>
 
         <div className="nav-links">
-          <a href={`${home}#services`}>{t('nav.services')}</a>
-          <a href={`${home}#gallery`}>{t('nav.gallery')}</a>
-          <a href="/contactus.html">{t('nav.contact')}</a>
-          <a href={`${home}#testimonials`}>{t('nav.testimonials')}</a>
-          <a href={`${home}#why`}>{t('nav.why')}</a>
-          <a href="/terms.html">{t('nav.terms')}</a>
+          {items
+            .filter((l) => l.label)
+            .map((l) => (
+              <a key={l.href} href={l.href}>
+                {l.label}
+              </a>
+            ))}
         </div>
 
         <a href="/contactus.html" className="nav-cta">

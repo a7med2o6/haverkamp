@@ -46,7 +46,7 @@ export async function WashPageView({ locale }: { locale: Locale }) {
         <div className="orb o5" />
       </div>
 
-      <SiteNav t={t} locale={locale} />
+      <SiteNav t={t} locale={locale} links={page.nav} />
 
       <main className="svc-page">
         {/* ═══════════ الهيرو ═══════════ */}

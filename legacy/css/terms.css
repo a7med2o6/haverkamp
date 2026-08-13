@@ -224,24 +224,3 @@
   .terms-icon { width: 40px; height: 40px; }
 }
 
-/* روابط القفز بين الأقسام — كانت في شريط التنقّل قبل توحيد الشريط */
-.terms-jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 22px;
-}
-.terms-jump a {
-  padding: 7px 15px;
-  border-radius: var(--r-pill);
-  border: 1px solid var(--glass-border);
-  background: var(--glass-tint);
-  color: var(--ink-1);
-  font-size: 13px;
-  text-decoration: none;
-  transition: color .2s, border-color .2s;
-}
-.terms-jump a:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}

@@ -72,7 +72,7 @@ export async function ContactPageView({ locale }: { locale: Locale }) {
         <div className="orb o5" />
       </div>
 
-      <SiteNav t={t} locale={locale} />
+      <SiteNav t={t} locale={locale} links={page.nav} />
 
       <main className="contact-page">
         <Link href={home} className="back-link">

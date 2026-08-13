@@ -48,7 +48,7 @@ export async function AccessoriesPageView({ locale }: { locale: Locale }) {
         <div className="orb o5" />
       </div>
 
-      <SiteNav t={t} locale={locale} />
+      <SiteNav t={t} locale={locale} links={page.nav} />
 
       <main className="shop-page">
         <div className="shop-hero">

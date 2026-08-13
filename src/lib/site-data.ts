@@ -54,6 +54,22 @@ export const getDictionary = cache(async (locale: Locale) => {
 
 export type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
+/** رابط في شريط التنقّل — كل صفحة تبني روابط أقسامها */
+export interface NavLink {
+  href: string;
+  label: string;
+}
+
+/**
+ * يبني روابط الشريط من أزواج (مرساة، مفتاح ترجمة) ويُسقط ما لا نص له،
+ * ويُلحق رابط البنود كما في كل صفحات الموقع الثابت.
+ */
+function buildNav(t: Dictionary, pairs: [string, string][]): NavLink[] {
+  return [...pairs, ['/terms.html', 'nav.terms'] as [string, string]]
+    .map(([href, key]) => ({ href, label: t(key) }))
+    .filter((l) => l.label);
+}
+
 /** إعدادات الموقع كخريطة مفتاح ← قيمة */
 export const getSettings = cache(async () => {
   const rows = await db.siteSetting.findMany();
@@ -154,6 +170,13 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
     name: service.translations[0]?.name ?? slug,
     metaTitle: service.translations[0]?.metaTitle,
     metaDescription: service.translations[0]?.metaDescription,
+
+    nav: buildNav(t, [
+      ['#steps', `${p}.nav.steps`],
+      ['#features', `${p}.nav.why`],
+      ['#gallery', 'nav.gallery'],
+      ['#faq', 'ppf.nav.faq'],
+    ]),
 
     hero: {
       tag: t(`${p}.hero.tag`),
@@ -346,6 +369,14 @@ export const getTintPage = cache(async (locale: Locale) => {
     metaTitle: tr?.metaTitle,
     metaDescription: tr?.metaDescription,
 
+    nav: buildNav(t, [
+      ['#features', 'tint.nav.features'],
+      ['#levels', 'tint.nav.levels'],
+      ['#brands', 'ppf.nav.brands'],
+      ['#gallery', 'nav.gallery'],
+      ['#faq', 'ppf.nav.faq'],
+    ]),
+
     hero: {
       tag: t('tint.hero.tag'),
       h1: t('tint.hero.h1'),
@@ -462,6 +493,13 @@ export const getPpfPage = cache(async (locale: Locale) => {
     metaTitle: tr?.metaTitle,
     metaDescription: tr?.metaDescription,
 
+    nav: buildNav(t, [
+      ['#finish-types', 'ppf.nav.finish'],
+      ['#color-studio', 'ppf.nav.studio'],
+      ['#brands', 'ppf.nav.brands'],
+      ['#faq', 'ppf.nav.faq'],
+    ]),
+
     hero: {
       tag: t('ppf.hero.tag'),
       h1: t('ppf.hero.h1'),
@@ -569,6 +607,13 @@ export const getWashPage = cache(async (locale: Locale) => {
     metaTitle: tr?.metaTitle,
     metaDescription: tr?.metaDescription,
 
+    nav: buildNav(t, [
+      ['#packages', 'wash.nav.packages'],
+      ['#features', 'wash.nav.why'],
+      ['#gallery', 'nav.gallery'],
+      ['#reviews', 'wash.nav.reviews'],
+    ]),
+
     hero: {
       tag: t('wash.hero.tag'),
       h1: t('wash.hero.h1'),
@@ -674,6 +719,11 @@ export const getContactPage = cache(async (locale: Locale) => {
   const closedLabel = t('cus.closed.day');
 
   return {
+    nav: [
+      { href: locale === 'en' ? '/en' : '/', label: t('footer.home') },
+      { href: '/terms.html', label: t('nav.terms') },
+    ].filter((l) => l.label),
+
     back: t('cus.back'),
     bio: t('cus.bio'),
     status: t('cus.status'),
@@ -807,6 +857,12 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
   const sections = [...groups.values()].map((g) => ({ ...g, count: g.items.length }));
 
   return {
+    // شريط التنقّل يشاور على أقسام المتجر نفسها لا على الرئيسية
+    nav: [
+      ...sections.map((s) => ({ href: `#${s.id}`, label: s.nav })),
+      { href: '/contactus.html', label: t('svc.btn.contact') },
+    ].filter((l) => l.label),
+
     hero: { tag: t('acc.hero.tag'), h1: t('acc.hero.h1'), body: t('acc.hero.p') },
     filterAll: t('acc.filter.all'),
     countUnit: t('acc.count.unit'),
@@ -865,6 +921,16 @@ export const getBrandPage = cache(async (slug: string, locale: Locale) => {
     metaTitle: tr?.metaTitle,
     metaDescription: tr?.metaDescription,
     cssHref: `/css/${slug}.css`,
+
+    nav: buildNav(t, [
+      ['#about', `${p}.nav.about`],
+      ['#specs', `${p}.nav.specs`],
+      // بطاقات أنواع الحماية لا توجد في هافركامب
+      ...(config.finish ? ([['#finish-types', 'ppf.nav.finish']] as [string, string][]) : []),
+      ['#gallery', 'nav.gallery'],
+      ['#packages', `${p}.nav.packages`],
+      ['#faq', 'ppf.nav.faq'],
+    ]),
 
     hero: {
       tag: t(`${p}.hero.tag`),

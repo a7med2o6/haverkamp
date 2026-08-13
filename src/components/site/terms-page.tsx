@@ -66,21 +66,21 @@ export async function TermsPageView({ locale }: { locale: Locale }) {
         <div className="orb o5" />
       </div>
 
-      <SiteNav t={t} locale={locale} />
+      <SiteNav
+        t={t}
+        locale={locale}
+        links={[
+          { href: '#terms-conditions', label: t('terms.nav.terms') },
+          { href: '#post-install', label: t('terms.nav.post') },
+          { href: '#warranty', label: t('terms.nav.warranty') },
+        ]}
+      />
 
       <main className="terms-page">
         <div className="terms-hero">
           <div className="tag">{t('terms.hero.tag')}</div>
           <h1>{t('terms.hero.h1')}</h1>
           <p>{t('terms.hero.p')}</p>
-
-          {/* الصفحة القديمة كانت تضع هذه الروابط في شريط التنقّل العلوي —
-              نقلناها للصفحة نفسها حتى يبقى الشريط موحّداً بين كل الصفحات */}
-          <nav className="terms-jump" aria-label={t('terms.hero.h1')}>
-            <a href="#terms-conditions">{t('terms.nav.terms')}</a>
-            <a href="#post-install">{t('terms.nav.post')}</a>
-            <a href="#warranty">{t('terms.nav.warranty')}</a>
-          </nav>
         </div>
 
         <TermsCard num="01" id="terms-conditions" title={t('terms.s1.h2')}>

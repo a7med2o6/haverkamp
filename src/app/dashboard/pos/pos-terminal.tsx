@@ -4,9 +4,11 @@ import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
+  Check,
   Loader2,
   Minus,
   Plus,
+  Printer,
   ReceiptText,
   Search,
   ShoppingCart,
@@ -80,6 +82,8 @@ export function PosTerminal({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false); // درج السلة على الجوال
   const [parkedOpen, setParkedOpen] = useState(false);
+  /** آخر فاتورة مُصدرة — تبقى معروضة حتى يبدأ الكاشير بيعاً جديداً */
+  const [lastSale, setLastSale] = useState<{ id: string; number: string } | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [recalling, startRecall] = useTransition();
 
@@ -248,6 +252,8 @@ export function PosTerminal({
         setCartOpen(false);
         setCheckoutOpen(true);
       }}
+      lastSale={lastSale}
+      onDismissSale={() => setLastSale(null)}
     />
   );
 
@@ -469,6 +475,13 @@ export function PosTerminal({
               toast.success(res.message ?? 'تم إصدار الفاتورة');
               resetCart();
               setCheckoutOpen(false);
+
+              // المعلّقة ليست بيعاً مكتملاً — لا إيصال لها
+              const parked = res.data?.parked === true;
+              if (!parked && res.id) {
+                setLastSale({ id: res.id, number: String(res.data?.number ?? '') });
+              }
+
               router.refresh();
               return true;
             }
@@ -477,6 +490,51 @@ export function PosTerminal({
           }}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * لوحة ما بعد البيع — تحلّ محل "السلة فارغة" حتى يبدأ الكاشير بيعاً جديداً.
+ * الإيصال يُفتح في نافذة منفصلة بـ ‎?print=1‎ فيبقى الطرفية جاهزة للعميل التالي
+ * بدل أن ينتقل الكاشير عن الشاشة ويعود.
+ */
+function LastSalePanel({
+  sale,
+  onDismiss,
+}: {
+  sale: { id: string; number: string };
+  onDismiss: () => void;
+}) {
+  const receiptUrl = `/dashboard/invoices/${sale.id}?print=1`;
+
+  return (
+    <div className="grid h-full place-items-center px-4 text-center">
+      <div className="w-full">
+        <div className="mx-auto grid size-12 place-items-center rounded-full bg-ok/15">
+          <Check className="size-6 text-ok" />
+        </div>
+
+        <p className="mt-3 text-[13px] font-semibold text-[var(--text-1)]">تمّ إصدار الفاتورة</p>
+        {sale.number && (
+          <p className="tnum mt-0.5 text-base font-bold text-[var(--text-0)]" dir="ltr">
+            {sale.number}
+          </p>
+        )}
+
+        <div className="mt-4 space-y-2">
+          <Button
+            className="w-full"
+            onClick={() => window.open(receiptUrl, '_blank', 'noopener')}
+          >
+            <Printer />
+            طباعة الإيصال
+          </Button>
+          <Button variant="ghost" size="sm" className="w-full" onClick={onDismiss}>
+            بيع جديد
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -518,6 +576,8 @@ function CartPanel({
   onRemove,
   onClear,
   onCheckout,
+  lastSale,
+  onDismissSale,
 }: {
   cart: CartLine[];
   customers: Array<{ id: string; name: string; phone: string }>;
@@ -531,6 +591,8 @@ function CartPanel({
   onRemove: (id: string) => void;
   onClear: () => void;
   onCheckout: () => void;
+  lastSale: { id: string; number: string } | null;
+  onDismissSale: () => void;
 }) {
   return (
     <div className="flex h-full flex-col rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)]">
@@ -566,7 +628,9 @@ function CartPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {cart.length === 0 ? (
+        {cart.length === 0 && lastSale ? (
+          <LastSalePanel sale={lastSale} onDismiss={onDismissSale} />
+        ) : cart.length === 0 ? (
           <div className="grid h-full place-items-center px-4 text-center">
             <div>
               <ShoppingCart className="mx-auto size-8 text-[var(--text-2)] opacity-40" />

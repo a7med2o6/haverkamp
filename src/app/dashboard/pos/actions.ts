@@ -140,6 +140,8 @@ export const createPosOrder = action({
     return {
       id: order.id,
       message: park ? `تم حفظ الفاتورة ${order.number} كمعلّقة` : `تم إصدار الفاتورة ${order.number}`,
+      // نقطة البيع تعرض الرقم وتفتح الإيصال للطباعة بعد البيع
+      data: { number: order.number, parked: park },
     };
   },
 });

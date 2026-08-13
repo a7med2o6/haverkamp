@@ -4,7 +4,8 @@ import { db } from '@/lib/db';
 import type { Permission } from '@/lib/rbac';
 
 export type ActionState =
-  | { ok: true; message?: string; id?: string }
+  /** `data` لبيانات تحتاجها الواجهة بعد النجاح — كرقم الفاتورة لطباعتها */
+  | { ok: true; message?: string; id?: string; data?: Record<string, unknown> }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
 /** رسائل الأخطاء الشائعة بالعربية */
@@ -57,7 +58,7 @@ export function action<S extends z.ZodType>(config: {
   handler: (
     input: z.infer<S>,
     ctx: { userId: string }
-  ) => Promise<{ id?: string; message?: string } | void>;
+  ) => Promise<{ id?: string; message?: string; data?: Record<string, unknown> } | void>;
 }) {
   return async (input: unknown): Promise<ActionState> => {
     try {
@@ -92,7 +93,7 @@ export function action<S extends z.ZodType>(config: {
           .catch(() => {}); // التدقيق لا يُفشل العملية
       }
 
-      return { ok: true, id: result?.id, message: result?.message };
+      return { ok: true, id: result?.id, message: result?.message, data: result?.data };
     } catch (e) {
       return toErrorState(e);
     }

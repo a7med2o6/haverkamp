@@ -4,13 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action, optionalString } from '@/lib/action-utils';
-import { MIGRATED_SERVICES } from '@/lib/site-data';
+import { migratedPaths } from '@/lib/site-data';
 
-/** يُحدِّث الموقع العام بعد أي تعديل محتوى */
-function revalidateSite(slug?: string) {
-  revalidatePath('/');
-  revalidatePath('/en');
-  if (slug && MIGRATED_SERVICES[slug]) revalidatePath(`/${slug}.html`);
+/**
+ * يُحدِّث الموقع العام بعد أي تعديل محتوى.
+ * نُبطل كل الصفحات المنقولة لا صفحة الخدمة وحدها — النصوص المشتركة
+ * (القائمة، التذييل، بيانات التواصل) تظهر في كل صفحة.
+ */
+function revalidateSite() {
+  for (const path of migratedPaths()) revalidatePath(path);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -68,7 +70,7 @@ export const saveService = action({
     });
 
     revalidatePath('/dashboard/cms/services');
-    revalidateSite(service.slug);
+    revalidateSite();
     return { id, message: `تم تحديث ${ar.name}` };
   },
 });
@@ -78,14 +80,10 @@ export const toggleServiceActive = action({
   schema: z.object({ id: z.string(), isActive: z.boolean() }),
   audit: { entity: 'Service', action: 'TOGGLE' },
   handler: async ({ id, isActive }) => {
-    const service = await db.service.update({
-      where: { id },
-      data: { isActive },
-      select: { slug: true },
-    });
+    await db.service.update({ where: { id }, data: { isActive } });
 
     revalidatePath('/dashboard/cms/services');
-    revalidateSite(service.slug);
+    revalidateSite();
     return { id, message: isActive ? 'تم إظهار الخدمة' : 'تم إخفاء الخدمة من الموقع' };
   },
 });
@@ -116,9 +114,6 @@ export const saveTranslation = action({
     revalidatePath('/dashboard/cms/translations');
     // النص قد يظهر في أي صفحة — نُبطل الرئيسية والصفحات المنقولة كلها
     revalidateSite();
-    for (const slug of Object.keys(MIGRATED_SERVICES)) revalidatePath(`/${slug}.html`);
-    revalidatePath('/terms.html');
-    revalidatePath('/en/terms.html');
 
     return { id: key, message: 'تم حفظ النص' };
   },

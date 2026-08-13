@@ -20,6 +20,9 @@ const MIGRATED = new Set([
   'polish.html',
   'paint.html',
   'terms.html',
+  'haverkamp.html',
+  'clif.html',
+  'iron.html',
 ]);
 
 const root = process.cwd();

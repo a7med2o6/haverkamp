@@ -387,12 +387,115 @@ export const getTintPage = cache(async (locale: Locale) => {
   };
 });
 
+/* ═══════════════════ حماية البدي ═══════════════════ */
+
+const PPF_FINISH_IMAGES = [
+  '/assets/services/body-protection/lam3a-1.jpg',
+  '/assets/services/body-protection/mate.png',
+  '/assets/services/body-protection/color.jpg',
+];
+
+/** بطاقات العلامات تقود لصفحات الماركات الثلاث */
+const PPF_BRANDS = [
+  { href: '/haverkamp.html', image: '/assets/services/body-protection/haverkamp.png' },
+  { href: '/clif.html', image: '/assets/services/body-protection/clif-logo.jpg' },
+  { href: '/iron.html', image: '/assets/services/body-protection/iron.png' },
+];
+
+export type PpfPage = NonNullable<Awaited<ReturnType<typeof getPpfPage>>>;
+
+/** يجمّع محتوى صفحة حماية البدي */
+export const getPpfPage = cache(async (locale: Locale) => {
+  const [t, service] = await Promise.all([
+    getDictionary(locale),
+    db.service.findUnique({
+      where: { slug: 'protication' },
+      include: { translations: { where: { locale } } },
+    }),
+  ]);
+
+  if (!service || !service.isActive) return null;
+
+  const tr = service.translations[0];
+
+  return {
+    slug: 'protication',
+    name: tr?.name ?? 'protication',
+    metaTitle: tr?.metaTitle,
+    metaDescription: tr?.metaDescription,
+
+    hero: {
+      tag: t('ppf.hero.tag'),
+      h1: t('ppf.hero.h1'),
+      sub: t('ppf.hero.sub'),
+      body: t('ppf.hero.p'),
+      image: '/assets/services/body-protection/protication.webp',
+    },
+
+    beforeAfter: {
+      tag: t('ppf.ba.tag'),
+      h2: t('ppf.ba.h2'),
+      body: t('ppf.ba.p'),
+      before: '/assets/services/body-protection/ppf-before.webp',
+      after: '/assets/services/body-protection/after.webp',
+      beforeLabel: t('ba.label.before'),
+      afterLabel: t('ba.label.after'),
+    },
+
+    finish: {
+      tag: t('ppf.finish.tag'),
+      h2: t('ppf.finish.h2'),
+      items: PPF_FINISH_IMAGES.map((image, i) => ({
+        image,
+        title: t(`ppf.f${i + 1}.h3`),
+        body: t(`ppf.f${i + 1}.p`),
+      })),
+    },
+
+    colorStudio: {
+      eyebrow: t('ppf.csc.eyebrow'),
+      h3: t('ppf.csc.h3'),
+      body: t('ppf.csc.p'),
+      btn: t('ppf.csc.btn'),
+      href: '/car-color.html',
+      image: '/assets/color-change.webp',
+    },
+
+    brands: {
+      tag: t('ppf.brands.tag'),
+      h2: t('ppf.brands.h2'),
+      more: t('ppf.brand.more'),
+      items: PPF_BRANDS.map((b, i) => ({
+        ...b,
+        name: t(`ppf.b${i + 1}.name`),
+        origin: t(`ppf.b${i + 1}.origin`),
+      })),
+    },
+
+    faq: {
+      tag: t('ppf.faq.tag'),
+      h2: t('ppf.faq.h2'),
+      items: [1, 2, 3, 4, 5, 6].map((n) => ({
+        q: t(`ppf.faq.${n}.q`),
+        a: t(`ppf.faq.${n}.a`),
+      })),
+    },
+
+    cta: { h2: t('ppf.cta.h2'), book: t('svc.btn.book') },
+  };
+});
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
  */
 export function migratedPaths(): string[] {
-  const slugs = [...Object.keys(MIGRATED_SERVICES), ...Object.keys(MIGRATED_BRANDS), 'tint'];
+  const slugs = [
+    ...Object.keys(MIGRATED_SERVICES),
+    ...Object.keys(MIGRATED_BRANDS),
+    'tint',
+    'protication',
+  ];
   return [
     '/',
     '/en',

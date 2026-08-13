@@ -5,6 +5,13 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
 
+/** المتجر العام يقرأ من نفس الجدول — أي تعديل منتج يجب أن يظهر فيه */
+const SHOP_PATHS = ['/accessories.html', '/en/accessories.html'];
+
+function revalidateShop() {
+  for (const path of SHOP_PATHS) revalidatePath(path);
+}
+
 const productSchema = z.object({
   id: z.string().optional(),
   sku: z.string().trim().min(1, 'رمز الصنف (SKU) مطلوب'),
@@ -37,11 +44,13 @@ export const saveProduct = action({
     if (id) {
       const updated = await db.product.update({ where: { id }, data });
       revalidatePath('/dashboard/products');
+      revalidateShop();
       return { id: updated.id, message: 'تم تحديث المنتج' };
     }
 
     const created = await db.product.create({ data });
     revalidatePath('/dashboard/products');
+    revalidateShop();
     return { id: created.id, message: `تمت إضافة ${created.nameAr}` };
   },
 });
@@ -53,6 +62,7 @@ export const toggleProductActive = action({
   handler: async ({ id, isActive }) => {
     await db.product.update({ where: { id }, data: { isActive } });
     revalidatePath('/dashboard/products');
+    revalidateShop();
     return { id, message: isActive ? 'تم تفعيل المنتج' : 'تم إيقاف المنتج' };
   },
 });

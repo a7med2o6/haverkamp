@@ -64,6 +64,9 @@ const rows: Row[] = [
   { key: 'cus.closed.now', ar: 'مغلق', en: 'Closed', group: 'cus' },
   { key: 'cus.opens.in', ar: 'يفتح بعد {h} ساعات', en: 'Opens in {h} hours', group: 'cus' },
   { key: 'cus.opens.on', ar: 'يفتح {d}', en: 'Opens {d}', group: 'cus' },
+
+  // ── المتجر: العدد صار يُحسب من جدول المنتجات فنحتاج وحدة العدّ فقط ──
+  { key: 'acc.count.unit', ar: 'منتج', en: 'items', group: 'acc' },
 ];
 
 async function main() {

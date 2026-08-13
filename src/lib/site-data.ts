@@ -685,6 +685,72 @@ export const getContactPage = cache(async (locale: Locale) => {
   };
 });
 
+/* ═══════════════════ متجر الإكسسوارات ═══════════════════ */
+
+/** الفئات كما تظهر على الصفحة: العنوان ومُعرّف القسم وزر التصفية */
+const ACC_SECTIONS = [
+  { id: 'perfumes', category: 'عطور', h2: 'acc.cat1.h2', nav: 'acc.nav.perfumes', card: 'prod' },
+  { id: 'medals', category: 'ميداليات', h2: 'acc.cat2.h2', nav: 'acc.nav.medals', card: 'medal' },
+  {
+    id: 'leather',
+    category: 'ميداليات جلد',
+    h2: 'acc.cat3.h2',
+    nav: 'acc.nav.leather',
+    card: 'medal',
+  },
+] as const;
+
+export type AccessoriesPage = Awaited<ReturnType<typeof getAccessoriesPage>>;
+
+/**
+ * متجر الإكسسوارات.
+ * المنتجات من جدول المنتجات نفسه الذي تستعمله نقطة البيع — يكفي رفع
+ * `showOnline` على المنتج ليظهر هنا.
+ */
+export const getAccessoriesPage = cache(async (locale: Locale) => {
+  const [t, products] = await Promise.all([
+    getDictionary(locale),
+    db.product.findMany({
+      // المتجر شبكة صور — منتج بلا صورة يترك فجوة، فنُخفيه حتى تُرفع صورته
+      where: { isActive: true, showOnline: true, image: { not: null } },
+      orderBy: [{ category: { sortOrder: 'asc' } }, { sku: 'asc' }],
+      include: { category: true },
+    }),
+  ]);
+
+  const sections = ACC_SECTIONS.map((s) => {
+    const items = products
+      .filter((p) => p.category?.nameAr === s.category)
+      .map((p) => ({
+        id: p.id,
+        name: (locale === 'en' ? p.nameEn || p.nameAr : p.nameAr) ?? '',
+        description: p.description ?? '',
+        image: p.image ?? '',
+        // الأسعار Decimal — نحوّلها لنص بلا أصفار زائدة كما في الصفحة الأصلية
+        price: Number(p.price).toString(),
+      }));
+
+    return {
+      id: s.id,
+      h2: t(s.h2),
+      nav: t(s.nav),
+      card: s.card,
+      count: items.length,
+      items,
+    };
+  }).filter((s) => s.items.length > 0);
+
+  return {
+    hero: { tag: t('acc.hero.tag'), h1: t('acc.hero.h1'), body: t('acc.hero.p') },
+    filterAll: t('acc.filter.all'),
+    countUnit: t('acc.count.unit'),
+    orderLabel: t('acc.prod.order'),
+    currency: t('currency.kd'),
+    cta: { h2: t('acc.cta.h2'), body: t('acc.cta.p'), contact: t('acc.cta.contact') },
+    sections,
+  };
+});
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
@@ -697,6 +763,7 @@ export function migratedPaths(): string[] {
     'protication',
     'wash',
     'contactus',
+    'accessories',
   ];
   return [
     '/',

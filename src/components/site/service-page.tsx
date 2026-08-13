@@ -1,16 +1,24 @@
 import Image from 'next/image';
-import {
-  getDictionary,
-  getServicePage,
-  getSettings,
-  type Locale,
-} from '@/lib/site-data';
+import { getDictionary, getServicePage, getSettings, type Locale } from '@/lib/site-data';
 import { Rich } from './rich';
 import { SiteNav } from './nav';
 import { SiteFooter } from './footer';
+import { GalleryGrid } from './gallery';
+
+function SectionHead({ tag, h2, body }: { tag: string; h2: string; body?: string }) {
+  return (
+    <div className="svc-sec-head">
+      {tag && <div className="tag">{tag}</div>}
+      {h2 && <Rich as="h2" html={h2} />}
+      {body && <Rich as="p" html={body} />}
+    </div>
+  );
+}
 
 /**
- * قالب صفحة الخدمة — يعرض القسم فقط إن وُجد محتواه في الترجمات،
+ * قالب صفحة الخدمة (الجام/البوليش/الصبغ).
+ * البنية والأصناف مطابقة لصفحات الموقع الثابت (svc-page / svc-hero / svc-sec)
+ * وتنسيقاتها في css/service.css — يُعرض القسم فقط إن وُجد محتواه في الترجمات
  * فتصلح الصفحة لخدمات ذات أقسام مختلفة دون تفريع قالب لكل خدمة.
  */
 export async function ServicePageView({
@@ -31,13 +39,20 @@ export async function ServicePageView({
   const phone = setting('contact.phone', '+965 5111 1154');
   const whatsapp = setting('contact.whatsapp', '96551111154');
   const instagram = setting('social.instagram', 'https://instagram.com/haverkampkw');
+  const wa = `https://wa.me/${whatsapp}`;
 
-  const hasSteps = page.steps.items.some((s) => s.title);
-  const hasFeatures = page.features.items.some((f) => f.title);
-  const hasFaq = page.faq.items.some((f) => f.q);
+  const { hero, steps, features, gallery, faq, cta } = page;
+  const hasSteps = steps.items.some((s) => s.title);
+  const hasFeatures = features.items.some((f) => f.title);
+  const hasFaq = faq.items.some((f) => f.q);
+  const materials = steps.materials.filter((m) => m.desc);
 
   return (
     <>
+      {/* تنسيقات صفحات الخدمة — كانت مضمّنة في كل صفحة ثابتة على حدة */}
+      {/* eslint-disable-next-line @next/next/no-css-tags */}
+      <link rel="stylesheet" href="/css/service.css" />
+
       <div className="bg-stage" aria-hidden="true">
         <div className="orb o1" />
         <div className="orb o2" />
@@ -48,166 +63,123 @@ export async function ServicePageView({
 
       <SiteNav t={t} locale={locale} />
 
-      <main className="shell">
+      <main className="svc-page">
         {/* ═══════════ الهيرو ═══════════ */}
-        <section className="hero" style={{ padding: '60px 0 40px' }}>
-          <div className="hero-top" style={{ margin: '0 0 36px' }}>
-            <div className="hero-text">
-              {page.hero.tag && (
-                <div className="tag" style={{ marginBottom: 14 }}>
-                  {page.hero.tag}
-                </div>
-              )}
-              <Rich as="h1" html={page.hero.h1} />
-              {page.hero.sub && <Rich as="p" className="hero-tagline" html={page.hero.sub} />}
-              {page.hero.body && <Rich as="p" className="lede" html={page.hero.body} />}
+        <div className="svc-hero">
+          <div className="svc-hero-text">
+            {hero.tag && <div className="tag">{hero.tag}</div>}
+            <Rich as="h1" html={hero.h1} />
+            {hero.sub && <p className="subtitle">{hero.sub}</p>}
+            {hero.body && <Rich as="p" html={hero.body} />}
 
-              {page.hero.badges.length > 0 && (
-                <div className="hero-credentials">
-                  {page.hero.badges.map((b) => (
-                    <div key={b} className="cred-row" style={{ maxWidth: 420, width: '100%' }}>
-                      <span className="cred-mark">●</span>
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+            {hero.badges.length > 0 && (
+              <div className="trust-badges">
+                {hero.badges.map((b) => (
+                  <span key={b} className="trust-badge">
+                    <span>{b}</span>
+                  </span>
+                ))}
+              </div>
+            )}
 
+            <div className="svc-hero-actions" style={{ marginTop: 28 }}>
+              <a href="/contactus.html" className="btn btn-primary">
+                {t('svc.btn.book')}
+              </a>
               <a
-                href={`https://wa.me/${whatsapp}`}
+                href={wa}
                 target="_blank"
                 rel="noopener"
-                className="nav-cta"
-                style={{ marginTop: 26, display: 'inline-flex' }}
+                className="btn btn-glass"
+                style={{ color: '#25D366', borderColor: 'rgba(37,211,102,.35)' }}
               >
-                {page.cta.book || t('contact.wa.btn')}
+                {t('svc.btn.wa')}
               </a>
             </div>
-
-            <div className="hero-logo-side">
-              <Image
-                src={page.hero.image}
-                alt={page.name}
-                width={720}
-                height={520}
-                priority
-                className="hero-logo-img"
-                style={{ borderRadius: 24, objectFit: 'cover' }}
-              />
-            </div>
           </div>
-        </section>
 
-        {/* ═══════════ خطوات التنفيذ ═══════════ */}
+          <div className="svc-hero-img glass">
+            <Image src={hero.image} alt={page.name} width={1536} height={683} priority />
+          </div>
+        </div>
+
+        {/* ═══════════ خطوات العمل ═══════════ */}
         {hasSteps && (
-          <section className="section" id="steps" style={{ padding: '45px 0' }}>
-            <div className="section-head">
-              <div>
-                <div className="tag" style={{ color: 'rgb(10, 20, 36)' }}>
-                  {page.steps.tag}
+          <div id="steps" className="svc-sec" style={{ paddingTop: 0 }}>
+            <SectionHead tag={steps.tag} h2={steps.h2} body={steps.body} />
+
+            {/* عدد الأعمدة يتبع عدد الخطوات — الصبغ خمس والباقي أربع */}
+            <div
+              className="steps-grid"
+              style={{ '--steps': steps.items.length } as React.CSSProperties}
+            >
+              {steps.items.map((s) => (
+                <div key={s.num} className="step-card glass">
+                  <div className="step-num">{s.num}</div>
+                  {s.icon && <div className="step-icon">{s.icon}</div>}
+                  <h3>{s.title}</h3>
+                  <p>{s.body}</p>
                 </div>
-                <h2>{page.steps.h2}</h2>
-              </div>
-              {page.steps.body && <p className="desc">{page.steps.body}</p>}
+              ))}
             </div>
 
-            <div className="why-grid">
-              {page.steps.items
-                .filter((s) => s.title)
-                .map((s) => (
-                  <div key={s.num} className="why-card glass">
-                    <div className="why-num">{s.num}</div>
-                    <h3>{s.title}</h3>
-                    <p>{s.body}</p>
+            {materials.length > 0 && (
+              <div className="materials-strip glass">
+                {materials.map((m, i) => (
+                  <div key={m.name} style={{ display: 'contents' }}>
+                    {i > 0 && <div className="mat-divider" />}
+                    <div className="mat-item">
+                      <div className="mat-name">{m.name}</div>
+                      <div className="mat-desc">{m.desc}</div>
+                    </div>
                   </div>
                 ))}
-            </div>
-          </section>
+              </div>
+            )}
+          </div>
         )}
 
         {/* ═══════════ لماذا نحن ═══════════ */}
         {hasFeatures && (
-          <section className="section" id="features" style={{ padding: '45px 0' }}>
-            <div className="section-head">
-              <div>
-                <div className="tag" style={{ color: 'rgb(10, 20, 36)' }}>
-                  {page.features.tag}
-                </div>
-                <h2>{page.features.h2}</h2>
-              </div>
-              {page.features.body && <p className="desc">{page.features.body}</p>}
-            </div>
-
-            <div className="why-grid">
-              {page.features.items
+          <div id="features" className="svc-sec" style={{ paddingTop: 0 }}>
+            <SectionHead tag={features.tag} h2={features.h2} body={features.body} />
+            <div className="features-grid">
+              {features.items
                 .filter((f) => f.title)
                 .map((f) => (
-                  <div key={f.num} className="why-card glass">
-                    <div className="why-icon">
-                      <svg
-                        width="32"
-                        height="32"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M12 2L4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-4z" />
-                        <path d="M9 12l2 2 4-4" strokeWidth="1.8" />
-                      </svg>
+                  <div key={f.num} className="feature-card glass">
+                    <div className="feature-body">
+                      <h3>{f.title}</h3>
+                      <p>{f.body}</p>
                     </div>
-                    <div className="why-num">{f.num}</div>
-                    <h3>{f.title}</h3>
-                    <p>{f.body}</p>
                   </div>
                 ))}
             </div>
-          </section>
+          </div>
         )}
 
         {/* ═══════════ معرض الأعمال ═══════════ */}
-        <section className="section" id="gallery" style={{ padding: '45px 0' }}>
-          <div className="section-head">
-            <div>
-              <div className="tag" style={{ color: 'rgb(10, 20, 36)' }}>
-                {page.gallery.tag}
-              </div>
-              <h2>{page.gallery.h2}</h2>
-            </div>
-            {page.gallery.body && <p className="desc">{page.gallery.body}</p>}
-          </div>
-
-          <div className="services-grid">
-            {page.gallery.images.map((src, i) => (
-              <div key={src} className="service-card glass" style={{ cursor: 'default' }}>
-                <div className="img-slot">
-                  <Image
-                    src={src}
-                    alt={`${page.name} — ${i + 1}`}
-                    width={520}
-                    height={340}
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <div id="gallery" className="svc-sec" style={{ paddingTop: 0 }}>
+          <SectionHead tag={gallery.tag} h2={gallery.h2} body={gallery.body} />
+          {/* الصور في bento تُنسَّق عبر `.bento-item img` لا عبر صنف عليها */}
+          <GalleryGrid
+            className="bento-grid"
+            itemClassName="bento-item glass"
+            imgClassName=""
+            items={gallery.images.map((src, i) => ({
+              id: `${slug}-${i}`,
+              src,
+              caption: `${page.name} — ${i + 1}`,
+            }))}
+          />
+        </div>
 
         {/* ═══════════ الأسئلة الشائعة ═══════════ */}
         {hasFaq && (
-          <section className="section" id="faq" style={{ padding: '45px 0' }}>
-            <div className="section-head">
-              <div>
-                <div className="tag" style={{ color: 'rgb(10, 20, 36)' }}>
-                  {page.faq.tag}
-                </div>
-                <h2>{page.faq.h2}</h2>
-              </div>
-            </div>
-
-            <div className="faq-list">
-              {page.faq.items
+          <div id="faq" className="svc-sec" style={{ paddingTop: 0 }}>
+            <SectionHead tag={faq.tag} h2={faq.h2} />
+            <div className="svc-faq">
+              {faq.items
                 .filter((f) => f.q)
                 .map((f) => (
                   <details key={f.q} className="faq-item glass">
@@ -230,27 +202,28 @@ export async function ServicePageView({
                   </details>
                 ))}
             </div>
-          </section>
+          </div>
         )}
 
         {/* ═══════════ دعوة للحجز ═══════════ */}
-        <section className="section" id="cta" style={{ padding: '45px 0 20px' }}>
-          <div className="contact-shell">
-            <div className="contact-info glass" style={{ padding: '48px 40px 40px' }}>
-              <h3>{page.cta.h2 || t('contact.title')}</h3>
-              {page.cta.body && <p>{page.cta.body}</p>}
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noopener"
-                className="nav-cta"
-                style={{ marginTop: 26, display: 'inline-flex' }}
-              >
-                {page.cta.book || t('contact.wa.btn')}
-              </a>
-            </div>
+        <div className="svc-cta glass">
+          <Rich as="h2" html={cta.h2} />
+          {cta.body && <p>{cta.body}</p>}
+          <div className="svc-cta-btns">
+            <a href="/contactus.html" className="btn btn-primary">
+              {cta.book || t('svc.btn.book')}
+            </a>
+            <a
+              href={wa}
+              target="_blank"
+              rel="noopener"
+              className="btn btn-glass"
+              style={{ color: '#25D366', borderColor: 'rgba(37,211,102,.35)' }}
+            >
+              {t('svc.btn.wa2')}
+            </a>
           </div>
-        </section>
+        </div>
       </main>
 
       <SiteFooter

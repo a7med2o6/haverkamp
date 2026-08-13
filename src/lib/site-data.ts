@@ -88,11 +88,44 @@ export const getNavServices = cache(async (locale: Locale) => {
    لأن لها أقساماً خاصة (مستويات العزل، الماركات، الباقات) لم تُبنَ بعد. */
 export const MIGRATED_SERVICES: Record<
   string,
-  { prefix: string; ext: string; steps: number; features: number; faqs: number }
+  {
+    prefix: string;
+    ext: string;
+    steps: number;
+    features: number;
+    faqs: number;
+    /** رموز الخطوات — زخرفية ومرتبطة بترتيب ثابت في الترجمات */
+    stepIcons: string[];
+    /** شريط الخامات أسفل الخطوات: الاسم ثابت والوصف من الترجمات */
+    materials?: string[];
+  }
 > = {
-  glass: { prefix: 'glass', ext: 'png', steps: 4, features: 4, faqs: 5 },
-  polish: { prefix: 'polish', ext: 'png', steps: 4, features: 4, faqs: 5 },
-  paint: { prefix: 'paint', ext: 'png', steps: 5, features: 4, faqs: 5 },
+  glass: {
+    prefix: 'glass',
+    ext: 'jpg',
+    steps: 4,
+    features: 4,
+    faqs: 5,
+    stepIcons: ['🔍', '🧴', '💉', '✅'],
+    materials: ['OEM', 'UV Resin', '🛡️'],
+  },
+  polish: {
+    prefix: 'polish',
+    ext: 'png',
+    steps: 4,
+    features: 4,
+    faqs: 5,
+    stepIcons: ['🚿', '🔍', '✨', '💡'],
+    materials: ['Menzerna', 'Sonax', '🇩🇪'],
+  },
+  paint: {
+    prefix: 'paint',
+    ext: 'png',
+    steps: 5,
+    features: 4,
+    faqs: 5,
+    stepIcons: ['🔍', '🛡️', '🪄', '🎨', '✨'],
+  },
 };
 
 export type ServicePage = NonNullable<Awaited<ReturnType<typeof getServicePage>>>;
@@ -137,8 +170,13 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
       body: t(`${p}.proc.p`),
       items: list(config.steps, (n) => `s${n}`).map((k, i) => ({
         num: String(i + 1).padStart(2, '0'),
+        icon: config.stepIcons[i] ?? '',
         title: t(`${p}.${k}.h3`),
         body: t(`${p}.${k}.p`),
+      })),
+      materials: (config.materials ?? []).map((name, i) => ({
+        name,
+        desc: t(`${p}.mat${i + 1}`),
       })),
     },
 

@@ -485,6 +485,113 @@ export const getPpfPage = cache(async (locale: Locale) => {
   };
 });
 
+/* ═══════════════════ الغسيل ═══════════════════ */
+
+/** بنود كل باقة — الفروق بين الباقات في التفاصيل لا في العدد وحده */
+const WASH_PACKAGE_FEATURES = [
+  [
+    'seats.vip',
+    'floors',
+    'mat',
+    'dash',
+    'tire',
+    'vents',
+    'rims',
+    'wax',
+    'san',
+    'foam',
+    'frag',
+    'nylon.vip',
+  ],
+  ['seats', 'floors', 'mat', 'vents', 'rims', 'wax', 'san.combo', 'frag', 'nylon'],
+  ['seats', 'floors', 'mat', 'vents', 'rims', 'all.combo', 'nylon'],
+];
+
+const WASH_REVIEW_AVATARS = ['👨', '👩', '👨', '👨', '👩', '👨'];
+
+export type WashPage = NonNullable<Awaited<ReturnType<typeof getWashPage>>>;
+
+/** يجمّع محتوى صفحة الغسيل */
+export const getWashPage = cache(async (locale: Locale) => {
+  const [t, service] = await Promise.all([
+    getDictionary(locale),
+    db.service.findUnique({
+      where: { slug: 'wash' },
+      include: { translations: { where: { locale } } },
+    }),
+  ]);
+
+  if (!service || !service.isActive) return null;
+
+  const tr = service.translations[0];
+
+  return {
+    slug: 'wash',
+    name: tr?.name ?? 'wash',
+    metaTitle: tr?.metaTitle,
+    metaDescription: tr?.metaDescription,
+
+    hero: {
+      tag: t('wash.hero.tag'),
+      h1: t('wash.hero.h1'),
+      sub: t('wash.hero.sub'),
+      body: t('wash.hero.p'),
+      image: '/assets/services/wash/wash-hero.png',
+      badges: [t('wash.tb1'), t('wash.tb2'), t('wash.tb3')].filter(Boolean),
+    },
+
+    packages: {
+      tag: t('wash.pkg.tag'),
+      h2: t('wash.pkg.h2'),
+      body: t('wash.pkg.p'),
+      unit: t('wash.pkg.from'),
+      badge: t('wash.pkg1.badge'),
+      // ملاحظة السعر واحدة للباقات الثلاث في الصفحة الأصلية
+      note: t('wash.pkg1.note'),
+      items: [1, 2, 3].map((n, i) => ({
+        name: t(`wash.pkg${n}.name`),
+        price: t(`wash.pkg${n}.price`),
+        cta: t(`wash.pkg${n}.cta`),
+        features: WASH_PACKAGE_FEATURES[i].map((k) => t(`wash.f.${k}`)).filter(Boolean),
+      })),
+    },
+
+    why: {
+      tag: t('wash.why.tag'),
+      h2: t('wash.why.h2'),
+      body: t('wash.why.p'),
+      items: [1, 2, 3, 4, 5, 6].map((n) => ({
+        title: t(`wash.w${n}.h3`),
+        body: t(`wash.w${n}.p`),
+      })),
+    },
+
+    gallery: {
+      tag: t('wash.gal.tag'),
+      h2: t('wash.gal.h2'),
+      body: t('wash.gal.p'),
+      images: Array.from(
+        { length: 6 },
+        (_, i) => `/assets/services/wash/wash-gal-${i + 1}.png`
+      ),
+    },
+
+    reviews: {
+      tag: t('wash.rev.tag'),
+      h2: t('wash.rev.h2'),
+      body: t('wash.rev.p'),
+      items: [1, 2, 3, 4, 5, 6].map((n, i) => ({
+        text: t(`wash.rev.${n}.t`),
+        name: t(`wash.rev.${n}.name`),
+        car: t(`wash.rev.${n}.car`),
+        avatar: WASH_REVIEW_AVATARS[i],
+      })),
+    },
+
+    cta: { h2: t('wash.cta.h2'), body: t('wash.cta.p'), book: t('svc.btn.book') },
+  };
+});
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
@@ -495,6 +602,7 @@ export function migratedPaths(): string[] {
     ...Object.keys(MIGRATED_BRANDS),
     'tint',
     'protication',
+    'wash',
   ];
   return [
     '/',

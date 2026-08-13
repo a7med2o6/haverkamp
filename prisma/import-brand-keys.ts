@@ -47,6 +47,17 @@ const rows: Row[] = [
   { key: 'tint.w1.num', ar: '99%+', en: '99%+', group: 'tint' },
   { key: 'tint.w2.num', ar: '5', en: '5', group: 'tint' },
   { key: 'tint.w3.num', ar: '50%', en: '50%', group: 'tint' },
+
+  // ── الغسيل: أسعار الباقات وأسماء أصحاب الآراء ──
+  { key: 'wash.pkg1.price', ar: '25', en: '25', group: 'wash' },
+  { key: 'wash.pkg2.price', ar: '15', en: '15', group: 'wash' },
+  { key: 'wash.pkg3.price', ar: '8', en: '8', group: 'wash' },
+  { key: 'wash.rev.1.name', ar: 'عمر السعدون', en: 'Omar Al-Saadoun', group: 'wash' },
+  { key: 'wash.rev.2.name', ar: 'لطيفة الياسين', en: 'Latifa Al-Yaseen', group: 'wash' },
+  { key: 'wash.rev.3.name', ar: 'خالد الفلكاوي', en: 'Khalid Al-Falakawi', group: 'wash' },
+  { key: 'wash.rev.4.name', ar: 'إبراهيم القحطاني', en: 'Ibrahim Al-Qahtani', group: 'wash' },
+  { key: 'wash.rev.5.name', ar: 'مريم العنبي', en: 'Mariam Al-Anbi', group: 'wash' },
+  { key: 'wash.rev.6.name', ar: 'فهد السهلي', en: 'Fahad Al-Sahli', group: 'wash' },
 ];
 
 async function main() {

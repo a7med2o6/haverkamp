@@ -274,12 +274,125 @@ export const MIGRATED_BRANDS: Record<string, BrandConfig> = {
 
 export type BrandPage = NonNullable<Awaited<ReturnType<typeof getBrandPage>>>;
 
+/* ═══════════════════ العازل الحراري ═══════════════════ */
+
+const TINT_BRAND_IMAGES = [
+  '/assets/services/tint/brand-haverkamp.png',
+  '/assets/services/tint/brand-suntek.jpg',
+  '/assets/services/tint/brand-aswf.jpeg',
+  '/assets/services/tint/brand-royal-shield.png',
+];
+
+/** أصناف التظليل تُحدِّد قتامة نافذة المعاينة في css/tint.css */
+const TINT_LEVEL_CLASSES = ['tint-level-0', 'tint-level-10', 'tint-level-30', 'tint-level-50'];
+
+export type TintPage = NonNullable<Awaited<ReturnType<typeof getTintPage>>>;
+
+/** يجمّع محتوى صفحة العازل الحراري */
+export const getTintPage = cache(async (locale: Locale) => {
+  const [t, service] = await Promise.all([
+    getDictionary(locale),
+    db.service.findUnique({
+      where: { slug: 'tint' },
+      include: { translations: { where: { locale } } },
+    }),
+  ]);
+
+  if (!service || !service.isActive) return null;
+
+  const tr = service.translations[0];
+
+  return {
+    slug: 'tint',
+    name: tr?.name ?? 'tint',
+    metaTitle: tr?.metaTitle,
+    metaDescription: tr?.metaDescription,
+
+    hero: {
+      tag: t('tint.hero.tag'),
+      h1: t('tint.hero.h1'),
+      sub: t('tint.hero.sub'),
+      body: t('tint.hero.p'),
+      image: '/assets/services/tint/tint-hero.webp',
+    },
+
+    benefits: {
+      tag: t('tint.ben.tag'),
+      h2: t('tint.ben.h2'),
+      items: [1, 2, 3, 4].map((n) => ({
+        title: t(`tint.b${n}.h3`),
+        body: t(`tint.b${n}.p`),
+      })),
+    },
+
+    beforeAfter: {
+      tag: t('tint.ba.tag'),
+      h2: t('tint.ba.h2'),
+      body: t('tint.ba.p'),
+      before: '/assets/services/tint/tint-before.jpg',
+      after: '/assets/services/tint/tint-after.jpg',
+      beforeLabel: t('ba.label.before'),
+      afterLabel: t('ba.label.after'),
+    },
+
+    levels: {
+      tag: t('tint.lvl.tag'),
+      h2: t('tint.lvl.h2'),
+      body: t('tint.lvl.p'),
+      items: [1, 2, 3, 4].map((n, i) => ({
+        className: TINT_LEVEL_CLASSES[i],
+        pct: t(`tint.l${n}.pct`),
+        title: t(`tint.l${n}.h3`),
+        body: t(`tint.l${n}.p`),
+        // الدرجة الأخيرة وحدها تحمل شارة «الحد الأقصى بالنظام»
+        badge: t(`tint.l${n}.badge`),
+      })),
+      warranty: [1, 2, 3].map((n) => ({
+        num: t(`tint.w${n}.num`),
+        label: t(`tint.w${n}.label`),
+        desc: t(`tint.w${n}.desc`),
+      })),
+    },
+
+    brands: {
+      tag: t('tint.brands.tag'),
+      h2: t('tint.brands.h2'),
+      items: TINT_BRAND_IMAGES.map((image, i) => ({
+        image,
+        name: t(`tint.br${i + 1}.name`),
+        // العلامات الأمريكية الثلاث تتشارك مفتاح المنشأ نفسه
+        origin: t(`tint.br${i + 1}.origin`) || t('tint.br.origin.us'),
+      })),
+    },
+
+    gallery: {
+      tag: t('tint.gal.tag'),
+      h2: t('tint.gal.h2'),
+      images: Array.from(
+        { length: 6 },
+        (_, i) => `/assets/services/tint/tint-gal-${i + 1}.jpg`
+      ),
+    },
+
+    faq: {
+      tag: t('tint.faq.tag'),
+      h2: t('tint.faq.h2'),
+      items: [1, 2, 3, 4, 5, 6].map((n) => ({
+        q: t(`tint.faq.${n}.q`),
+        a: t(`tint.faq.${n}.a`),
+      })),
+    },
+
+    cta: { h2: t('tint.cta.h2'), body: '', book: t('svc.btn.book') },
+  };
+});
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
  */
 export function migratedPaths(): string[] {
-  const slugs = [...Object.keys(MIGRATED_SERVICES), ...Object.keys(MIGRATED_BRANDS)];
+  const slugs = [...Object.keys(MIGRATED_SERVICES), ...Object.keys(MIGRATED_BRANDS), 'tint'];
   return [
     '/',
     '/en',

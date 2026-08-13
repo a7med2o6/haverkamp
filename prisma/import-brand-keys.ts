@@ -38,6 +38,15 @@ const rows: Row[] = [
   { key: 'iron.pkg1.price', ar: '400', en: '400', group: 'iron' },
   { key: 'iron.pkg2.price', ar: '210', en: '210', group: 'iron' },
   { key: 'iron.pkg3.price', ar: '160', en: '160', group: 'iron' },
+
+  // ── العازل الحراري: درجات التظليل وأرقام الكفالة ──
+  { key: 'tint.l1.pct', ar: 'شفاف', en: 'Clear', group: 'tint' },
+  { key: 'tint.l2.pct', ar: '10%', en: '10%', group: 'tint' },
+  { key: 'tint.l3.pct', ar: '30%', en: '30%', group: 'tint' },
+  { key: 'tint.l4.pct', ar: '50%', en: '50%', group: 'tint' },
+  { key: 'tint.w1.num', ar: '99%+', en: '99%+', group: 'tint' },
+  { key: 'tint.w2.num', ar: '5', en: '5', group: 'tint' },
+  { key: 'tint.w3.num', ar: '50%', en: '50%', group: 'tint' },
 ];
 
 async function main() {

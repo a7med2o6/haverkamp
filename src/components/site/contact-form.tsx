@@ -197,10 +197,14 @@ export function ContactForm({
         />
       </div>
 
-      {/* مصيدة البوتات — مخفية عن البشر وقارئات الشاشة */}
+      {/*
+        مصيدة البوتات — مخفية عن البشر وقارئات الشاشة.
+        الاسم متعمَّد غير مألوف: حقل باسم website أو url تملؤه التعبئة
+        التلقائية في المتصفح، فيُصنَّف زائرٌ حقيقي كبوت ويضيع حجزه.
+      */}
       <input
         type="text"
-        name="website"
+        name="hk-ref-src"
         value={values.website}
         onChange={(e) => set('website', e.target.value)}
         tabIndex={-1}

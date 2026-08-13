@@ -22,8 +22,12 @@ const bookingSchema = z.object({
   car: z.string().trim().max(80).optional(),
   notes: z.string().trim().max(500).optional(),
   preferredAt: z.string().trim().max(30).optional(),
-  /** حقل خفي — البشر لا يملؤونه، والبوتات تملؤه */
-  website: z.string().max(0).optional(),
+  /**
+   * حقل خفي — البشر لا يملؤونه، والبوتات تملؤه.
+   * لا نضع عليه قيد طول: رفضه هنا يُرجع خطأ يسمّي الحقل فيكشف المصيدة،
+   * ويحجب إنساناً ملأه سهواً بالتعبئة التلقائية. نفحصه في المعالج بصمت.
+   */
+  website: z.string().max(200).optional(),
 });
 
 export type BookingResult =
@@ -41,7 +45,7 @@ export async function submitBooking(input: unknown): Promise<BookingResult> {
   const { name, phone, serviceSlug, car, notes, preferredAt, website } = parsed.data;
 
   // مصيدة البوتات: نُظهر نجاحاً صامتاً حتى لا يتعلّم الآلي أن الحقل كاشف
-  if (website) return { ok: true, code: '' };
+  if (website?.trim()) return { ok: true, code: '' };
 
   try {
     const service = serviceSlug

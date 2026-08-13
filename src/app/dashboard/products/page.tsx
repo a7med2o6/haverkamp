@@ -205,6 +205,7 @@ export default async function ProductsPage({
                               categoryId: p.categoryId,
                               serviceId: p.serviceId,
                               description: p.description,
+                              image: p.image,
                               unit: p.unit,
                               cost: toNumber(p.cost),
                               price: toNumber(p.price),

@@ -688,24 +688,39 @@ export const getContactPage = cache(async (locale: Locale) => {
 /* ═══════════════════ متجر الإكسسوارات ═══════════════════ */
 
 /** الفئات كما تظهر على الصفحة: العنوان ومُعرّف القسم وزر التصفية */
-const ACC_SECTIONS = [
-  { id: 'perfumes', category: 'عطور', h2: 'acc.cat1.h2', nav: 'acc.nav.perfumes', card: 'prod' },
-  { id: 'medals', category: 'ميداليات', h2: 'acc.cat2.h2', nav: 'acc.nav.medals', card: 'medal' },
-  {
-    id: 'leather',
-    category: 'ميداليات جلد',
-    h2: 'acc.cat3.h2',
-    nav: 'acc.nav.leather',
-    card: 'medal',
-  },
-] as const;
+/**
+ * التصنيفات الثلاثة الموروثة من الصفحة الثابتة: لها عناوين مترجَمة
+ * (بالإيموجي) وبطاقة مصمّمة لها. أي تصنيف آخر يُعرض باسمه من قاعدة
+ * البيانات وببطاقة المنتج العادية — فلا يختفي منتج جديد بصمت.
+ */
+const ACC_KNOWN: Record<
+  string,
+  { id: string; h2: string; nav: string; card: 'prod' | 'medal' }
+> = {
+  عطور: { id: 'perfumes', h2: 'acc.cat1.h2', nav: 'acc.nav.perfumes', card: 'prod' },
+  ميداليات: { id: 'medals', h2: 'acc.cat2.h2', nav: 'acc.nav.medals', card: 'medal' },
+  'ميداليات جلد': { id: 'leather', h2: 'acc.cat3.h2', nav: 'acc.nav.leather', card: 'medal' },
+};
+
+/** مُعرّف قسم صالح لـ id في HTML من اسم عربي */
+function sectionId(categoryId: string | null) {
+  return categoryId ? `cat-${categoryId}` : 'cat-other';
+}
+
+interface AccessoryItem {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  price: string;
+}
 
 export type AccessoriesPage = Awaited<ReturnType<typeof getAccessoriesPage>>;
 
 /**
  * متجر الإكسسوارات.
  * المنتجات من جدول المنتجات نفسه الذي تستعمله نقطة البيع — يكفي رفع
- * `showOnline` على المنتج ليظهر هنا.
+ * `showOnline` على المنتج ووضع صورة له ليظهر هنا.
  */
 export const getAccessoriesPage = cache(async (locale: Locale) => {
   const [t, products] = await Promise.all([
@@ -718,27 +733,40 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
     }),
   ]);
 
-  const sections = ACC_SECTIONS.map((s) => {
-    const items = products
-      .filter((p) => p.category?.nameAr === s.category)
-      .map((p) => ({
-        id: p.id,
-        name: (locale === 'en' ? p.nameEn || p.nameAr : p.nameAr) ?? '',
-        description: p.description ?? '',
-        image: p.image ?? '',
-        // الأسعار Decimal — نحوّلها لنص بلا أصفار زائدة كما في الصفحة الأصلية
-        price: Number(p.price).toString(),
-      }));
+  // نبني الأقسام من تصنيفات المنتجات الفعلية حفاظاً على ترتيب الاستعلام
+  const groups = new Map<
+    string,
+    { id: string; h2: string; nav: string; card: 'prod' | 'medal'; items: AccessoryItem[] }
+  >();
 
-    return {
-      id: s.id,
-      h2: t(s.h2),
-      nav: t(s.nav),
-      card: s.card,
-      count: items.length,
-      items,
-    };
-  }).filter((s) => s.items.length > 0);
+  for (const p of products) {
+    const key = p.categoryId ?? 'other';
+    if (!groups.has(key)) {
+      const known = p.category ? ACC_KNOWN[p.category.nameAr] : undefined;
+      const name = p.category
+        ? ((locale === 'en' ? p.category.nameEn || p.category.nameAr : p.category.nameAr) ?? '')
+        : t('acc.cat.other');
+
+      groups.set(key, {
+        id: known?.id ?? sectionId(p.categoryId),
+        h2: known ? t(known.h2) : name,
+        nav: known ? t(known.nav) : name,
+        card: known?.card ?? 'prod',
+        items: [],
+      });
+    }
+
+    groups.get(key)!.items.push({
+      id: p.id,
+      name: (locale === 'en' ? p.nameEn || p.nameAr : p.nameAr) ?? '',
+      description: p.description ?? '',
+      image: p.image ?? '',
+      // الأسعار Decimal — نحوّلها لنص بلا أصفار زائدة كما في الصفحة الأصلية
+      price: Number(p.price).toString(),
+    });
+  }
+
+  const sections = [...groups.values()].map((g) => ({ ...g, count: g.items.length }));
 
   return {
     hero: { tag: t('acc.hero.tag'), h1: t('acc.hero.h1'), body: t('acc.hero.p') },

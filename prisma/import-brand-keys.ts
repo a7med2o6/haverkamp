@@ -67,6 +67,7 @@ const rows: Row[] = [
 
   // ── المتجر: العدد صار يُحسب من جدول المنتجات فنحتاج وحدة العدّ فقط ──
   { key: 'acc.count.unit', ar: 'منتج', en: 'items', group: 'acc' },
+  { key: 'acc.cat.other', ar: 'منتجات أخرى', en: 'Other products', group: 'acc' },
 ];
 
 async function main() {

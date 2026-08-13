@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { ArrowLeftRight, Loader2, Pencil, Plus } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
+import { FileUpload } from '@/components/ui/file-upload';
 import { PRODUCT_TYPE, STOCK_MOVEMENT, toOptions } from '@/lib/labels';
 import { recordStockMovement, saveProduct } from './actions';
 
@@ -20,6 +22,7 @@ export interface ProductValues {
   categoryId?: string | null;
   serviceId?: string | null;
   description?: string | null;
+  image?: string | null;
   unit: string;
   cost: number | string;
   price: number | string;
@@ -55,6 +58,7 @@ export function ProductFormButton({
       categoryId: '',
       serviceId: '',
       description: '',
+      image: '',
       unit: 'قطعة',
       cost: '',
       price: '',
@@ -250,6 +254,41 @@ export function ProductFormButton({
                 className="min-h-16"
               />
             </Field>
+
+            {/* المتجر شبكة صور — منتج بلا صورة لا يظهر فيه مهما كان showOnline */}
+            <div className="sm:col-span-2">
+              <div className="flex items-start gap-4">
+                {values.image ? (
+                  <Image
+                    src={values.image}
+                    alt=""
+                    width={96}
+                    height={96}
+                    className="shrink-0 rounded-[var(--radius-sm)] object-cover"
+                    style={{ width: 96, height: 96 }}
+                  />
+                ) : (
+                  <div
+                    className="grid shrink-0 place-items-center rounded-[var(--radius-sm)] border border-dashed border-[var(--line)] text-[11px] text-[var(--text-2)]"
+                    style={{ width: 96, height: 96 }}
+                  >
+                    لا صورة
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <FileUpload
+                    value={values.image ?? ''}
+                    folder="products"
+                    onChange={(url) => set('image', url)}
+                  />
+                  {values.showOnline && !values.image && (
+                    <p className="mt-1.5 text-xs text-warn">
+                      المتجر يعرض المنتجات بصورها — بلا صورة لن يظهر هذا المنتج
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-2.5 sm:col-span-2">
               {!isService && (

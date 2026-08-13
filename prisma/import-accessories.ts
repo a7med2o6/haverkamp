@@ -64,16 +64,19 @@ const LEATHER: Item[] = Array.from({ length: 6 }, (_, i) => ({
 async function main() {
   const items = [...PERFUMES, ...MEDALS, ...LEATHER];
 
-  // الفئات الثلاث تُرتَّب كما تظهر على الصفحة
+  // ترتيب المتجر يتبع sortOrder — نضع الفئة الجديدة بعد الموجودة لا قبلها
   const categoryIds = new Map<string, string>();
-  for (const [i, name] of ['عطور', 'ميداليات', 'ميداليات جلد'].entries()) {
+  const last = await db.productCategory.findFirst({ orderBy: { sortOrder: 'desc' } });
+  let nextOrder = (last?.sortOrder ?? 0) + 1;
+
+  for (const name of ['عطور', 'ميداليات', 'ميداليات جلد']) {
     const existing = await db.productCategory.findFirst({ where: { nameAr: name } });
     if (existing) {
       categoryIds.set(name, existing.id);
       continue;
     }
     const created = await db.productCategory.create({
-      data: { nameAr: name, sortOrder: i + 1 },
+      data: { nameAr: name, sortOrder: nextOrder++ },
     });
     categoryIds.set(name, created.id);
   }

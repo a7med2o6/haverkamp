@@ -22,6 +22,7 @@ const productSchema = z.object({
   categoryId: optionalString,
   serviceId: optionalString,
   description: optionalString,
+  image: optionalString,
   unit: z.string().trim().min(1, 'الوحدة مطلوبة'),
   cost: moneySchema,
   price: moneySchema,

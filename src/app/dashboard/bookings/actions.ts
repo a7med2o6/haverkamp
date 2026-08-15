@@ -73,6 +73,47 @@ export const setBookingStatus = action({
 });
 
 /**
+ * ينقل حجزاً إلى يوم آخر مع الحفاظ على ساعته.
+ * يُستدعى من سحب البطاقة في التقويم، فالوجهة يوم لا لحظة.
+ */
+export const rescheduleBooking = action({
+  permission: 'crm:write',
+  schema: z.object({
+    id: z.string(),
+    /** يوم الوجهة بتوقيت الكويت: YYYY-MM-DD */
+    day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ غير صالح'),
+  }),
+  audit: { entity: 'Booking', action: 'RESCHEDULE' },
+  handler: async ({ id, day }) => {
+    const booking = await db.booking.findUnique({
+      where: { id },
+      select: { scheduledAt: true, code: true, jobOrder: { select: { id: true } } },
+    });
+    if (!booking) throw new AppError('الحجز غير موجود');
+    if (booking.jobOrder) {
+      throw new AppError('الحجز صار أمر شغل — عدّل موعده من أمر الشغل');
+    }
+
+    // نقرأ ساعة الحجز بتوقيت الكويت ونعيد تركيبها على اليوم الجديد.
+    // الكويت بلا توقيت صيفي فالإزاحة +03:00 ثابتة.
+    const hm = new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZone: 'Asia/Kuwait',
+    }).format(booking.scheduledAt);
+
+    const scheduledAt = new Date(`${day}T${hm}:00+03:00`);
+    if (Number.isNaN(scheduledAt.getTime())) throw new AppError('تاريخ غير صالح');
+
+    await db.booking.update({ where: { id }, data: { scheduledAt } });
+    revalidatePath('/dashboard/bookings');
+
+    return { id, message: `تم نقل ${booking.code}` };
+  },
+});
+
+/**
  * يحوّل حجزاً إلى أمر شغل — ينشئ ملف عميل من بيانات الزائر إن لزم.
  */
 export const convertBookingToJob = action({

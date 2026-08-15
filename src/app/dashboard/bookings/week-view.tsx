@@ -1,15 +1,8 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS } from '@/lib/labels';
-import {
-  cn,
-  dayKey,
-  formatBookingTime,
-  formatDayLabel,
-  formatWeekday,
-  weekDays,
-} from '@/lib/utils';
+import { cn, dayKey, formatDayLabel, weekDays } from '@/lib/utils';
+import { WeekGrid, type DayColumn } from './week-grid';
 
 export interface WeekBooking {
   id: string;
@@ -42,12 +35,14 @@ export function WeekView({
   bookings,
   weekend,
   today,
+  canWrite,
 }: {
   start: Date;
   bookings: WeekBooking[];
   /** رموز أيام العطلة من إعدادات الدوام: FRI … */
   weekend: string[];
   today: Date;
+  canWrite: boolean;
 }) {
   const days = weekDays(start);
   const end = days[6];
@@ -66,6 +61,19 @@ export function WeekView({
 
   const DAY_CODES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const todayK = dayKey(today);
+
+  const columns: DayColumn[] = days.map((d) => {
+    const k = dayKey(d);
+    return {
+      key: k,
+      date: d,
+      isOff: weekend.includes(DAY_CODES[d.getDay()]),
+      isToday: k === todayK,
+      bookings: (byDay.get(k) ?? []).sort(
+        (a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime()
+      ),
+    };
+  });
 
   return (
     <>
@@ -90,79 +98,7 @@ export function WeekView({
         </div>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-        {days.map((d) => {
-          const k = dayKey(d);
-          const list = (byDay.get(k) ?? []).sort(
-            (a, b) => a.scheduledAt.getTime() - b.scheduledAt.getTime()
-          );
-          const isOff = weekend.includes(DAY_CODES[d.getDay()]);
-          const isToday = k === todayK;
-
-          return (
-            <div
-              key={k}
-              className={cn(
-                'flex min-h-40 flex-col rounded-[var(--radius-lg)] border bg-[var(--surface-1)]',
-                isToday ? 'border-accent' : 'border-[var(--line)]',
-                isOff && 'opacity-60'
-              )}
-            >
-              <div
-                className={cn(
-                  'border-b px-3 py-2.5',
-                  isToday ? 'border-accent/40 bg-accent/10' : 'border-[var(--line)]'
-                )}
-              >
-                <p className="text-[13px] font-bold text-[var(--text-0)]">{formatWeekday(d)}</p>
-                <p className="tnum mt-0.5 text-[11px] text-[var(--text-2)]">
-                  {formatDayLabel(d)}
-                  {isOff ? ' · إجازة' : list.length ? ` · ${list.length} حجز` : ' · فاضي'}
-                </p>
-              </div>
-
-              <div className="flex-1 space-y-1.5 p-2">
-                {list.map((b) => {
-                  const time = formatBookingTime(b.scheduledAt);
-
-                  return (
-                    <Link
-                      key={b.id}
-                      href={`?view=list&focus=${b.code}`}
-                      className={cn(
-                        'block rounded-[var(--radius-sm)] border border-s-2 border-[var(--line)] bg-[var(--surface-2)] p-2 transition-colors hover:border-accent',
-                        STATUS_EDGE[b.status] ?? 'border-s-[var(--line-strong)]'
-                      )}
-                    >
-                      <div className="flex items-baseline justify-between gap-1.5">
-                        <span className="tnum text-[11px] font-semibold text-[var(--text-1)]">
-                          {time ?? 'بدون وقت'}
-                        </span>
-                        {b.hasJob && <Badge tone="ok">أمر شغل</Badge>}
-                      </div>
-                      <p className="mt-1 truncate text-[12px] font-semibold text-[var(--text-0)]">
-                        {b.name}
-                      </p>
-                      {b.service && (
-                        <p className="truncate text-[11px] text-[var(--text-2)]">{b.service}</p>
-                      )}
-                      {b.car && (
-                        <p className="truncate text-[11px] text-[var(--text-2)]">{b.car}</p>
-                      )}
-                    </Link>
-                  );
-                })}
-
-                {list.length === 0 && !isOff && (
-                  <p className="grid h-full place-items-center text-[11px] text-[var(--text-2)]">
-                    —
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <WeekGrid days={columns} canWrite={canWrite} />
 
       {/* دليل الألوان */}
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-2)]">

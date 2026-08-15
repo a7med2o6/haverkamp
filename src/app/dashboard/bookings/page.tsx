@@ -151,6 +151,7 @@ export default async function BookingsPage({
         <WeekView
           start={weekStart}
           today={new Date()}
+          canWrite={canWrite}
           weekend={(weekendSetting?.value as string[] | undefined) ?? ['FRI']}
           bookings={weekBookings.map<WeekBooking>((b) => ({
             id: b.id,

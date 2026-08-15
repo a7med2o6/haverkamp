@@ -158,15 +158,14 @@ export async function AccessoriesPageView({ locale }: { locale: Locale }) {
             </a>
           </div>
         </div>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={phone}
+          whatsapp={whatsapp}
+          instagram={instagram}
+        />
       </main>
-
-      <SiteFooter
-        t={t}
-        locale={locale}
-        phone={phone}
-        whatsapp={whatsapp}
-        instagram={instagram}
-      />
     </>
   );
 }

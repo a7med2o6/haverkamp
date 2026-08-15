@@ -207,15 +207,14 @@ export async function PpfPageView({ locale }: { locale: Locale }) {
             </div>
           </div>
         </div>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={phone}
+          whatsapp={whatsapp}
+          instagram={instagram}
+        />
       </main>
-
-      <SiteFooter
-        t={t}
-        locale={locale}
-        phone={phone}
-        whatsapp={whatsapp}
-        instagram={instagram}
-      />
     </>
   );
 }

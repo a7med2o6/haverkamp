@@ -119,15 +119,14 @@ export async function TermsPageView({ locale }: { locale: Locale }) {
             ))}
           </div>
         </TermsCard>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={setting('contact.phone', '+965 5111 1154')}
+          whatsapp={setting('contact.whatsapp', '96551111154')}
+          instagram={setting('social.instagram', 'https://instagram.com/haverkampkw')}
+        />
       </main>
-
-      <SiteFooter
-        t={t}
-        locale={locale}
-        phone={setting('contact.phone', '+965 5111 1154')}
-        whatsapp={setting('contact.whatsapp', '96551111154')}
-        instagram={setting('social.instagram', 'https://instagram.com/haverkampkw')}
-      />
     </>
   );
 }

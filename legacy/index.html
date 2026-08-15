@@ -282,7 +282,7 @@
 
         <a href="glass.html" class="service-card glass">
           <div class="img-slot">
-            <img src="assets/main-page/glass.png" alt="إصلاح جام السيارات" loading="lazy" />
+            <img src="/assets/services/glass/glass-gal-4.jpg" alt="إصلاح جام السيارات" loading="lazy" />
           </div>
           <div class="card-body">
             <h3 data-i18n="card.glass.title">إصلاح الجام</h3>
@@ -1024,30 +1024,30 @@
   <script>
     function sendToWhatsApp(e) {
       e.preventDefault();
-      const name    = document.getElementById('cf-name').value.trim();
-      const phone   = document.getElementById('cf-phone').value.trim();
+      const name = document.getElementById('cf-name').value.trim();
+      const phone = document.getElementById('cf-phone').value.trim();
       const service = document.getElementById('cf-service').value;
-      const car     = document.getElementById('cf-car').value.trim();
-      const notes   = document.getElementById('cf-notes').value.trim();
-      const isEn    = (localStorage.getItem('hk_lang') || 'ar') === 'en';
+      const car = document.getElementById('cf-car').value.trim();
+      const notes = document.getElementById('cf-notes').value.trim();
+      const isEn = (localStorage.getItem('hk_lang') || 'ar') === 'en';
 
       let msg;
       if (isEn) {
-        msg  = `New website enquiry 🚗\n`;
+        msg = `New website enquiry 🚗\n`;
         msg += `━━━━━━━━━━━━━━━━\n`;
         msg += `👤 Name: ${name}\n`;
         msg += `📞 Phone: ${phone}\n`;
         msg += `🔧 Service: ${service}\n`;
-        if (car)   msg += `🚘 Car: ${car}\n`;
+        if (car) msg += `🚘 Car: ${car}\n`;
         if (notes) msg += `📝 Notes: ${notes}\n`;
         msg += `━━━━━━━━━━━━━━━━`;
       } else {
-        msg  = `طلب جديد من الموقع 🚗\n`;
+        msg = `طلب جديد من الموقع 🚗\n`;
         msg += `━━━━━━━━━━━━━━━━\n`;
         msg += `👤 الاسم: ${name}\n`;
         msg += `📞 الجوال: ${phone}\n`;
         msg += `🔧 الخدمة: ${service}\n`;
-        if (car)   msg += `🚘 السيارة: ${car}\n`;
+        if (car) msg += `🚘 السيارة: ${car}\n`;
         if (notes) msg += `📝 ملاحظات: ${notes}\n`;
         msg += `━━━━━━━━━━━━━━━━`;
       }

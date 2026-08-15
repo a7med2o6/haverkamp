@@ -321,15 +321,14 @@ export async function BrandPageView({ slug, locale }: { slug: string; locale: Lo
             </div>
           </div>
         </div>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={phone}
+          whatsapp={whatsapp}
+          instagram={instagram}
+        />
       </main>
-
-      <SiteFooter
-        t={t}
-        locale={locale}
-        phone={phone}
-        whatsapp={whatsapp}
-        instagram={instagram}
-      />
     </>
   );
 }

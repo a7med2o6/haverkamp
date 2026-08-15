@@ -475,15 +475,14 @@ export async function SiteHome({ locale }: { locale: Locale }) {
             />
           </div>
         </section>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={phone}
+          whatsapp={whatsapp}
+          instagram={instagram}
+        />
       </main>
-
-      <SiteFooter
-        t={t}
-        locale={locale}
-        phone={phone}
-        whatsapp={whatsapp}
-        instagram={instagram}
-      />
     </>
   );
 }

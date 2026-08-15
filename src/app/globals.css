@@ -169,6 +169,38 @@
 /* ── مدخل الموظفين في تذييل الموقع العام ──
    يرث ألوان روابط التذييل من styles.css ويضيف إطاراً خفيفاً
    ليقرأ كمدخل داخلي لا كرابط تسويقي. */
+/* ── صفحة تسجيل الدخول ──────────────────────────────────────
+   كانت تُثبّت تدرّجاً داكناً بقيم صريحة، فتبقى سوداء حتى في الوضع
+   الفاتح، وبطاقتها بشفافية 4% لا تكاد تنفصل عن الخلفية. */
+.login-page {
+  background: var(--surface-0);
+}
+
+.login-glow {
+  background:
+    radial-gradient(ellipse 60% 50% at 25% 10%, var(--login-glow-1), transparent 60%),
+    radial-gradient(ellipse 50% 45% at 80% 90%, var(--login-glow-2), transparent 60%);
+}
+
+:root {
+  --login-glow-1: rgba(94, 184, 255, 0.14);
+  --login-glow-2: rgba(94, 184, 255, 0.08);
+  /* سطح مرفوع عن الخلفية لتُقرأ البطاقة كبطاقة لا كفراغ */
+  --login-card-bg: #101d31;
+}
+
+[data-theme='light'] {
+  --login-glow-1: rgba(94, 184, 255, 0.18);
+  --login-glow-2: rgba(94, 184, 255, 0.10);
+  --login-card-bg: #ffffff;
+}
+
+.login-card {
+  background: var(--login-card-bg);
+  border: 1px solid var(--line-strong);
+  box-shadow: var(--shadow-card);
+}
+
 /* ── بوابة الموظفين في التذييل ──────────────────────────────
    مدخل تشغيلي لا وجهة تسويقية: يفصله شعرة رأسية عن روابط الزوّار
    ويبقى خافتاً حتى المرور، فلا يزاحمها ولا يختفي. */

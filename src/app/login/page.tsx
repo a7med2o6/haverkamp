@@ -10,16 +10,9 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12">
-      {/* خلفية متدرّجة */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 50% at 25% 10%, rgba(94,184,255,0.10), transparent 60%), radial-gradient(ellipse 50% 45% at 80% 90%, rgba(94,184,255,0.06), transparent 60%), linear-gradient(140deg, #050912 0%, #0a1424 50%, #050912 100%)',
-        }}
-      />
+    <main className="login-page relative flex min-h-dvh items-center justify-center overflow-hidden px-4 py-12">
+      {/* هالة لونية خفيفة فوق خلفية اللوحة — تتبع الوضع الفاتح والداكن */}
+      <div aria-hidden className="login-glow pointer-events-none absolute inset-0 -z-10" />
 
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
@@ -32,12 +25,12 @@ export default function LoginPage() {
             className="h-12 w-auto object-contain"
           />
           <h1 className="mt-6 text-xl font-bold text-[var(--text-0)]">لوحة تحكم هافركامب</h1>
-          <p className="mt-1.5 text-[13px] text-[var(--text-2)]">
+          <p className="mt-1.5 text-[13px] text-[var(--text-1)]">
             سجّل الدخول للمتابعة إلى نظام الإدارة
           </p>
         </div>
 
-        <div className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--glass)] p-6 shadow-[var(--shadow-card)] backdrop-blur-2xl">
+        <div className="login-card rounded-[var(--radius-lg)] p-6">
           <Suspense fallback={<div className="h-64" />}>
             <LoginForm />
           </Suspense>

@@ -692,3 +692,182 @@ export async function getServiceContent(slug: string): Promise<ContentGroup[]> {
     }))
     .filter((g) => g.fields.length > 0);
 }
+
+/* ═══════════════════ الصفحة الرئيسية ═══════════════════ */
+
+/**
+ * أقسام الصفحة الرئيسية.
+ * بطاقات الخدمات وآراء العملاء وصور المعرض تأتي من جداولها، فلا نكرّرها
+ * هنا — ونكتفي بعناوين أقسامها وأوصافها.
+ */
+function homeGroupSpecs(): GroupSpec[] {
+  const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  return [
+    {
+      id: 'hero',
+      title: 'رأس الصفحة',
+      hint: 'العنوان الكبير وسطور الاعتماد والشارات',
+      fields: [
+        ['hero.h1', 'العنوان الرئيسي', true],
+        ['hero.cred1', 'سطر الاعتماد الأول', true],
+        ['hero.cred2', 'سطر الاعتماد الثاني', true],
+        ['hero.tagline', 'الجملة التسويقية', true],
+        ['hero.lede', 'الفقرة التعريفية', true],
+        ['hero.badge.certified', 'شارة الصورة — منشأة معتمدة'],
+        ['hero.badge.warranty', 'شارة الصورة — الكفالة'],
+        ['hero.badge.cars', 'شارة الصورة — عدد السيارات'],
+        ['hero.strip.years', 'شريط الأرقام — سنوات الخبرة'],
+        ['hero.strip.clients', 'شريط الأرقام — العملاء'],
+        ['hero.strip.cars', 'شريط الأرقام — السيارات'],
+      ],
+    },
+    {
+      id: 'services',
+      title: 'قسم الخدمات',
+      hint: 'العنوان فقط — البطاقات نفسها تُدار من «الخدمات»',
+      fields: [
+        ['sec.services.tag', 'السطر العلوي'],
+        ['sec.services.h2', 'عنوان القسم', true],
+        ['sec.services.desc', 'وصف القسم', true],
+      ],
+    },
+    {
+      id: 'gallery',
+      title: 'قسم معرض الصور',
+      hint: 'العنوان فقط — الصور تُدار من «معرض الصور»',
+      fields: [
+        ['sec.gallery.tag', 'السطر العلوي'],
+        ['sec.gallery.h2', 'عنوان القسم', true],
+        ['sec.gallery.desc', 'وصف القسم', true],
+      ],
+    },
+    {
+      id: 'why',
+      title: 'لماذا نحن',
+      hint: 'ست بطاقات',
+      fields: [
+        ['sec.why.tag', 'السطر العلوي'],
+        ['sec.why.h2', 'عنوان القسم', true],
+        ['sec.why.desc', 'وصف القسم', true],
+        ...range(6).flatMap<FieldSpec>((n) => [
+          [`why.${pad(n)}.title`, `الميزة ${n} — العنوان`],
+          [`why.${pad(n)}.desc`, `الميزة ${n} — الشرح`, true],
+        ]),
+      ],
+    },
+    {
+      id: 'testimonials',
+      title: 'قسم آراء العملاء',
+      hint: 'العنوان فقط — الآراء نفسها تُدار من «آراء العملاء»',
+      fields: [
+        ['sec.testi.tag', 'السطر العلوي'],
+        ['sec.testi.h2', 'عنوان القسم', true],
+        ['sec.testi.desc', 'وصف القسم', true],
+      ],
+    },
+    {
+      id: 'faq',
+      title: 'الأسئلة الشائعة',
+      hint: 'خمسة أسئلة',
+      fields: [
+        ['sec.faq.tag', 'السطر العلوي'],
+        ['sec.faq.h2', 'عنوان القسم', true],
+        ['sec.faq.desc', 'وصف القسم', true],
+        ...range(5).flatMap<FieldSpec>((n) => [
+          [`faq.${n}.q`, `السؤال ${n}`],
+          [`faq.${n}.a`, `الإجابة ${n}`, true],
+        ]),
+      ],
+    },
+    {
+      id: 'contact',
+      title: 'قسم التواصل',
+      hint: 'بطاقة البيانات ونموذج الحجز',
+      fields: [
+        ['sec.contact.tag', 'السطر العلوي'],
+        ['sec.contact.h2', 'عنوان القسم', true],
+        ['sec.contact.desc', 'وصف القسم', true],
+        ['contact.title', 'عنوان بطاقة التواصل', true],
+        ['contact.subtitle', 'وصف بطاقة التواصل', true],
+        ['contact.phone.lbl', 'تسمية الهاتف'],
+        ['contact.wa.lbl', 'تسمية الواتساب'],
+        ['contact.wa.btn', 'نص زر الواتساب'],
+        ['contact.location.lbl', 'تسمية الموقع'],
+        ['contact.location.val', 'العنوان المكتوب'],
+        ['contact.hours.lbl', 'تسمية ساعات العمل'],
+        ['contact.hours.val', 'ساعات العمل المكتوبة'],
+      ],
+    },
+    {
+      id: 'form',
+      title: 'نموذج الحجز',
+      hint: 'تسميات حقول النموذج',
+      fields: [
+        ['form.name.label', 'تسمية الاسم'],
+        ['form.phone.label', 'تسمية الجوال'],
+        ['form.service.label', 'تسمية الخدمة'],
+        ['form.car.label', 'تسمية السيارة'],
+        ['form.notes.label', 'تسمية الملاحظات'],
+        ['form.submit', 'نص زر الإرسال'],
+      ],
+    },
+    {
+      id: 'shared',
+      title: 'نصوص مشتركة',
+      hint: 'تظهر في كل صفحات الموقع — شريط التنقّل والتذييل والأزرار',
+      fields: [
+        ['nav.services', 'قائمة — الخدمات'],
+        ['nav.gallery', 'قائمة — معرض الصور'],
+        ['nav.contact', 'قائمة — تواصل معنا'],
+        ['nav.testimonials', 'قائمة — آراء العملاء'],
+        ['nav.why', 'قائمة — لماذا نحن'],
+        ['nav.terms', 'قائمة — البنود والشروط'],
+        ['nav.cta', 'زر القائمة الرئيسي'],
+        ['footer.copy', 'سطر الحقوق'],
+        ['footer.wa', 'تذييل — واتساب'],
+        ['footer.terms', 'تذييل — الشروط'],
+        ['footer.warranty', 'تذييل — سياسة الضمان'],
+        ['footer.instagram', 'تذييل — انستجرام'],
+        ['footer.home', 'تذييل — الرئيسية'],
+        ['svc.btn.book', 'زر «احجز موعدك»'],
+        ['svc.btn.wa', 'زر «واتساب»'],
+        ['svc.btn.wa2', 'زر «راسلنا على واتساب»'],
+        ['svc.btn.contact', 'زر «صفحة التواصل»'],
+        ['svc.cta.desc', 'وصف دعوة الحجز في صفحات الخدمة', true],
+      ],
+    },
+  ];
+}
+
+/** كل مفاتيح الصفحة الرئيسية بالترتيب الذي تظهر به */
+export function homeContentKeys(): string[] {
+  return homeGroupSpecs().flatMap((g) => g.fields.map(([suffix]) => suffix));
+}
+
+/** يقرأ محتوى الصفحة الرئيسية مجمّعاً في أقسام جاهزة للتحرير */
+export async function getHomeContent(): Promise<ContentGroup[]> {
+  const specs = homeGroupSpecs();
+  const keys = specs.flatMap((g) => g.fields.map(([suffix]) => suffix));
+
+  const rows = await db.translation.findMany({
+    where: { key: { in: keys } },
+    select: { key: true, ar: true, en: true },
+  });
+  const byKey = new Map(rows.map((r) => [r.key, r]));
+
+  return specs
+    .map((g) => ({
+      id: g.id,
+      title: g.title,
+      hint: g.hint,
+      fields: g.fields
+        .filter(([key]) => byKey.has(key))
+        .map(([key, label, long]) => {
+          const row = byKey.get(key)!;
+          return { key, label, long: long ?? false, ar: row.ar, en: row.en ?? '' };
+        }),
+    }))
+    .filter((g) => g.fields.length > 0);
+}

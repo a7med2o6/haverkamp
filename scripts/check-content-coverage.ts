@@ -6,7 +6,7 @@
  */
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
-import { serviceContentKeys } from '../src/lib/service-content';
+import { homeContentKeys, serviceContentKeys } from '../src/lib/service-content';
 import 'dotenv/config';
 
 const db = new PrismaClient({
@@ -26,8 +26,24 @@ const PAGES: [slug: string, prefix: string][] = [
   ['wash', 'wash'],
 ];
 
+/** مجموعات مفاتيح الرئيسية والنصوص المشتركة */
+const HOME_GROUPS = ['hero', 'sec', 'why', 'faq', 'contact', 'form', 'nav', 'footer', 'svc'];
+
 async function main() {
   let uncovered = 0;
+
+  // الرئيسية: نقارن بالمجموعات لا بالبادئة
+  const homeCovered = new Set(homeContentKeys());
+  const homeRows = await db.translation.findMany({
+    where: { group: { in: HOME_GROUPS } },
+    select: { key: true },
+  });
+  const homeMissing = homeRows.map((r) => r.key).filter((k) => !homeCovered.has(k));
+  uncovered += homeMissing.length;
+  console.log(
+    `  ${homeMissing.length ? '✗' : '✓'} ${'الرئيسية'.padEnd(12)} ${homeRows.length - homeMissing.length}/${homeRows.length}` +
+      (homeMissing.length ? `  ناقص: ${homeMissing.join(', ')}` : '')
+  );
 
   for (const [slug, prefix] of PAGES) {
     const covered = new Set(serviceContentKeys(slug));

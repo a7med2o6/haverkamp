@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import { migratedPaths } from '@/lib/site-data';
-import { serviceContentKeys } from '@/lib/service-content';
+import { homeContentKeys, serviceContentKeys } from '@/lib/service-content';
 
 /**
  * يُحدِّث الموقع العام بعد أي تعديل محتوى.
@@ -356,5 +356,70 @@ export const saveServiceContent = action({
     ].filter(Boolean);
 
     return { id: slug, message: `تم الحفظ — ${parts.join(' و')}` };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  محتوى الصفحة الرئيسية
+// ═══════════════════════════════════════════════════════════
+
+/** أرقام شريط الإحصائيات — قيم عددية في الإعدادات لا نصوص ترجمة */
+const HOME_STAT_KEYS = ['stats.years', 'stats.clients', 'stats.cars'] as const;
+
+export const saveHomeContent = action({
+  permission: 'cms:write',
+  schema: z.object({
+    fields: z
+      .array(
+        z.object({
+          key: z.string().trim().min(1),
+          ar: z.string().max(2000),
+          en: z.string().max(2000),
+        })
+      )
+      .default([]),
+    /** أرقام شريط الإحصائيات */
+    stats: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  }),
+  audit: { entity: 'Translation', action: 'SAVE_HOME' },
+  handler: async ({ fields, stats }) => {
+    const statEntries = Object.entries(stats ?? {});
+    if (fields.length === 0 && statEntries.length === 0) {
+      throw new AppError('لا يوجد ما يُحفظ');
+    }
+
+    const allowed = new Set(homeContentKeys());
+    const stray = fields.find((f) => !allowed.has(f.key));
+    if (stray) throw new AppError('حقل غير معروف في الصفحة الرئيسية');
+
+    const strayStat = statEntries.find(([k]) => !HOME_STAT_KEYS.includes(k as never));
+    if (strayStat) throw new AppError('رقم غير معروف في شريط الإحصائيات');
+
+    const empty = fields.find((f) => !f.ar.trim());
+    if (empty) throw new AppError('النص العربي مطلوب في كل الحقول');
+
+    await db.$transaction(async (tx) => {
+      for (const f of fields) {
+        await tx.translation.upsert({
+          where: { key: f.key },
+          update: { ar: f.ar, en: f.en.trim() ? f.en : null },
+          create: { key: f.key, ar: f.ar, en: f.en.trim() ? f.en : null, group: 'home' },
+        });
+      }
+
+      for (const [key, value] of statEntries) {
+        await tx.siteSetting.update({ where: { key }, data: { value } });
+      }
+    });
+
+    revalidatePath('/dashboard/cms/home');
+    revalidateSite();
+
+    const parts = [
+      fields.length ? `${fields.length} نصاً` : null,
+      statEntries.length ? 'أرقام الإحصائيات' : null,
+    ].filter(Boolean);
+
+    return { id: 'home', message: `تم الحفظ — ${parts.join(' و')}` };
   },
 });

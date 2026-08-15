@@ -17,7 +17,8 @@
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "legacy:sync": "node scripts/sync-legacy.mjs",
     "db:import:testimonials": "tsx prisma/import-testimonials.ts",
-    "check:content": "tsx scripts/check-content-coverage.ts"
+    "check:content": "tsx scripts/check-content-coverage.ts",
+    "db:prune:keys": "tsx prisma/prune-dead-keys.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

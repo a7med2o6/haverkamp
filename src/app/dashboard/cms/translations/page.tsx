@@ -13,7 +13,7 @@ import { PAGE_SIZE } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { TranslationRow } from './translation-row';
 
-export const metadata: Metadata = { title: 'الترجمات' };
+export const metadata: Metadata = { title: 'كل النصوص' };
 export const dynamic = 'force-dynamic';
 
 export default async function TranslationsPage({
@@ -64,8 +64,8 @@ export default async function TranslationsPage({
   return (
     <>
       <PageHeader
-        title="نصوص الموقع"
-        description="كل نص يظهر للزائر — التعديل ينعكس على الموقع فوراً"
+        title="كل النصوص"
+        description="عرض خام لكل نصوص الموقع — المحتوى يُحرَّر من صفحاته في «الصفحة الرئيسية» و«الخدمات» و«الصفحات»، وهذه للبحث والحالات النادرة"
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-3">

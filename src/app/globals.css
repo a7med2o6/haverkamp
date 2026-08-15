@@ -169,23 +169,88 @@
 /* ── مدخل الموظفين في تذييل الموقع العام ──
    يرث ألوان روابط التذييل من styles.css ويضيف إطاراً خفيفاً
    ليقرأ كمدخل داخلي لا كرابط تسويقي. */
+/* ── بوابة الموظفين في التذييل ──────────────────────────────
+   مدخل تشغيلي لا وجهة تسويقية: يفصله شعرة رأسية عن روابط الزوّار
+   ويبقى خافتاً حتى المرور، فلا يزاحمها ولا يختفي. */
+.footer .links .staff-sep {
+  width: 1px;
+  align-self: stretch;
+  min-height: 18px;
+  background: var(--glass-border, rgba(255, 255, 255, 0.1));
+}
+
 .footer .links a.staff-login {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   white-space: nowrap;
-  padding: 5px 12px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  opacity: 0.65;
-  transition: opacity 0.15s, color 0.15s;
+  padding: 6px 12px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid transparent;
+  color: var(--ink-2, #6c7e9a);
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s;
 }
-.footer .links a.staff-login:hover {
-  opacity: 1;
+
+.footer .links a.staff-login:hover,
+.footer .links a.staff-login:focus-visible {
   color: var(--accent, #5eb8ff);
+  background: var(--glass-tint, rgba(255, 255, 255, 0.035));
+  border-color: var(--glass-border-bright, rgba(255, 255, 255, 0.16));
 }
-.footer .links a.staff-login svg {
-  flex-shrink: 0;
+
+.footer .links a.staff-login .staff-ico {
+  display: inline-flex;
+  opacity: 0.75;
+  transition: opacity 0.2s;
+}
+.footer .links a.staff-login:hover .staff-ico {
+  opacity: 1;
+}
+
+/* السهم مطويّ ويُفرد عند المرور — إشارة أن الرابط يخرج من الموقع العام */
+.footer .links a.staff-login .staff-arrow {
+  display: inline-flex;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateX(-4px);
+  transition: max-width 0.25s, opacity 0.2s, transform 0.25s;
+}
+.footer .links a.staff-login:hover .staff-arrow,
+.footer .links a.staff-login:focus-visible .staff-arrow {
+  max-width: 16px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* الاتجاه من اليمين لليسار — السهم يشير للجهة التي يمضي إليها القارئ */
+[dir='rtl'] .footer .links a.staff-login .staff-arrow svg {
+  transform: scaleX(-1);
+}
+[dir='rtl'] .footer .links a.staff-login .staff-arrow {
+  transform: translateX(4px);
+}
+[dir='rtl'] .footer .links a.staff-login:hover .staff-arrow,
+[dir='rtl'] .footer .links a.staff-login:focus-visible .staff-arrow {
+  transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer .links a.staff-login,
+  .footer .links a.staff-login .staff-arrow,
+  .footer .links a.staff-login .staff-ico {
+    transition: none;
+  }
+}
+
+@media (max-width: 560px) {
+  /* الفاصل بلا معنى حين تلتفّ الروابط أسطراً */
+  .footer .links .staff-sep {
+    display: none;
+  }
+  .footer .links a.staff-login {
+    border-color: var(--glass-border, rgba(255, 255, 255, 0.1));
+  }
 }
 
 /* ── الطباعة (الفواتير والتقارير) ── */

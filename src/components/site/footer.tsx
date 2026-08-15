@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/lib/site-data';
 
-/** تذييل الموقع — يتضمّن مدخل فريق العمل إلى لوحة التحكم */
+/**
+ * تذييل الموقع.
+ * مدخل فريق العمل مفصول عن روابط الزوّار بفاصل رفيع: هو باب تشغيلي لا
+ * وجهة تسويقية، فيبقى هادئاً حتى المرور عليه.
+ */
 export function SiteFooter({
   t,
   locale,
@@ -15,6 +19,8 @@ export function SiteFooter({
   whatsapp: string;
   instagram: string;
 }) {
+  const staffLabel = locale === 'en' ? 'Staff Portal' : 'بوابة الموظفين';
+
   return (
     <footer className="footer" style={{ margin: '45px 0 0', padding: '45px 0 32px' }}>
       <div className="footer-row">
@@ -38,21 +44,22 @@ export function SiteFooter({
             {t('footer.instagram')}
           </a>
 
+          <span className="staff-sep" aria-hidden="true" />
+
           {/* مدخل فريق العمل — لا يُفهرَس ولا يُتتبَّع من محركات البحث */}
-          <Link href="/login" rel="nofollow" className="staff-login">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              aria-hidden="true"
-            >
-              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4" />
-              <path d="M10 17l5-5-5-5M15 12H3" />
-            </svg>
-            {locale === 'en' ? 'Staff Login' : 'دخول الموظفين'}
+          <Link href="/login" rel="nofollow" className="staff-login" aria-label={staffLabel}>
+            <span className="staff-ico" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 118 0v4" />
+              </svg>
+            </span>
+            <span className="staff-text">{staffLabel}</span>
+            <span className="staff-arrow" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
           </Link>
         </div>
       </div>

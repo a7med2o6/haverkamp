@@ -8,7 +8,7 @@ import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MIGRATED_SERVICES } from '@/lib/site-data';
+import { MIGRATED_SERVICES, isMigratedSlug } from '@/lib/site-data';
 import { ServiceFormButton, ToggleServiceButton } from './service-form';
 
 export const metadata: Metadata = { title: 'الخدمات' };
@@ -56,7 +56,10 @@ export default async function CmsServicesPage() {
               services.map((s) => {
                 const ar = pick(s.translations, 'ar');
                 const en = pick(s.translations, 'en');
-                const migrated = !!MIGRATED_SERVICES[s.slug];
+                // الصفحة منقولة إلى Next (لم تعد ثابتة)
+                const migrated = isMigratedSlug(s.slug);
+                // ومحرّر المحتوى مبنيّ لها بعد
+                const editable = !!MIGRATED_SERVICES[s.slug];
 
                 return (
                   <Tr key={s.id}>
@@ -119,7 +122,7 @@ export default async function CmsServicesPage() {
                     {canWrite && (
                       <Td>
                         <div className="flex items-center gap-0.5">
-                          {migrated && (
+                          {editable && (
                             <Link
                               href={`/dashboard/cms/services/${s.slug}`}
                               aria-label={`تحرير محتوى صفحة ${ar?.name ?? s.slug}`}

@@ -874,19 +874,30 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
 });
 
 /**
+ * خدمات لها صفحة يُصيّرها Next — لم تعد تُخدَم من public/ الثابت.
+ * تشمل ما لها قالب خاص (الماركات، العازل، الحماية، الغسيل) لا ما في
+ * MIGRATED_SERVICES وحده.
+ */
+export const MIGRATED_SLUGS: string[] = [
+  ...Object.keys(MIGRATED_SERVICES),
+  ...Object.keys(MIGRATED_BRANDS),
+  'tint',
+  'protication',
+  'wash',
+  'accessories',
+];
+
+/** هل صفحة هذه الخدمة منقولة إلى Next؟ */
+export function isMigratedSlug(slug: string): boolean {
+  return MIGRATED_SLUGS.includes(slug);
+}
+
+/**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.
  */
 export function migratedPaths(): string[] {
-  const slugs = [
-    ...Object.keys(MIGRATED_SERVICES),
-    ...Object.keys(MIGRATED_BRANDS),
-    'tint',
-    'protication',
-    'wash',
-    'contactus',
-    'accessories',
-  ];
+  const slugs = [...MIGRATED_SLUGS, 'contactus'];
   return [
     '/',
     '/en',

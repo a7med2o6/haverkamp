@@ -894,7 +894,13 @@ export function isMigratedSlug(slug: string): boolean {
 
 /** هل بُني محرّر محتوى لهذه الصفحة في اللوحة؟ */
 export function hasContentEditor(slug: string): boolean {
-  return !!MIGRATED_SERVICES[slug] || !!MIGRATED_BRANDS[slug];
+  return (
+    !!MIGRATED_SERVICES[slug] ||
+    !!MIGRATED_BRANDS[slug] ||
+    slug === 'tint' ||
+    slug === 'protication' ||
+    slug === 'wash'
+  );
 }
 
 /**

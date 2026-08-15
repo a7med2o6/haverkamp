@@ -10,7 +10,8 @@ import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS, CUSTOMER_SOURCE } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
-import { cn, formatDateTime, toLocalInput } from '@/lib/utils';
+import { cn, formatDateTime, startOfWeek, toLocalInput, weekDays } from '@/lib/utils';
+import { WeekView, type WeekBooking } from './week-view';
 import {
   BookingFormButton,
   BookingStatusSelect,
@@ -30,11 +31,23 @@ const FILTERS = [
 export default async function BookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; page?: string; view?: string; week?: string }>;
 }) {
   const session = await requirePermission('crm:read');
-  const { filter = 'upcoming', page: pageParam } = await searchParams;
+  const {
+    filter = 'upcoming',
+    page: pageParam,
+    view = 'week',
+    week: weekParam,
+  } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+  const isWeek = view === 'week';
+
+  // أسبوع التقويم — من المَعلمة أو الأسبوع الحالي
+  const anchor = weekParam ? new Date(`${weekParam}T00:00:00`) : new Date();
+  const weekStart = startOfWeek(Number.isNaN(anchor.getTime()) ? new Date() : anchor);
+  const weekEnd = new Date(weekDays(weekStart)[6]);
+  weekEnd.setHours(23, 59, 59, 999);
 
   const now = new Date();
   const todayStart = new Date(now);
@@ -50,6 +63,22 @@ export default async function BookingsPage({
         : filter === 'PENDING'
           ? { status: 'PENDING' }
           : {};
+
+  const [weekBookings, weekendSetting] = isWeek
+    ? await Promise.all([
+        db.booking.findMany({
+          where: { scheduledAt: { gte: weekStart, lte: weekEnd } },
+          orderBy: { scheduledAt: 'asc' },
+          include: {
+            customer: { select: { name: true } },
+            vehicle: { select: { make: true, model: true } },
+            service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
+            jobOrder: { select: { id: true } },
+          },
+        }),
+        db.siteSetting.findUnique({ where: { key: 'hr.weekend' } }),
+      ])
+    : [[], null];
 
   const [bookings, total, customers, services] = await Promise.all([
     db.booking.findMany({
@@ -97,11 +126,50 @@ export default async function BookingsPage({
         }
       />
 
+      {/* تبويبا العرض */}
+      <div className="mb-4 flex gap-1.5">
+        {[
+          { key: 'week', label: 'التقويم' },
+          { key: 'list', label: 'القائمة' },
+        ].map((v) => (
+          <Link
+            key={v.key}
+            href={v.key === 'week' ? '/dashboard/bookings?view=week' : '/dashboard/bookings?view=list'}
+            className={cn(
+              'rounded-[var(--radius-sm)] border px-4 py-1.5 text-[13px] font-semibold transition-colors',
+              (v.key === 'week') === isWeek
+                ? 'border-accent bg-accent/15 text-accent-soft'
+                : 'border-[var(--line)] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]'
+            )}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </div>
+
+      {isWeek ? (
+        <WeekView
+          start={weekStart}
+          today={new Date()}
+          weekend={(weekendSetting?.value as string[] | undefined) ?? ['FRI']}
+          bookings={weekBookings.map<WeekBooking>((b) => ({
+            id: b.id,
+            code: b.code,
+            scheduledAt: b.scheduledAt,
+            status: b.status,
+            name: b.customer?.name ?? b.guestName ?? 'زائر',
+            car: b.vehicle ? `${b.vehicle.make} ${b.vehicle.model}` : (b.guestCar ?? ''),
+            service: b.service?.translations[0]?.name ?? '',
+            hasJob: !!b.jobOrder,
+          }))}
+        />
+      ) : (
+      <>
       <div className="mb-4 flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={`/dashboard/bookings?filter=${f.key}`}
+            href={`/dashboard/bookings?view=list&filter=${f.key}`}
             className={cn(
               'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
               filter === f.key
@@ -221,6 +289,8 @@ export default async function BookingsPage({
       </TableWrap>
 
       <Pagination page={page} total={total} />
+      </>
+      )}
     </>
   );
 }

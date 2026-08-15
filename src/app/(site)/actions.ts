@@ -52,8 +52,15 @@ export async function submitBooking(input: unknown): Promise<BookingResult> {
       ? await db.service.findUnique({ where: { slug: serviceSlug }, select: { id: true } })
       : null;
 
-    // بلا موعد مفضّل: نجدوله غداً ويعدّله الاستقبال عند التأكيد
-    const scheduledAt = preferredAt ? new Date(preferredAt) : new Date(Date.now() + 86400000);
+    /*
+     * النموذج يأخذ تاريخاً بلا وقت. `new Date('2026-08-20')` يعني منتصف
+     * ليل UTC — أي الثالثة فجراً بتوقيت الكويت، فيظهر الحجز في التقويم
+     * بوقت لم يطلبه أحد. نثبّت الإزاحة ليكون منتصف ليل محلياً، وهو ما
+     * تقرأه الواجهة كـ«بدون وقت».
+     */
+    const scheduledAt = preferredAt
+      ? new Date(`${preferredAt}T00:00:00+03:00`)
+      : new Date(Date.now() + 86400000);
 
     // نربطه بعميل مسجّل إن تطابق رقم الهاتف، وإلا يبقى زائراً
     const existing = await db.customer.findFirst({

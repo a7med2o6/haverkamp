@@ -148,3 +148,102 @@ export function toNumber(v: unknown): number {
   const n = Number(v.toString());
   return Number.isFinite(n) ? n : 0;
 }
+
+/* ── أسابيع التقويم ─────────────────────────────────────────
+   الأسبوع في الكويت يبدأ السبت لا الأحد. */
+
+/** المنطقة الزمنية المرجعية — الأعمال كلها بتوقيت الكويت */
+const KUWAIT_TZ = 'Asia/Kuwait';
+
+/**
+ * أجزاء التاريخ كما تُرى في الكويت.
+ * اللوحة تُصيَّر على الخادم وقد يعمل بأي منطقة، والمواعيد تُخزَّن UTC —
+ * فقراءة اليوم بتوقيت الخادم قد تضع حجزاً في عمود اليوم السابق.
+ */
+function kuwaitParts(d: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+    timeZone: KUWAIT_TZ,
+  }).formatToParts(d);
+
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return {
+    y: Number(get('year')),
+    m: Number(get('month')),
+    d: Number(get('day')),
+    weekday: weekdays.indexOf(get('weekday')),
+  };
+}
+
+/** يوم بتوقيت الكويت كتاريخ محلي للعرض والحساب */
+function kuwaitDay(d: Date): Date {
+  const { y, m, d: day } = kuwaitParts(d);
+  return new Date(y, m - 1, day);
+}
+
+/** أول يوم في سبت الأسبوع الذي يقع فيه التاريخ (بتوقيت الكويت) */
+export function startOfWeek(d: Date): Date {
+  const out = kuwaitDay(d);
+  const weekday = kuwaitParts(d).weekday;
+  // 6 = السبت — نرجع للخلف حتى نبلغه
+  out.setDate(out.getDate() - ((weekday + 1) % 7));
+  return out;
+}
+
+/** أيام الأسبوع السبعة ابتداءً من السبت */
+export function weekDays(start: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+/** «١٥ أغسطس» للترويسة، بأرقام لاتينية كبقية اللوحة */
+export function formatDayLabel(d: Date): string {
+  return new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
+    day: 'numeric',
+    month: 'long',
+  }).format(d);
+}
+
+/** اسم اليوم: «السبت» */
+export function formatWeekday(d: Date): string {
+  return new Intl.DateTimeFormat('ar-KW', { weekday: 'long' }).format(d);
+}
+
+/**
+ * «10:30 ص» — أو null للحجز بلا وقت محدّد.
+ * نقرأ الساعة بتوقيت الكويت لا بتوقيت الخادم: اللوحة تُصيَّر على الخادم
+ * وقد يعمل بأي منطقة، فمنتصف الليل محلياً يصير ساعة أخرى عنده.
+ */
+export function formatBookingTime(d: Date): string | null {
+  const fmt = new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: KUWAIT_TZ,
+  });
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: KUWAIT_TZ,
+  }).formatToParts(d);
+
+  const hour = parts.find((p) => p.type === 'hour')?.value;
+  const minute = parts.find((p) => p.type === 'minute')?.value;
+  if (hour === '00' && minute === '00') return null;
+
+  return fmt.format(d);
+}
+
+/** مفتاح يوم بتوقيت الكويت — أساس تجميع الحجوزات في أعمدة التقويم */
+export function dayKey(d: Date): string {
+  const { y, m, d: day } = kuwaitParts(d);
+  return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}

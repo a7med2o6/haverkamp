@@ -265,6 +265,30 @@ export const saveServiceContent = action({
   permission: 'cms:write',
   schema: z.object({
     slug: z.string().trim().min(1),
+    /** بيانات سجل الخدمة — تُحفظ مع النصوص في معاملة واحدة */
+    service: z
+      .object({
+        cardImage: optionalString,
+        heroImage: optionalString,
+        sortOrder: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
+        isActive: z.boolean(),
+        showInNav: z.boolean(),
+        ar: z.object({
+          name: z.string().trim().min(2, 'اسم الخدمة بالعربية مطلوب'),
+          tagline: optionalString,
+          shortDesc: optionalString,
+          metaTitle: optionalString,
+          metaDescription: optionalString,
+        }),
+        en: z.object({
+          name: optionalString,
+          tagline: optionalString,
+          shortDesc: optionalString,
+          metaTitle: optionalString,
+          metaDescription: optionalString,
+        }),
+      })
+      .optional(),
     fields: z
       .array(
         z.object({
@@ -273,10 +297,12 @@ export const saveServiceContent = action({
           en: z.string().max(2000),
         })
       )
-      .min(1, 'لا يوجد ما يُحفظ'),
+      .default([]),
   }),
   audit: { entity: 'Service', action: 'SAVE_CONTENT' },
-  handler: async ({ slug, fields }) => {
+  handler: async ({ slug, service, fields }) => {
+    if (!service && fields.length === 0) throw new AppError('لا يوجد ما يُحفظ');
+
     // لا نقبل إلا مفاتيح هذه الصفحة — الطلب يأتي من المتصفح
     const allowed = new Set(serviceContentKeys(slug));
     if (allowed.size === 0) throw new AppError('هذه الخدمة لا تُحرَّر من هنا بعد');
@@ -287,25 +313,48 @@ export const saveServiceContent = action({
     const empty = fields.find((f) => !f.ar.trim());
     if (empty) throw new AppError('النص العربي مطلوب في كل الحقول');
 
-    await db.$transaction(
-      fields.map((f) =>
-        db.translation.upsert({
+    await db.$transaction(async (tx) => {
+      for (const f of fields) {
+        await tx.translation.upsert({
           where: { key: f.key },
           update: { ar: f.ar, en: f.en.trim() ? f.en : null },
-          create: {
-            key: f.key,
-            ar: f.ar,
-            en: f.en.trim() ? f.en : null,
-            group: slug,
-          },
-        })
-      )
-    );
+          create: { key: f.key, ar: f.ar, en: f.en.trim() ? f.en : null, group: slug },
+        });
+      }
+
+      if (!service) return;
+
+      const { ar, en, ...rest } = service;
+      const row = await tx.service.findUnique({ where: { slug }, select: { id: true } });
+      if (!row) throw new AppError('الخدمة غير موجودة');
+
+      await tx.service.update({ where: { id: row.id }, data: rest });
+
+      await tx.serviceTranslation.upsert({
+        where: { serviceId_locale: { serviceId: row.id, locale: 'ar' } },
+        update: ar,
+        create: { serviceId: row.id, locale: 'ar', ...ar },
+      });
+
+      // الإنجليزية اختيارية — لا ننشئ سجلاً فارغاً بلا اسم
+      if (en.name) {
+        await tx.serviceTranslation.upsert({
+          where: { serviceId_locale: { serviceId: row.id, locale: 'en' } },
+          update: { ...en, name: en.name },
+          create: { serviceId: row.id, locale: 'en', ...en, name: en.name },
+        });
+      }
+    });
 
     revalidatePath('/dashboard/cms/services');
     revalidatePath(`/dashboard/cms/services/${slug}`);
     revalidateSite();
 
-    return { id: slug, message: `تم حفظ محتوى الصفحة — ${fields.length} حقل` };
+    const parts = [
+      service ? 'بيانات الخدمة' : null,
+      fields.length ? `${fields.length} نصاً` : null,
+    ].filter(Boolean);
+
+    return { id: slug, message: `تم الحفظ — ${parts.join(' و')}` };
   },
 });

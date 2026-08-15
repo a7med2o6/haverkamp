@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { getHomeContent } from '@/lib/service-content';
+import { getPageImages } from '@/lib/page-images';
 import { HomeEditor, type HomeStats } from './home-editor';
 
 export const metadata: Metadata = { title: 'الصفحة الرئيسية' };
@@ -15,9 +16,10 @@ const STAT_KEYS = ['stats.years', 'stats.clients', 'stats.cars'] as const;
 export default async function HomeContentPage() {
   const session = await requirePermission('cms:read');
 
-  const [groups, settings] = await Promise.all([
+  const [groups, settings, images] = await Promise.all([
     getHomeContent(),
     db.siteSetting.findMany({ where: { key: { in: [...STAT_KEYS] } } }),
+    getPageImages('home'),
   ]);
 
   const stats = Object.fromEntries(
@@ -34,7 +36,7 @@ export default async function HomeContentPage() {
       />
 
       {can(session.user.role, 'cms:write') ? (
-        <HomeEditor groups={groups} stats={stats} />
+        <HomeEditor groups={groups} stats={stats} images={images} />
       ) : (
         <p className="rounded-[var(--radius-lg)] border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--text-2)]">
           ليس لديك صلاحية تحرير المحتوى

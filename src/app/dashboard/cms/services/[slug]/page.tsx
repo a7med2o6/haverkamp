@@ -8,6 +8,7 @@ import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { hasContentEditor } from '@/lib/site-data';
 import { getServiceContent } from '@/lib/service-content';
+import { getPageImages } from '@/lib/page-images';
 import { ContentEditor } from './content-editor';
 
 export const dynamic = 'force-dynamic';
@@ -35,9 +36,10 @@ export default async function ServiceContentPage({
 
   if (!hasContentEditor(slug)) notFound();
 
-  const [service, groups] = await Promise.all([
+  const [service, groups, images] = await Promise.all([
     db.service.findUnique({ where: { slug }, include: { translations: true } }),
     getServiceContent(slug),
+    getPageImages(slug),
   ]);
 
   if (!service) notFound();
@@ -87,7 +89,13 @@ export default async function ServiceContentPage({
       />
 
       {canWrite ? (
-        <ContentEditor slug={slug} groups={groups} service={meta} pageUrl={`/${slug}.html`} />
+        <ContentEditor
+          slug={slug}
+          groups={groups}
+          service={meta}
+          images={images}
+          pageUrl={`/${slug}.html`}
+        />
       ) : (
         <p className="rounded-[var(--radius-lg)] border border-dashed border-[var(--line)] p-8 text-center text-sm text-[var(--text-2)]">
           ليس لديك صلاحية تحرير المحتوى

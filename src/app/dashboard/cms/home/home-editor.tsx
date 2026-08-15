@@ -9,6 +9,8 @@ import { Field, Input, Textarea } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 import { saveHomeContent } from '../actions';
 import type { ContentGroup } from '@/lib/service-content';
+import type { ImageSlot } from '@/lib/page-images';
+import { ImageSection } from '@/components/dashboard/image-section';
 
 export interface HomeStats {
   'stats.years': number;
@@ -27,7 +29,15 @@ const STAT_LABELS: Record<keyof HomeStats, string> = {
  * نفس تقسيم محرّر صفحات الخدمة، مع قسم لأرقام شريط الإحصائيات لأنها
  * قيم عددية في الإعدادات لا نصوص ترجمة.
  */
-export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: HomeStats }) {
+export function HomeEditor({
+  groups,
+  stats,
+  images,
+}: {
+  groups: ContentGroup[];
+  stats: HomeStats;
+  images: ImageSlot[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -37,6 +47,9 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
     return map;
   });
   const [nums, setNums] = useState<HomeStats>(stats);
+  /** بدائل الصور المعدّلة — المفتاح إلى المسار الجديد */
+  const [pics, setPics] = useState<Record<string, string>>({});
+
   const [open, setOpen] = useState<Record<string, boolean>>({ [groups[0]?.id]: true });
 
   const original = useMemo(() => {
@@ -64,7 +77,14 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
     return counts;
   }, [groups, dirtyKeys]);
 
-  const hasChanges = dirtyKeys.length > 0 || dirtyStats.length > 0;
+
+
+  const dirtyPics = useMemo(
+    () => Object.keys(pics).filter((k) => pics[k] !== images.find((s) => s.key === k)?.url),
+    [pics, images]
+  );
+
+  const hasChanges = dirtyKeys.length > 0 || dirtyStats.length > 0 || dirtyPics.length > 0;
 
   function set(key: string, locale: 'ar' | 'en', v: string) {
     setValues((prev) => ({ ...prev, [key]: { ...prev[key], [locale]: v } }));
@@ -73,6 +93,7 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
   function reset() {
     setValues(original);
     setNums(stats);
+    setPics({});
     toast.info('تم التراجع عن التعديلات غير المحفوظة');
   }
 
@@ -90,6 +111,7 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
     startTransition(async () => {
       const res = await saveHomeContent({
         fields: dirtyKeys.map((k) => ({ key: k, ar: values[k].ar, en: values[k].en })),
+        images: dirtyPics.length ? Object.fromEntries(dirtyPics.map((k) => [k, pics[k]])) : undefined,
         stats: dirtyStats.length
           ? Object.fromEntries(dirtyStats.map((k) => [k, nums[k]]))
           : undefined,
@@ -113,6 +135,7 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
               {[
                 dirtyKeys.length ? `${dirtyKeys.length} نصاً` : null,
                 dirtyStats.length ? 'أرقام الإحصائيات' : null,
+                dirtyPics.length ? `${dirtyPics.length} صورة` : null,
               ]
                 .filter(Boolean)
                 .join(' و')}{' '}
@@ -149,6 +172,15 @@ export function HomeEditor({ groups, stats }: { groups: ContentGroup[]; stats: H
       </div>
 
       <div className="space-y-3">
+        <ImageSection
+          slots={images}
+          values={pics}
+          onChange={(key, url) => setPics((prev) => ({ ...prev, [key]: url }))}
+          open={open.images ?? false}
+          onToggle={() => setOpen((p) => ({ ...p, images: !p.images }))}
+          dirty={dirtyPics.length}
+        />
+
         {/* أرقام شريط الإحصائيات — من الإعدادات لا الترجمات */}
         <Section
           title="أرقام شريط الإحصائيات"

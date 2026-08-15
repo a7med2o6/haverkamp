@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { db } from '@/lib/db';
 import { GALLERY_SLOTS } from '@/lib/constants';
+import { imageResolver } from '@/lib/page-images';
 
 export type Locale = 'ar' | 'en';
 
@@ -151,12 +152,13 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
   const config = MIGRATED_SERVICES[slug];
   if (!config) return null;
 
-  const [t, service] = await Promise.all([
+  const [t, service, img] = await Promise.all([
     getDictionary(locale),
     db.service.findUnique({
       where: { slug },
       include: { translations: { where: { locale } } },
     }),
+    imageResolver(slug),
   ]);
 
   if (!service || !service.isActive) return null;
@@ -183,7 +185,7 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
       h1: t(`${p}.hero.h1`),
       sub: t(`${p}.hero.sub`),
       body: t(`${p}.hero.p`),
-      image: `/assets/services/${slug}/${slug}-hero.${config.ext}`,
+      image: img('hero', `/assets/services/${slug}/${slug}-hero.${config.ext}`),
       badges: [t(`${p}.tb1`), t(`${p}.tb2`), t(`${p}.tb3`)].filter(Boolean),
     },
 
@@ -218,9 +220,8 @@ export const getServicePage = cache(async (slug: string, locale: Locale) => {
       tag: t(`${p}.gal.tag`),
       h2: t(`${p}.gal.h2`),
       body: t(`${p}.gal.p`),
-      images: Array.from(
-        { length: 6 },
-        (_, i) => `/assets/services/${slug}/${slug}-gal-${i + 1}.${config.ext}`
+      images: Array.from({ length: 6 }, (_, i) =>
+        img(`gal${i + 1}`, `/assets/services/${slug}/${slug}-gal-${i + 1}.${config.ext}`)
       ),
     },
 
@@ -351,12 +352,13 @@ export type TintPage = NonNullable<Awaited<ReturnType<typeof getTintPage>>>;
 
 /** يجمّع محتوى صفحة العازل الحراري */
 export const getTintPage = cache(async (locale: Locale) => {
-  const [t, service] = await Promise.all([
+  const [t, service, img] = await Promise.all([
     getDictionary(locale),
     db.service.findUnique({
       where: { slug: 'tint' },
       include: { translations: { where: { locale } } },
     }),
+    imageResolver('tint'),
   ]);
 
   if (!service || !service.isActive) return null;
@@ -382,7 +384,7 @@ export const getTintPage = cache(async (locale: Locale) => {
       h1: t('tint.hero.h1'),
       sub: t('tint.hero.sub'),
       body: t('tint.hero.p'),
-      image: '/assets/services/tint/tint-hero.webp',
+      image: img('hero', '/assets/services/tint/tint-hero.webp'),
     },
 
     benefits: {
@@ -398,8 +400,8 @@ export const getTintPage = cache(async (locale: Locale) => {
       tag: t('tint.ba.tag'),
       h2: t('tint.ba.h2'),
       body: t('tint.ba.p'),
-      before: '/assets/services/tint/tint-before.jpg',
-      after: '/assets/services/tint/tint-after.jpg',
+      before: img('before', '/assets/services/tint/tint-before.jpg'),
+      after: img('after', '/assets/services/tint/tint-after.jpg'),
       beforeLabel: t('ba.label.before'),
       afterLabel: t('ba.label.after'),
     },
@@ -427,7 +429,7 @@ export const getTintPage = cache(async (locale: Locale) => {
       tag: t('tint.brands.tag'),
       h2: t('tint.brands.h2'),
       items: TINT_BRAND_IMAGES.map((image, i) => ({
-        image,
+        image: img(`brand${i + 1}`, image),
         name: t(`tint.br${i + 1}.name`),
         // العلامات الأمريكية الثلاث تتشارك مفتاح المنشأ نفسه
         origin: t(`tint.br${i + 1}.origin`) || t('tint.br.origin.us'),
@@ -437,9 +439,8 @@ export const getTintPage = cache(async (locale: Locale) => {
     gallery: {
       tag: t('tint.gal.tag'),
       h2: t('tint.gal.h2'),
-      images: Array.from(
-        { length: 6 },
-        (_, i) => `/assets/services/tint/tint-gal-${i + 1}.jpg`
+      images: Array.from({ length: 6 }, (_, i) =>
+        img(`gal${i + 1}`, `/assets/services/tint/tint-gal-${i + 1}.jpg`)
       ),
     },
 
@@ -475,12 +476,13 @@ export type PpfPage = NonNullable<Awaited<ReturnType<typeof getPpfPage>>>;
 
 /** يجمّع محتوى صفحة حماية البدي */
 export const getPpfPage = cache(async (locale: Locale) => {
-  const [t, service] = await Promise.all([
+  const [t, service, img] = await Promise.all([
     getDictionary(locale),
     db.service.findUnique({
       where: { slug: 'protication' },
       include: { translations: { where: { locale } } },
     }),
+    imageResolver('protication'),
   ]);
 
   if (!service || !service.isActive) return null;
@@ -505,15 +507,15 @@ export const getPpfPage = cache(async (locale: Locale) => {
       h1: t('ppf.hero.h1'),
       sub: t('ppf.hero.sub'),
       body: t('ppf.hero.p'),
-      image: '/assets/services/body-protection/protication.webp',
+      image: img('hero', '/assets/services/body-protection/protication.webp'),
     },
 
     beforeAfter: {
       tag: t('ppf.ba.tag'),
       h2: t('ppf.ba.h2'),
       body: t('ppf.ba.p'),
-      before: '/assets/services/body-protection/ppf-before.webp',
-      after: '/assets/services/body-protection/after.webp',
+      before: img('before', '/assets/services/body-protection/ppf-before.webp'),
+      after: img('after', '/assets/services/body-protection/after.webp'),
       beforeLabel: t('ba.label.before'),
       afterLabel: t('ba.label.after'),
     },
@@ -522,7 +524,7 @@ export const getPpfPage = cache(async (locale: Locale) => {
       tag: t('ppf.finish.tag'),
       h2: t('ppf.finish.h2'),
       items: PPF_FINISH_IMAGES.map((image, i) => ({
-        image,
+        image: img(`finish${i + 1}`, image),
         title: t(`ppf.f${i + 1}.h3`),
         body: t(`ppf.f${i + 1}.p`),
       })),
@@ -534,7 +536,7 @@ export const getPpfPage = cache(async (locale: Locale) => {
       body: t('ppf.csc.p'),
       btn: t('ppf.csc.btn'),
       href: '/car-color.html',
-      image: '/assets/color-change.webp',
+      image: img('studio', '/assets/color-change.webp'),
     },
 
     brands: {
@@ -543,6 +545,7 @@ export const getPpfPage = cache(async (locale: Locale) => {
       more: t('ppf.brand.more'),
       items: PPF_BRANDS.map((b, i) => ({
         ...b,
+        image: img(`brand${i + 1}`, b.image),
         name: t(`ppf.b${i + 1}.name`),
         origin: t(`ppf.b${i + 1}.origin`),
       })),
@@ -589,12 +592,13 @@ export type WashPage = NonNullable<Awaited<ReturnType<typeof getWashPage>>>;
 
 /** يجمّع محتوى صفحة الغسيل */
 export const getWashPage = cache(async (locale: Locale) => {
-  const [t, service] = await Promise.all([
+  const [t, service, img] = await Promise.all([
     getDictionary(locale),
     db.service.findUnique({
       where: { slug: 'wash' },
       include: { translations: { where: { locale } } },
     }),
+    imageResolver('wash'),
   ]);
 
   if (!service || !service.isActive) return null;
@@ -619,7 +623,7 @@ export const getWashPage = cache(async (locale: Locale) => {
       h1: t('wash.hero.h1'),
       sub: t('wash.hero.sub'),
       body: t('wash.hero.p'),
-      image: '/assets/services/wash/wash-hero.png',
+      image: img('hero', '/assets/services/wash/wash-hero.png'),
       badges: [t('wash.tb1'), t('wash.tb2'), t('wash.tb3')].filter(Boolean),
     },
 
@@ -653,9 +657,8 @@ export const getWashPage = cache(async (locale: Locale) => {
       tag: t('wash.gal.tag'),
       h2: t('wash.gal.h2'),
       body: t('wash.gal.p'),
-      images: Array.from(
-        { length: 6 },
-        (_, i) => `/assets/services/wash/wash-gal-${i + 1}.png`
+      images: Array.from({ length: 6 }, (_, i) =>
+        img(`gal${i + 1}`, `/assets/services/wash/wash-gal-${i + 1}.png`)
       ),
     },
 
@@ -924,12 +927,13 @@ export const getBrandPage = cache(async (slug: string, locale: Locale) => {
   const config = MIGRATED_BRANDS[slug];
   if (!config) return null;
 
-  const [t, service] = await Promise.all([
+  const [t, service, img] = await Promise.all([
     getDictionary(locale),
     db.service.findUnique({
       where: { slug },
       include: { translations: { where: { locale } } },
     }),
+    imageResolver(slug),
   ]);
 
   if (!service || !service.isActive) return null;
@@ -960,7 +964,7 @@ export const getBrandPage = cache(async (slug: string, locale: Locale) => {
       sub: t(`${p}.hero.sub`),
       body: t(`${p}.hero.p`),
       badges: [t(`${p}.tb1`), t(`${p}.tb2`), t(`${p}.tb3`)].filter(Boolean),
-      logo: config.logo,
+      logo: img('logo', config.logo),
       blendLogo: config.blendLogo ?? false,
       flag: config.flag,
       badge: t(`${p}.hero.badge`),
@@ -992,7 +996,7 @@ export const getBrandPage = cache(async (slug: string, locale: Locale) => {
           tag: t(`${p}.finish.tag`),
           h2: t(`${p}.finish.h2`),
           items: config.finish.map((f, i) => ({
-            image: f.image,
+            image: img(`finish${i + 1}`, f.image),
             title: t(`${p}.f${i + 1}.h3`),
             body: t(`${p}.f${i + 1}.p`),
           })),
@@ -1003,7 +1007,7 @@ export const getBrandPage = cache(async (slug: string, locale: Locale) => {
       tag: t(`${p}.gal.tag`),
       h2: t(`${p}.gal.h2`),
       body: t(`${p}.gal.p`),
-      images: config.gallery,
+      images: config.gallery.map((src, i) => img(`gal${i + 1}`, src)),
     },
 
     packages: {

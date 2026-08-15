@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { imageResolver } from '@/lib/page-images';
 import {
   getDictionary,
   getFeaturedGallery,
@@ -50,12 +51,13 @@ function Stars({ size = 16, filled = 5 }: { size?: number; filled?: number }) {
 }
 
 export async function SiteHome({ locale }: { locale: Locale }) {
-  const [t, setting, services, testimonials, gallery] = await Promise.all([
+  const [t, setting, services, testimonials, gallery, img] = await Promise.all([
     getDictionary(locale),
     getSettings(),
     getNavServices(locale),
     getTestimonials(locale),
     getFeaturedGallery(locale),
+    imageResolver('home'),
   ]);
 
   const phone = setting('contact.phone', '+965 5111 1154');
@@ -107,7 +109,7 @@ export async function SiteHome({ locale }: { locale: Locale }) {
 
             <div className="hero-logo-side">
               <Image
-                src="/assets/haverkamp.png"
+                src={img('logo', '/assets/haverkamp.png')}
                 alt="هافركامب"
                 width={420}
                 height={420}
@@ -121,7 +123,7 @@ export async function SiteHome({ locale }: { locale: Locale }) {
             <div className="hero-stage">
               <div className="hero-grid-lines" aria-hidden="true" />
               <Image
-                src="/assets/main.webp"
+                src={img('car', '/assets/main.webp')}
                 alt={locale === 'en' ? 'Car protected with Haverkamp films' : 'سيارة محمية بأفلام هافركامب'}
                 width={1200}
                 height={700}

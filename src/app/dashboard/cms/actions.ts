@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import { migratedPaths } from '@/lib/site-data';
 import { homeContentKeys, serviceContentKeys } from '@/lib/service-content';
+import { pageImageKeys } from '@/lib/page-images';
 
 /**
  * يُحدِّث الموقع العام بعد أي تعديل محتوى.
@@ -298,10 +299,21 @@ export const saveServiceContent = action({
         })
       )
       .default([]),
+    /** بدائل صور الصفحة — مفتاح الإعداد إلى المسار */
+    images: z.record(z.string(), z.string().max(500)).optional(),
   }),
   audit: { entity: 'Service', action: 'SAVE_CONTENT' },
-  handler: async ({ slug, service, fields }) => {
-    if (!service && fields.length === 0) throw new AppError('لا يوجد ما يُحفظ');
+  handler: async ({ slug, service, fields, images }) => {
+    const imageEntries = Object.entries(images ?? {});
+    if (!service && fields.length === 0 && imageEntries.length === 0) {
+      throw new AppError('لا يوجد ما يُحفظ');
+    }
+
+    if (imageEntries.length) {
+      const allowedImages = new Set(pageImageKeys(slug));
+      const strayImage = imageEntries.find(([k]) => !allowedImages.has(k));
+      if (strayImage) throw new AppError('صورة غير معروفة في هذه الصفحة');
+    }
 
     // لا نقبل إلا مفاتيح هذه الصفحة — الطلب يأتي من المتصفح
     const allowed = new Set(serviceContentKeys(slug));
@@ -319,6 +331,14 @@ export const saveServiceContent = action({
           where: { key: f.key },
           update: { ar: f.ar, en: f.en.trim() ? f.en : null },
           create: { key: f.key, ar: f.ar, en: f.en.trim() ? f.en : null, group: slug },
+        });
+      }
+
+      for (const [key, url] of imageEntries) {
+        await tx.siteSetting.upsert({
+          where: { key },
+          update: { value: url },
+          create: { key, value: url, group: 'images' },
         });
       }
 
@@ -353,6 +373,7 @@ export const saveServiceContent = action({
     const parts = [
       service ? 'بيانات الخدمة' : null,
       fields.length ? `${fields.length} نصاً` : null,
+      imageEntries.length ? `${imageEntries.length} صورة` : null,
     ].filter(Boolean);
 
     return { id: slug, message: `تم الحفظ — ${parts.join(' و')}` };
@@ -380,12 +401,21 @@ export const saveHomeContent = action({
       .default([]),
     /** أرقام شريط الإحصائيات */
     stats: z.record(z.string(), z.number().int().nonnegative()).optional(),
+    /** بدائل صور الصفحة — مفتاح الإعداد إلى المسار */
+    images: z.record(z.string(), z.string().max(500)).optional(),
   }),
   audit: { entity: 'Translation', action: 'SAVE_HOME' },
-  handler: async ({ fields, stats }) => {
+  handler: async ({ fields, stats, images }) => {
     const statEntries = Object.entries(stats ?? {});
-    if (fields.length === 0 && statEntries.length === 0) {
+    const imageEntries = Object.entries(images ?? {});
+    if (fields.length === 0 && statEntries.length === 0 && imageEntries.length === 0) {
       throw new AppError('لا يوجد ما يُحفظ');
+    }
+
+    if (imageEntries.length) {
+      const allowedImages = new Set(pageImageKeys('home'));
+      const strayImage = imageEntries.find(([k]) => !allowedImages.has(k));
+      if (strayImage) throw new AppError('صورة غير معروفة في الصفحة الرئيسية');
     }
 
     const allowed = new Set(homeContentKeys());
@@ -410,6 +440,14 @@ export const saveHomeContent = action({
       for (const [key, value] of statEntries) {
         await tx.siteSetting.update({ where: { key }, data: { value } });
       }
+
+      for (const [key, url] of imageEntries) {
+        await tx.siteSetting.upsert({
+          where: { key },
+          update: { value: url },
+          create: { key, value: url, group: 'images' },
+        });
+      }
     });
 
     revalidatePath('/dashboard/cms/home');
@@ -418,6 +456,7 @@ export const saveHomeContent = action({
     const parts = [
       fields.length ? `${fields.length} نصاً` : null,
       statEntries.length ? 'أرقام الإحصائيات' : null,
+      imageEntries.length ? `${imageEntries.length} صورة` : null,
     ].filter(Boolean);
 
     return { id: 'home', message: `تم الحفظ — ${parts.join(' و')}` };

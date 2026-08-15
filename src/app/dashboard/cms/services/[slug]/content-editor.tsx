@@ -10,6 +10,8 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { cn } from '@/lib/utils';
 import { saveServiceContent } from '../../actions';
 import type { ContentGroup } from '@/lib/service-content';
+import type { ImageSlot } from '@/lib/page-images';
+import { ImageSection } from '@/components/dashboard/image-section';
 
 /**
  * محرّر محتوى صفحة الخدمة.
@@ -30,11 +32,13 @@ export function ContentEditor({
   slug,
   groups,
   service,
+  images,
   pageUrl,
 }: {
   slug: string;
   groups: ContentGroup[];
   service: ServiceMeta;
+  images: ImageSlot[];
   pageUrl: string;
 }) {
   const router = useRouter();
@@ -50,6 +54,9 @@ export function ContentEditor({
   const [meta, setMeta] = useState<ServiceMeta>(service);
 
   // أول قسم مفتوح والباقي مطويّ — الصفحة طويلة
+  /** بدائل الصور المعدّلة — المفتاح إلى المسار الجديد */
+  const [pics, setPics] = useState<Record<string, string>>({});
+
   const [open, setOpen] = useState<Record<string, boolean>>({ basics: true });
 
   const original = useMemo(() => {
@@ -80,6 +87,11 @@ export function ContentEditor({
     return counts;
   }, [groups, dirtyKeys]);
 
+  const dirtyPics = useMemo(
+    () => Object.keys(pics).filter((k) => pics[k] !== images.find((s) => s.key === k)?.url),
+    [pics, images]
+  );
+
   function set(key: string, locale: 'ar' | 'en', v: string) {
     setValues((prev) => ({ ...prev, [key]: { ...prev[key], [locale]: v } }));
   }
@@ -95,11 +107,12 @@ export function ContentEditor({
   function reset() {
     setValues(original);
     setMeta(service);
+    setPics({});
     toast.info('تم التراجع عن التعديلات غير المحفوظة');
   }
 
   function save() {
-    if (dirtyKeys.length === 0 && !metaDirty) return;
+    if (dirtyKeys.length === 0 && !metaDirty && dirtyPics.length === 0) return;
 
     if (!meta.ar.name.trim()) {
       toast.error('اسم الخدمة بالعربية مطلوب');
@@ -121,6 +134,7 @@ export function ContentEditor({
         slug,
         service: metaDirty ? meta : undefined,
         fields: dirtyKeys.map((k) => ({ key: k, ar: values[k].ar, en: values[k].en })),
+        images: dirtyPics.length ? Object.fromEntries(dirtyPics.map((k) => [k, pics[k]])) : undefined,
       });
 
       if (res.ok) {
@@ -137,9 +151,13 @@ export function ContentEditor({
       {/* شريط الإجراءات — يبقى ظاهراً أثناء التمرير في صفحة طويلة */}
       <div className="sticky top-0 z-20 -mx-1 mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] bg-[var(--surface-0)]/95 px-1 py-3 backdrop-blur">
         <p className="text-[13px] text-[var(--text-2)]">
-          {dirtyKeys.length > 0 || metaDirty ? (
+          {dirtyKeys.length > 0 || metaDirty || dirtyPics.length > 0 ? (
             <span className="text-warn">
-              {[metaDirty ? 'بيانات الخدمة' : null, dirtyKeys.length ? `${dirtyKeys.length} نصاً` : null]
+              {[
+                metaDirty ? 'بيانات الخدمة' : null,
+                dirtyKeys.length ? `${dirtyKeys.length} نصاً` : null,
+                dirtyPics.length ? `${dirtyPics.length} صورة` : null,
+              ]
                 .filter(Boolean)
                 .join(' و')}{' '}
               غير محفوظ
@@ -160,14 +178,14 @@ export function ContentEditor({
             معاينة الصفحة
           </a>
 
-          {(dirtyKeys.length > 0 || metaDirty) && (
+          {(dirtyKeys.length > 0 || metaDirty || dirtyPics.length > 0) && (
             <Button variant="ghost" size="sm" onClick={reset} disabled={pending}>
               <RotateCcw />
               تراجع
             </Button>
           )}
 
-          <Button size="sm" onClick={save} disabled={pending || (dirtyKeys.length === 0 && !metaDirty)}>
+          <Button size="sm" onClick={save} disabled={pending || (dirtyKeys.length === 0 && !metaDirty && dirtyPics.length === 0)}>
             {pending ? <Loader2 className="animate-spin" /> : <Save />}
             حفظ
           </Button>
@@ -175,6 +193,15 @@ export function ContentEditor({
       </div>
 
       <div className="space-y-3">
+        <ImageSection
+          slots={images}
+          values={pics}
+          onChange={(key, url) => setPics((prev) => ({ ...prev, [key]: url }))}
+          open={open.images ?? false}
+          onToggle={() => setOpen((p) => ({ ...p, images: !p.images }))}
+          dirty={dirtyPics.length}
+        />
+
         {/* ── بيانات الخدمة: البطاقة والصور والظهور ── */}
         <Panel
           id="basics"

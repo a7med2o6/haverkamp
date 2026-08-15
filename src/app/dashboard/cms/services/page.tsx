@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import Link from 'next/link';
+import { FileText } from 'lucide-react';
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
@@ -117,6 +119,16 @@ export default async function CmsServicesPage() {
                     {canWrite && (
                       <Td>
                         <div className="flex items-center gap-0.5">
+                          {migrated && (
+                            <Link
+                              href={`/dashboard/cms/services/${s.slug}`}
+                              aria-label={`تحرير محتوى صفحة ${ar?.name ?? s.slug}`}
+                              title="تحرير محتوى الصفحة"
+                              className="inline-grid size-8 place-items-center rounded-[var(--radius-sm)] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)] hover:text-accent"
+                            >
+                              <FileText className="size-4" />
+                            </Link>
+                          )}
                           <ServiceFormButton
                             service={{
                               id: s.id,

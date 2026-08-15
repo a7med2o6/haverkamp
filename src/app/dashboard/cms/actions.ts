@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import { migratedPaths } from '@/lib/site-data';
+import { serviceContentKeys } from '@/lib/service-content';
 
 /**
  * يُحدِّث الموقع العام بعد أي تعديل محتوى.
@@ -248,5 +249,63 @@ export const deleteTestimonial = action({
     revalidatePath('/dashboard/cms/testimonials');
     revalidateSite();
     return { id, message: 'تم حذف الرأي' };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  محتوى صفحة الخدمة
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * يحفظ محتوى صفحة خدمة كاملة دفعة واحدة.
+ * التحرير يجري على مستوى الصفحة لا المفتاح، فالحفظ معاملة واحدة: إمّا
+ * تُحفظ الصفحة كلها أو لا شيء — فلا تبقى نصفها القديم ونصفها الجديد.
+ */
+export const saveServiceContent = action({
+  permission: 'cms:write',
+  schema: z.object({
+    slug: z.string().trim().min(1),
+    fields: z
+      .array(
+        z.object({
+          key: z.string().trim().min(1),
+          ar: z.string().max(2000),
+          en: z.string().max(2000),
+        })
+      )
+      .min(1, 'لا يوجد ما يُحفظ'),
+  }),
+  audit: { entity: 'Service', action: 'SAVE_CONTENT' },
+  handler: async ({ slug, fields }) => {
+    // لا نقبل إلا مفاتيح هذه الصفحة — الطلب يأتي من المتصفح
+    const allowed = new Set(serviceContentKeys(slug));
+    if (allowed.size === 0) throw new AppError('هذه الخدمة لا تُحرَّر من هنا بعد');
+
+    const stray = fields.find((f) => !allowed.has(f.key));
+    if (stray) throw new AppError('حقل غير معروف في هذه الصفحة');
+
+    const empty = fields.find((f) => !f.ar.trim());
+    if (empty) throw new AppError('النص العربي مطلوب في كل الحقول');
+
+    await db.$transaction(
+      fields.map((f) =>
+        db.translation.upsert({
+          where: { key: f.key },
+          update: { ar: f.ar, en: f.en.trim() ? f.en : null },
+          create: {
+            key: f.key,
+            ar: f.ar,
+            en: f.en.trim() ? f.en : null,
+            group: slug,
+          },
+        })
+      )
+    );
+
+    revalidatePath('/dashboard/cms/services');
+    revalidatePath(`/dashboard/cms/services/${slug}`);
+    revalidateSite();
+
+    return { id: slug, message: `تم حفظ محتوى الصفحة — ${fields.length} حقل` };
   },
 });

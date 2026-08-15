@@ -6,7 +6,12 @@
  */
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/generated/prisma/client';
-import { homeContentKeys, serviceContentKeys } from '../src/lib/service-content';
+import {
+  OTHER_PAGES,
+  homeContentKeys,
+  pageContentKeys,
+  serviceContentKeys,
+} from '../src/lib/service-content';
 import 'dotenv/config';
 
 const db = new PrismaClient({
@@ -61,10 +66,31 @@ async function main() {
     console.log(`  ${mark} ${slug.padEnd(12)} ${total - missing.length}/${total}${tail}`);
   }
 
+  // الصفحات الأخرى: البنود والتواصل والإكسسوارات
+  for (const [page, meta] of Object.entries(OTHER_PAGES)) {
+    const covered = new Set(pageContentKeys(page));
+    console.log(`  ✓ ${meta.title.padEnd(18)} ${covered.size} نصاً`);
+  }
+
+  // ما لا يصله أي محرّر — إمّا مفاتيح ميتة أو صفحة بلا محرّر
+  const everything = new Set([
+    ...homeContentKeys(),
+    ...PAGES.flatMap(([slug]) => serviceContentKeys(slug)),
+    ...Object.keys(OTHER_PAGES).flatMap(pageContentKeys),
+  ]);
+  const orphans = (await db.translation.findMany({ select: { key: true } }))
+    .map((r) => r.key)
+    .filter((k) => !everything.has(k));
+
+  if (orphans.length) {
+    console.log(`\n  ℹ ${orphans.length} مفتاحاً خارج كل المحرّرات:`);
+    console.log(`     ${orphans.join(', ')}`);
+  }
+
   console.log(
     uncovered === 0
-      ? '\n  ✅ كل المفاتيح مغطّاة'
-      : `\n  ⚠ ${uncovered} مفتاحاً خارج المحرّر`
+      ? '\n  ✅ كل صفحة تغطّي مفاتيحها'
+      : `\n  ⚠ ${uncovered} مفتاحاً خارج محرّر صفحته`
   );
   process.exitCode = uncovered === 0 ? 0 : 1;
 }

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import { migratedPaths } from '@/lib/site-data';
-import { homeContentKeys, serviceContentKeys } from '@/lib/service-content';
+import { homeContentKeys, pageContentKeys, serviceContentKeys } from '@/lib/service-content';
 import { pageImageKeys } from '@/lib/page-images';
 
 /**
@@ -460,5 +460,53 @@ export const saveHomeContent = action({
     ].filter(Boolean);
 
     return { id: 'home', message: `تم الحفظ — ${parts.join(' و')}` };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  محتوى الصفحات الأخرى (البنود · التواصل · الإكسسوارات)
+// ═══════════════════════════════════════════════════════════
+
+export const savePageContent = action({
+  permission: 'cms:write',
+  schema: z.object({
+    page: z.string().trim().min(1),
+    fields: z
+      .array(
+        z.object({
+          key: z.string().trim().min(1),
+          ar: z.string().max(2000),
+          en: z.string().max(2000),
+        })
+      )
+      .default([]),
+  }),
+  audit: { entity: 'Translation', action: 'SAVE_PAGE' },
+  handler: async ({ page, fields }) => {
+    if (fields.length === 0) throw new AppError('لا يوجد ما يُحفظ');
+
+    const allowed = new Set(pageContentKeys(page));
+    if (allowed.size === 0) throw new AppError('هذه الصفحة لا تُحرَّر من هنا');
+
+    const stray = fields.find((f) => !allowed.has(f.key));
+    if (stray) throw new AppError('حقل غير معروف في هذه الصفحة');
+
+    const empty = fields.find((f) => !f.ar.trim());
+    if (empty) throw new AppError('النص العربي مطلوب في كل الحقول');
+
+    await db.$transaction(
+      fields.map((f) =>
+        db.translation.upsert({
+          where: { key: f.key },
+          update: { ar: f.ar, en: f.en.trim() ? f.en : null },
+          create: { key: f.key, ar: f.ar, en: f.en.trim() ? f.en : null, group: page },
+        })
+      )
+    );
+
+    revalidatePath(`/dashboard/cms/pages/${page}`);
+    revalidateSite();
+
+    return { id: page, message: `تم الحفظ — ${fields.length} نصاً` };
   },
 });

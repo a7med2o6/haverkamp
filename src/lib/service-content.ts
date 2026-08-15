@@ -871,3 +871,222 @@ export async function getHomeContent(): Promise<ContentGroup[]> {
     }))
     .filter((g) => g.fields.length > 0);
 }
+
+/* ═══════════════════ صفحات أخرى ═══════════════════ */
+
+/** الصفحات التي لها محرّر محتوى خارج الخدمات والرئيسية */
+export const OTHER_PAGES: Record<string, { title: string; url: string }> = {
+  terms: { title: 'البنود والشروط', url: '/terms.html' },
+  contactus: { title: 'صفحة التواصل', url: '/contactus.html' },
+  accessories: { title: 'متجر الإكسسوارات', url: '/accessories.html' },
+};
+
+function otherGroupSpecs(page: string): { prefix: string; specs: GroupSpec[] } | null {
+  const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+
+  if (page === 'terms') {
+    return {
+      prefix: 'terms',
+      specs: [
+        {
+          id: 'hero',
+          title: 'رأس الصفحة',
+          fields: [
+            ['hero.tag', 'السطر العلوي الصغير'],
+            ['hero.h1', 'العنوان الرئيسي'],
+            ['hero.p', 'الفقرة التعريفية', true],
+          ],
+        },
+        {
+          id: 'conditions',
+          title: 'البنود والشروط',
+          hint: 'البطاقة الأولى — تسعة بنود',
+          fields: [
+            ['s1.h2', 'عنوان البطاقة'],
+            ...range(9).map<FieldSpec>((n) => [`s1.li${n}`, `البند ${n}`, true]),
+          ],
+        },
+        {
+          id: 'post-install',
+          title: 'إرشادات ما بعد التركيب',
+          hint: 'البطاقة الثانية — كتلتان',
+          fields: [
+            ['s2.h2', 'عنوان البطاقة'],
+            ['s2a.lbl', 'الكتلة الأولى — العنوان'],
+            ['s2a.p', 'الكتلة الأولى — النص', true],
+            ['s2b.lbl', 'الكتلة الثانية — العنوان'],
+            ['s2b.p', 'الكتلة الثانية — النص', true],
+          ],
+        },
+        {
+          id: 'warranty',
+          title: 'الكفالة',
+          hint: 'البطاقة الثالثة — كفالتان',
+          fields: [
+            ['s3.h2', 'عنوان البطاقة'],
+            ['w1.title', 'الكفالة الأولى — العنوان'],
+            ['w1.li1', 'الكفالة الأولى — البند 1', true],
+            ['w1.li2', 'الكفالة الأولى — البند 2', true],
+            ['w1.note', 'الكفالة الأولى — ملاحظة', true],
+            ['w2.title', 'الكفالة الثانية — العنوان'],
+            ['w2.li1', 'الكفالة الثانية — البند 1', true],
+            ['w2.li2', 'الكفالة الثانية — البند 2', true],
+          ],
+        },
+        {
+          id: 'nav',
+          title: 'شريط التنقّل',
+          hint: 'أسماء الأقسام في شريط أعلى الصفحة',
+          fields: [
+            ['nav.terms', 'رابط «البنود»'],
+            ['nav.post', 'رابط «ما بعد التركيب»'],
+            ['nav.warranty', 'رابط «الكفالة»'],
+          ],
+        },
+      ],
+    };
+  }
+
+  if (page === 'contactus') {
+    return {
+      prefix: 'cus',
+      specs: [
+        {
+          id: 'profile',
+          title: 'بطاقة التعريف',
+          hint: 'الاسم والنبذة أعلى الصفحة',
+          fields: [
+            ['back', 'رابط العودة'],
+            ['bio', 'النبذة', true],
+            ['status', 'حالة الاستقبال'],
+          ],
+        },
+        {
+          id: 'tiles',
+          title: 'وسائل التواصل',
+          hint: 'الأرقام نفسها في «إعدادات الموقع»',
+          fields: [
+            ['phone.lbl', 'تسمية الهاتف'],
+            ['wa.lbl', 'تسمية الواتساب'],
+            ['ig.lbl', 'تسمية انستجرام'],
+            ['loc.lbl', 'تسمية الموقع'],
+            ['loc.val', 'العنوان المكتوب'],
+          ],
+        },
+        {
+          id: 'hours',
+          title: 'ساعات العمل',
+          hint: 'المواعيد نفسها من إعدادات الدوام في الموارد البشرية',
+          fields: [
+            ['hours.h3', 'عنوان القسم'],
+            ['today', 'شارة «اليوم»'],
+            ['closed.day', 'نص يوم الإجازة'],
+            ['open.now', 'حالة «مفتوح»'],
+            ['closed.now', 'حالة «مغلق»'],
+            ['opens.in', 'يفتح بعد {h} ساعات'],
+            ['opens.on', 'يفتح {d}'],
+            ['day.sat', 'السبت'],
+            ['day.sun', 'الأحد'],
+            ['day.mon', 'الإثنين'],
+            ['day.tue', 'الثلاثاء'],
+            ['day.wed', 'الأربعاء'],
+            ['day.thu', 'الخميس'],
+            ['day.fri', 'الجمعة'],
+          ],
+        },
+        {
+          id: 'map',
+          title: 'الخريطة',
+          fields: [
+            ['map.h3', 'عنوان القسم'],
+            ['map.open', 'نص زر فتح الخرائط'],
+            ['map.addr', 'العنوان أسفل الخريطة', true],
+          ],
+        },
+      ],
+    };
+  }
+
+  if (page === 'accessories') {
+    return {
+      prefix: 'acc',
+      specs: [
+        {
+          id: 'hero',
+          title: 'رأس الصفحة',
+          fields: [
+            ['hero.tag', 'السطر العلوي الصغير'],
+            ['hero.h1', 'العنوان الرئيسي', true],
+            ['hero.p', 'الفقرة التعريفية', true],
+          ],
+        },
+        {
+          id: 'sections',
+          title: 'عناوين الأقسام',
+          hint: 'المنتجات نفسها تُدار من «المنتجات»',
+          fields: [
+            ['filter.all', 'زر التصفية «الكل»'],
+            ['nav.perfumes', 'قسم العطور — الزر'],
+            ['cat1.h2', 'قسم العطور — العنوان'],
+            ['nav.medals', 'قسم الميداليات — الزر'],
+            ['cat2.h2', 'قسم الميداليات — العنوان'],
+            ['nav.leather', 'قسم ميداليات الجلد — الزر'],
+            ['cat3.h2', 'قسم ميداليات الجلد — العنوان'],
+            ['cat.other', 'عنوان «منتجات أخرى»'],
+            ['count.unit', 'وحدة العدّ'],
+            ['prod.order', 'نص زر الطلب'],
+          ],
+        },
+        {
+          id: 'cta',
+          title: 'دعوة للتواصل',
+          hint: 'الشريط أسفل الصفحة',
+          fields: [
+            ['cta.h2', 'العنوان'],
+            ['cta.p', 'الوصف', true],
+            ['cta.contact', 'نص زر صفحة التواصل'],
+          ],
+        },
+      ],
+    };
+  }
+
+  return null;
+}
+
+/** كل مفاتيح صفحة من الصفحات الأخرى */
+export function pageContentKeys(page: string): string[] {
+  const found = otherGroupSpecs(page);
+  if (!found) return [];
+  return found.specs.flatMap((g) => g.fields.map(([suffix]) => `${found.prefix}.${suffix}`));
+}
+
+/** يقرأ محتوى صفحة من الصفحات الأخرى مجمّعاً في أقسام */
+export async function getPageContent(page: string): Promise<ContentGroup[]> {
+  const found = otherGroupSpecs(page);
+  if (!found) return [];
+
+  const { prefix, specs } = found;
+  const keys = specs.flatMap((g) => g.fields.map(([suffix]) => `${prefix}.${suffix}`));
+
+  const rows = await db.translation.findMany({
+    where: { key: { in: keys } },
+    select: { key: true, ar: true, en: true },
+  });
+  const byKey = new Map(rows.map((r) => [r.key, r]));
+
+  return specs
+    .map((g) => ({
+      id: g.id,
+      title: g.title,
+      hint: g.hint,
+      fields: g.fields
+        .filter(([suffix]) => byKey.has(`${prefix}.${suffix}`))
+        .map(([suffix, label, long]) => {
+          const key = `${prefix}.${suffix}`;
+          const row = byKey.get(key)!;
+          return { key, label, long: long ?? false, ar: row.ar, en: row.en ?? '' };
+        }),
+    }))
+    .filter((g) => g.fields.length > 0);
+}

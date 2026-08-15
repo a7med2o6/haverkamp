@@ -892,6 +892,11 @@ export function isMigratedSlug(slug: string): boolean {
   return MIGRATED_SLUGS.includes(slug);
 }
 
+/** هل بُني محرّر محتوى لهذه الصفحة في اللوحة؟ */
+export function hasContentEditor(slug: string): boolean {
+  return !!MIGRATED_SERVICES[slug] || !!MIGRATED_BRANDS[slug];
+}
+
 /**
  * كل مسارات الموقع التي يُصيّرها Next — تُبطَل عند تعديل المحتوى.
  * أي صفحة جديدة تُنقل من legacy تُضاف هنا وإلا بقيت تعرض نسخة قديمة.

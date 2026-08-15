@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { MIGRATED_SERVICES } from '@/lib/site-data';
+import { MIGRATED_BRANDS, MIGRATED_SERVICES } from '@/lib/site-data';
 
 /**
  * مخطّط محتوى صفحة الخدمة للتحرير.
@@ -141,20 +141,190 @@ function groupSpecs(slug: string): GroupSpec[] {
   return specs;
 }
 
+/**
+ * أقسام صفحة الماركة (هافركامب/كلايف/أيرون).
+ * الثلاث تتشارك البنية: نبذة وإحصائيات ومواصفات وباقات، وتختلف في
+ * وجود بطاقات «أنواع الحماية» وفي بنود الباقة الأولى.
+ */
+function brandGroupSpecs(slug: string): GroupSpec[] {
+  const config = MIGRATED_BRANDS[slug];
+  if (!config) return [];
+
+  const range = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+
+  const specs: GroupSpec[] = [
+    {
+      id: 'hero',
+      title: 'رأس الصفحة',
+      hint: 'العنوان الكبير ولوحة شعار الماركة',
+      fields: [
+        ['hero.tag', 'السطر العلوي الصغير'],
+        ['hero.h1', 'العنوان الرئيسي', true],
+        ['hero.sub', 'العنوان الفرعي'],
+        ['hero.p', 'الفقرة التعريفية', true],
+        ['hero.badge', 'شارة الشعار (بجوار العلم)'],
+        ['hero.bsub', 'سطر أسفل الشعار'],
+        ['tb1', 'شارة الثقة الأولى'],
+        ['tb2', 'شارة الثقة الثانية'],
+        ['tb3', 'شارة الثقة الثالثة'],
+      ],
+    },
+    {
+      id: 'about',
+      title: 'نبذة عن الماركة',
+      hint: 'الفقرات وأرقام الإحصائيات الثلاثة',
+      fields: [
+        ['about.tag', 'السطر العلوي'],
+        ['about.h2', 'عنوان القسم'],
+        ['about.p', 'وصف القسم', true],
+        ['about.p2', 'الفقرة الأولى', true],
+        ['about.p3', 'الفقرة الثانية', true],
+        ...range(3).flatMap<FieldSpec>((n) => [
+          [`st${n}.num`, `الإحصائية ${n} — الرقم`],
+          [`st${n}.lbl`, `الإحصائية ${n} — الشرح`, true],
+        ]),
+      ],
+    },
+    {
+      id: 'specs',
+      title: 'المواصفات التقنية',
+      hint: 'ست بطاقات: قيمة وشرح',
+      fields: [
+        ['specs.tag', 'السطر العلوي'],
+        ['specs.h2', 'عنوان القسم'],
+        ...range(6).flatMap<FieldSpec>((n) => [
+          [`sp${n}.val`, `المواصفة ${n} — القيمة`],
+          [`sp${n}.lbl`, `المواصفة ${n} — الشرح`, true],
+        ]),
+      ],
+    },
+  ];
+
+  if (config.finish) {
+    specs.push({
+      id: 'finish',
+      title: 'أنواع الحماية',
+      hint: 'ثلاث بطاقات بصور — شفاف ومطفي وتغيير لون',
+      fields: [
+        ['finish.tag', 'السطر العلوي'],
+        ['finish.h2', 'عنوان القسم'],
+        ...range(3).flatMap<FieldSpec>((n) => [
+          [`f${n}.h3`, `النوع ${n} — العنوان`],
+          [`f${n}.p`, `النوع ${n} — الشرح`, true],
+        ]),
+      ],
+    });
+  }
+
+  specs.push(
+    {
+      id: 'gallery',
+      title: 'معرض الأعمال',
+      hint: 'الصور نفسها تُدار من «معرض الصور»',
+      fields: [
+        ['gal.tag', 'السطر العلوي'],
+        ['gal.h2', 'عنوان القسم'],
+        ['gal.p', 'وصف القسم', true],
+      ],
+    },
+    {
+      id: 'packages',
+      title: 'الباقات والأسعار',
+      hint: 'ثلاث باقات — الأسعار قابلة للتعديل هنا',
+      fields: [
+        ['pkg.tag', 'السطر العلوي'],
+        ['pkg.h2', 'عنوان القسم'],
+        ['pkg.p', 'وصف القسم', true],
+        ['pkg1.badge', 'شارة الباقة الأولى'],
+        ['pkg.badge', 'شارة الباقة الأولى (بديل)'],
+        ['pkg.note', 'ملاحظة أسفل السعر'],
+        ['pkg.unit', 'وحدة السعر'],
+        ['pkg.wa', 'نص زر الطلب'],
+        ...range(3).flatMap<FieldSpec>((n) => [
+          [`pkg${n}.name`, `الباقة ${n} — الاسم`],
+          [`pkg${n}.price`, `الباقة ${n} — السعر`],
+        ]),
+        // بنود الباقات: المشتركة ثم الخاصة بكل باقة
+        ['p1f1', 'بند الباقة الأولى — الأول'],
+        ['p1f6', 'بند الباقة الأولى — تلبيس الدواسات'],
+        ['p1f8', 'بند الباقة الأولى — خدمة الونش'],
+        ['p2f1', 'بند الباقة الثانية — الأول'],
+        ['p3f1', 'بند الباقة الثالثة — الأول'],
+      ],
+    },
+    {
+      id: 'faq',
+      title: 'الأسئلة الشائعة',
+      hint: 'ستة أسئلة',
+      fields: [
+        ['faq.tag', 'السطر العلوي'],
+        ['faq.h2', 'عنوان القسم'],
+        ...range(6).flatMap<FieldSpec>((n) => [
+          [`faq.${n}.q`, `السؤال ${n}`],
+          [`faq.${n}.a`, `الإجابة ${n}`, true],
+        ]),
+      ],
+    },
+    {
+      id: 'cta',
+      title: 'دعوة للحجز',
+      hint: 'الشريط أسفل الصفحة',
+      fields: [
+        ['cta.h2', 'العنوان'],
+        ['cta.p', 'الوصف', true],
+        ['btn.book', 'نص الزر'],
+      ],
+    },
+    {
+      id: 'nav',
+      title: 'شريط التنقّل',
+      hint: 'أسماء الأقسام في شريط أعلى الصفحة',
+      fields: [
+        ['nav.about', 'رابط «نبذة»'],
+        ['nav.specs', 'رابط «المواصفات»'],
+        ['nav.packages', 'رابط «الباقات»'],
+      ],
+    }
+  );
+
+  // بنود الباقات المشتركة — تسمية مفاتيحها تختلف بين هافركامب والباقي
+  const featPrefix = slug === 'haverkamp' ? 'pkg.feat' : 'feat';
+  specs.find((g) => g.id === 'packages')!.fields.push(
+    [`${featPrefix}.tint`, 'بند مشترك — العازل الحراري'],
+    [`${featPrefix}.ws`, 'بند مشترك — حماية الجام'],
+    [`${featPrefix}.nano.seats`, 'بند مشترك — نانو المقاعد'],
+    [`${featPrefix}.nano.rims`, 'بند مشترك — نانو الرنجات'],
+    [`${featPrefix}.san`, 'بند مشترك — التعقيم']
+  );
+
+  return specs;
+}
+
+/** يختار مخطّط الأقسام حسب نوع الصفحة */
+function specsFor(slug: string): { prefix: string; specs: GroupSpec[] } | null {
+  if (MIGRATED_SERVICES[slug]) {
+    return { prefix: MIGRATED_SERVICES[slug].prefix, specs: groupSpecs(slug) };
+  }
+  if (MIGRATED_BRANDS[slug]) {
+    return { prefix: MIGRATED_BRANDS[slug].prefix, specs: brandGroupSpecs(slug) };
+  }
+  return null;
+}
+
 /** كل مفاتيح صفحة الخدمة بالترتيب الذي تظهر به */
 export function serviceContentKeys(slug: string): string[] {
-  const prefix = MIGRATED_SERVICES[slug]?.prefix;
-  if (!prefix) return [];
+  const found = specsFor(slug);
+  if (!found) return [];
 
-  return groupSpecs(slug).flatMap((g) => g.fields.map(([suffix]) => `${prefix}.${suffix}`));
+  return found.specs.flatMap((g) => g.fields.map(([suffix]) => `${found.prefix}.${suffix}`));
 }
 
 /** يقرأ محتوى صفحة الخدمة مجمّعاً في أقسام جاهزة للتحرير */
 export async function getServiceContent(slug: string): Promise<ContentGroup[]> {
-  const prefix = MIGRATED_SERVICES[slug]?.prefix;
-  if (!prefix) return [];
+  const found = specsFor(slug);
+  if (!found) return [];
 
-  const specs = groupSpecs(slug);
+  const { prefix, specs } = found;
   const keys = specs.flatMap((g) => g.fields.map(([suffix]) => `${prefix}.${suffix}`));
 
   const rows = await db.translation.findMany({
@@ -163,14 +333,19 @@ export async function getServiceContent(slug: string): Promise<ContentGroup[]> {
   });
   const byKey = new Map(rows.map((r) => [r.key, r]));
 
-  return specs.map((g) => ({
-    id: g.id,
-    title: g.title,
-    hint: g.hint,
-    fields: g.fields.map(([suffix, label, long]) => {
-      const key = `${prefix}.${suffix}`;
-      const row = byKey.get(key);
-      return { key, label, long: long ?? false, ar: row?.ar ?? '', en: row?.en ?? '' };
-    }),
-  }));
+  return specs
+    .map((g) => ({
+      id: g.id,
+      title: g.title,
+      hint: g.hint,
+      fields: g.fields
+        // المفاتيح البديلة تُعرَّف لكل الصفحات ولا توجد إلا في بعضها
+        .filter(([suffix]) => byKey.has(`${prefix}.${suffix}`))
+        .map(([suffix, label, long]) => {
+          const key = `${prefix}.${suffix}`;
+          const row = byKey.get(key)!;
+          return { key, label, long: long ?? false, ar: row.ar, en: row.en ?? '' };
+        }),
+    }))
+    .filter((g) => g.fields.length > 0);
 }

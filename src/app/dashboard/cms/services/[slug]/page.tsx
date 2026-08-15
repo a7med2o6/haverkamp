@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
-import { MIGRATED_SERVICES } from '@/lib/site-data';
+import { hasContentEditor } from '@/lib/site-data';
 import { getServiceContent } from '@/lib/service-content';
 import { ContentEditor } from './content-editor';
 
@@ -33,7 +33,7 @@ export default async function ServiceContentPage({
   const session = await requirePermission('cms:read');
   const { slug } = await params;
 
-  if (!MIGRATED_SERVICES[slug]) notFound();
+  if (!hasContentEditor(slug)) notFound();
 
   const [service, groups] = await Promise.all([
     db.service.findUnique({ where: { slug }, include: { translations: true } }),

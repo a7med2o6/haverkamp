@@ -8,7 +8,7 @@ import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MIGRATED_SERVICES, isMigratedSlug } from '@/lib/site-data';
+import { hasContentEditor, isMigratedSlug } from '@/lib/site-data';
 import { ServiceFormButton, ToggleServiceButton } from './service-form';
 
 export const metadata: Metadata = { title: 'الخدمات' };
@@ -59,7 +59,7 @@ export default async function CmsServicesPage() {
                 // الصفحة منقولة إلى Next (لم تعد ثابتة)
                 const migrated = isMigratedSlug(s.slug);
                 // ومحرّر المحتوى مبنيّ لها بعد
-                const editable = !!MIGRATED_SERVICES[s.slug];
+                const editable = hasContentEditor(s.slug);
 
                 return (
                   <Tr key={s.id}>

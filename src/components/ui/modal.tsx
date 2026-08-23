@@ -31,18 +31,28 @@ export function Modal({
   // نكتشف العميل بلقطة ثابتة بدل ضبط حالة داخل effect.
   const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
+  /**
+   * المنادي يمرّر onClose كدالة سهمية جديدة في كل رندر. لو اعتمد الـ effect
+   * عليها لأُعيد تشغيله مع كل ضغطة مفتاح، فيسحب التركيز من الحقل إلى النافذة
+   * ويضطر المستخدم للنقر على الحقل بعد كل حرف. نقرأها من ref بدل ذلك.
+   */
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCloseRef.current();
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
-    // نقل التركيز داخل النافذة لإمكانية الوصول
+    // نقل التركيز داخل النافذة لإمكانية الوصول — عند الفتح فقط
     panelRef.current?.focus();
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 

@@ -252,6 +252,61 @@ export const discardParkedOrder = action({
 //  تحصيل لاحق على فاتورة (الآجل والدفع الجزئي)
 // ═══════════════════════════════════════════════════════════
 
+/**
+ * خصم على مستوى الفاتورة — يعيد حساب الإجمالي والحالة.
+ * لا يُسمح بخصم ينزل بالإجمالي تحت ما حُصِّل فعلاً.
+ */
+export const setOrderDiscount = action({
+  permission: 'pos:write',
+  schema: z.object({
+    orderId: z.string(),
+    discountAmount: z.union([z.string(), z.number()]).transform(Number),
+    discountNote: optionalString,
+  }),
+  audit: { entity: 'Order', action: 'DISCOUNT' },
+  handler: async ({ orderId, discountAmount, discountNote }) => {
+    if (!Number.isFinite(discountAmount) || discountAmount < 0) {
+      throw new AppError('قيمة الخصم غير صالحة');
+    }
+
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: { subtotal: true, taxAmount: true, paidAmount: true, status: true, number: true },
+    });
+    if (!order) throw new AppError('الفاتورة غير موجودة');
+    if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
+      throw new AppError('لا يمكن تعديل خصم فاتورة ملغاة أو مرتجعة');
+    }
+
+    const discount = fils(discountAmount);
+    const subtotal = Number(order.subtotal);
+    if (discount > subtotal) throw new AppError('الخصم أكبر من قيمة الفاتورة');
+
+    const total = fils(subtotal - discount + Number(order.taxAmount));
+    const paid = Number(order.paidAmount);
+    if (total < paid) {
+      throw new AppError(`لا يمكن أن يقل الإجمالي عن المحصّل — ${paid.toFixed(3)} د.ك`);
+    }
+
+    await db.order.update({
+      where: { id: orderId },
+      data: {
+        discountAmount: discount,
+        discountNote,
+        total,
+        status: paid <= 0 ? 'DRAFT' : paid >= total ? 'COMPLETED' : 'PARTIAL',
+      },
+    });
+
+    revalidatePath(`/dashboard/invoices/${orderId}`);
+    revalidatePath('/dashboard/invoices');
+    return {
+      id: orderId,
+      message: discount > 0 ? `تم تسجيل خصم ${discount.toFixed(3)} د.ك` : 'تم إلغاء الخصم',
+    };
+  },
+});
+
 export const collectPayment = action({
   permission: 'pos:write',
   schema: z.object({

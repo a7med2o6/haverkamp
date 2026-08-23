@@ -12,6 +12,7 @@ import { ORDER_STATUS, PAYMENT_METHOD } from '@/lib/labels';
 import { formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { PrintButton } from './print-button';
 import { CollectPaymentButton } from './collect-button';
+import { DiscountButton } from './discount-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +72,16 @@ export default async function InvoiceDetailPage({
           العودة إلى الفواتير
         </Link>
         <div className="flex items-center gap-2">
+          {canCollect && (
+            <DiscountButton
+              orderId={order.id}
+              subtotal={toNumber(order.subtotal)}
+              taxAmount={toNumber(order.taxAmount)}
+              paidAmount={toNumber(order.paidAmount)}
+              discountAmount={toNumber(order.discountAmount)}
+              discountNote={order.discountNote ?? ''}
+            />
+          )}
           {canCollect && remaining > 0 && (
             <CollectPaymentButton orderId={order.id} remaining={remaining} />
           )}

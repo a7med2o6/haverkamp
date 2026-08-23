@@ -39,6 +39,53 @@ export const createJobOrder = action({
   },
 });
 
+export const updateJobOrder = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    id: z.string(),
+    vehicleId: optionalString,
+    odometer: optionalString,
+    promisedAt: optionalString,
+    intakeNotes: optionalString,
+    notes: optionalString,
+  }),
+  audit: { entity: 'JobOrder', action: 'UPDATE' },
+  handler: async ({ id, vehicleId, odometer, promisedAt, intakeNotes, notes }) => {
+    const job = await db.jobOrder.findUnique({ where: { id }, select: { customerId: true } });
+    if (!job) throw new AppError('أمر الشغل غير موجود');
+
+    if (vehicleId) {
+      const vehicle = await db.vehicle.findUnique({
+        where: { id: vehicleId },
+        select: { customerId: true },
+      });
+      if (!vehicle || vehicle.customerId !== job.customerId)
+        throw new AppError('السيارة لا تخصّ عميل هذا الأمر');
+    }
+
+    const km = odometer ? Number(odometer) : null;
+    if (km !== null && (!Number.isFinite(km) || km < 0)) throw new AppError('قراءة العداد غير صالحة');
+
+    const promised = promisedAt ? new Date(promisedAt) : null;
+    if (promised && Number.isNaN(promised.getTime())) throw new AppError('موعد التسليم غير صالح');
+
+    await db.jobOrder.update({
+      where: { id },
+      data: {
+        vehicleId: vehicleId || null,
+        odometer: km === null ? null : Math.round(km),
+        promisedAt: promised,
+        intakeNotes: intakeNotes ?? null,
+        notes: notes ?? null,
+      },
+    });
+
+    revalidatePath('/dashboard/job-orders');
+    revalidatePath(`/dashboard/job-orders/${id}`);
+    return { id, message: 'تم تحديث بيانات أمر الشغل' };
+  },
+});
+
 export const setJobStatus = action({
   permission: 'workshop:write',
   schema: z.object({
@@ -106,6 +153,71 @@ export const saveJobItem = action({
   },
 });
 
+/**
+ * يضيف باقة حماية كبند واحد مسعّر، وتحته محتوياتها كبنود بصفر
+ * يعلّم عليها الفني أولاً بأول. السعر قابل للتعديل لأنه يتغيّر حسب نوع السيارة.
+ */
+export const addJobPackage = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    jobOrderId: z.string(),
+    packageId: z.string(),
+    label: optionalString,
+    unitPrice: z.union([z.string(), z.number()]).transform(Number),
+  }),
+  audit: { entity: 'JobOrderItem', action: 'ADD_PACKAGE' },
+  handler: async ({ jobOrderId, packageId, label, unitPrice }) => {
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new AppError('السعر غير صالح');
+
+    const pkg = await db.servicePackage.findUnique({
+      where: { id: packageId },
+      include: {
+        service: {
+          include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
+        },
+        translations: { where: { locale: 'ar' }, select: { name: true, features: true } },
+      },
+    });
+
+    if (!pkg) throw new AppError('الباقة غير موجودة');
+
+    const serviceName = pkg.service.translations[0]?.name ?? pkg.service.slug;
+    const packageName = pkg.translations[0]?.name ?? 'باقة';
+    const price = fils(unitPrice);
+
+    await db.$transaction(async (tx) => {
+      const parent = await tx.jobOrderItem.create({
+        data: {
+          jobOrderId,
+          serviceId: pkg.serviceId,
+          label: label || `${serviceName} — ${packageName}`,
+          qty: 1,
+          unitPrice: price,
+          total: price,
+        },
+      });
+
+      const features = pkg.translations[0]?.features ?? [];
+      if (features.length > 0) {
+        await tx.jobOrderItem.createMany({
+          data: features.map((feature) => ({
+            jobOrderId,
+            parentId: parent.id,
+            serviceId: pkg.serviceId,
+            label: feature,
+            qty: 1,
+            unitPrice: 0,
+            total: 0,
+          })),
+        });
+      }
+    });
+
+    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    return { id: jobOrderId, message: `تمت إضافة ${packageName}` };
+  },
+});
+
 export const deleteJobItem = action({
   permission: 'workshop:write',
   schema: z.object({ id: z.string(), jobOrderId: z.string() }),
@@ -161,7 +273,8 @@ export const createInvoiceFromJob = action({
   handler: async ({ jobOrderId }, { userId }) => {
     const job = await db.jobOrder.findUnique({
       where: { id: jobOrderId },
-      include: { items: true, order: true },
+      // محتويات الباقات بنود متابعة داخلية بصفر — الفاتورة تأخذ الآباء فقط
+      include: { items: { where: { parentId: null } }, order: true },
     });
 
     if (!job) throw new AppError('أمر الشغل غير موجود');

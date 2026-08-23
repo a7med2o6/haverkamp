@@ -132,6 +132,34 @@ export function expiryStatus(date: Date | string | null | undefined): {
   return { days, tone: 'ok', label: 'سارية' };
 }
 
+/**
+ * حالة موعد تسليم موعود: متأخر / يستحق قريباً / ضمن الموعد.
+ * يرجع null حين لا داعي للتنبيه — بلا موعد، أو الشغل انتهى، أو باقي أكثر من يوم.
+ */
+export function dueStatus(
+  date: Date | string | null | undefined,
+  isActive = true
+): { tone: ExpiryTone; label: string } | null {
+  if (!date || !isActive) return null;
+
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return null;
+
+  const hours = Math.round((d.getTime() - Date.now()) / 3600000);
+
+  if (hours < 0) {
+    const late = Math.abs(hours);
+    return {
+      tone: 'danger',
+      label: late < 24 ? `متأخر ${late} ساعة` : `متأخر ${Math.floor(late / 24)} يوم`,
+    };
+  }
+  if (hours <= 24) {
+    return { tone: 'warn', label: hours <= 1 ? 'يستحق خلال ساعة' : `يستحق خلال ${hours} ساعة` };
+  }
+  return null;
+}
+
 /** يحوّل Date إلى صيغة <input type="datetime-local"> بالتوقيت المحلي */
 export function toLocalInput(d: Date | string): string {
   const date = typeof d === 'string' ? new Date(d) : d;

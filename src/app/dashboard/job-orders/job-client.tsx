@@ -3,12 +3,13 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FileText, Loader2, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { FileText, Loader2, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { JOB_STATUS, toOptions } from '@/lib/labels';
 import {
+  addJobPackage,
   assignTechnician,
   createInvoiceFromJob,
   createJobOrder,
@@ -17,6 +18,7 @@ import {
   saveJobItem,
   setJobStatus,
   toggleJobItemDone,
+  updateJobOrder,
 } from './actions';
 
 export function NewJobOrderButton({
@@ -183,35 +185,105 @@ export function JobStatusSelect({ id, status }: { id: string; status: string }) 
   );
 }
 
+const EMPTY_ITEM = {
+  packageId: '',
+  productId: '',
+  serviceId: '',
+  label: '',
+  qty: '1',
+  unitPrice: '',
+};
+
+export type ProtectionBrand = {
+  serviceId: string;
+  serviceName: string;
+  packages: Array<{ id: string; name: string; price: number; features: string[] }>;
+};
+
 export function JobItemForm({
   jobOrderId,
   products,
+  services,
+  protections,
 }: {
   jobOrderId: string;
   products: Array<{ id: string; nameAr: string; price: number }>;
+  services: Array<{ id: string; name: string; price: number | null }>;
+  protections: ProtectionBrand[];
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [values, setValues] = useState({ productId: '', label: '', qty: '1', unitPrice: '' });
+  const [values, setValues] = useState(EMPTY_ITEM);
 
-  function pickProduct(id: string) {
-    const p = products.find((x) => x.id === id);
-    setValues((v) => ({
-      ...v,
-      productId: id,
-      label: p?.nameAr ?? v.label,
-      unitPrice: p ? String(p.price) : v.unitPrice,
-    }));
+  /** مفتاح موحّد للقائمة الواحدة: `k:` باقة، `s:` خدمة، `p:` صنف */
+  const picked = values.packageId
+    ? `k:${values.packageId}`
+    : values.serviceId
+      ? `s:${values.serviceId}`
+      : values.productId
+        ? `p:${values.productId}`
+        : '';
+
+  const pickedPackage = values.packageId
+    ? protections.flatMap((b) => b.packages).find((p) => p.id === values.packageId)
+    : undefined;
+
+  function pick(key: string) {
+    const [kind, id] = key.split(':');
+
+    if (kind === 'k') {
+      const brand = protections.find((b) => b.packages.some((p) => p.id === id));
+      const pkg = brand?.packages.find((p) => p.id === id);
+      setValues((v) => ({
+        ...v,
+        packageId: id,
+        serviceId: '',
+        productId: '',
+        qty: '1',
+        label: brand && pkg ? `${brand.serviceName} — ${pkg.name}` : v.label,
+        unitPrice: pkg ? String(pkg.price) : v.unitPrice,
+      }));
+    } else if (kind === 's') {
+      const s = services.find((x) => x.id === id);
+      setValues((v) => ({
+        ...v,
+        serviceId: id,
+        packageId: '',
+        productId: '',
+        label: s?.name ?? v.label,
+        unitPrice: s?.price != null ? String(s.price) : v.unitPrice,
+      }));
+    } else if (kind === 'p') {
+      const p = products.find((x) => x.id === id);
+      setValues((v) => ({
+        ...v,
+        productId: id,
+        packageId: '',
+        serviceId: '',
+        label: p?.nameAr ?? v.label,
+        unitPrice: p ? String(p.price) : v.unitPrice,
+      }));
+    } else {
+      setValues((v) => ({ ...v, packageId: '', productId: '', serviceId: '' }));
+    }
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await saveJobItem({ jobOrderId, ...values });
+      const res = values.packageId
+        ? await addJobPackage({
+            jobOrderId,
+            packageId: values.packageId,
+            label: values.label,
+            unitPrice: values.unitPrice,
+          })
+        : await saveJobItem({ jobOrderId, ...values });
+
       if (res.ok) {
         toast.success(res.message ?? 'تم');
-        setValues({ productId: '', label: '', qty: '1', unitPrice: '' });
+        setValues(EMPTY_ITEM);
         setOpen(false);
         router.refresh();
       } else {
@@ -245,16 +317,52 @@ export function JobItemForm({
           }
         >
           <form id="job-item-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="اختر من الأصناف" className="sm:col-span-2">
-              <Select value={values.productId} onChange={(e) => pickProduct(e.target.value)}>
+            <Field label="اختر باقة حماية أو خدمة أو صنفاً" className="sm:col-span-2">
+              <Select value={picked} onChange={(e) => pick(e.target.value)}>
                 <option value="">— بند مخصّص —</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nameAr}
-                  </option>
+                {protections.map((brand) => (
+                  <optgroup key={brand.serviceId} label={brand.serviceName}>
+                    {brand.packages.map((p) => (
+                      <option key={p.id} value={`k:${p.id}`}>
+                        {p.name}
+                        {p.price > 0 ? ` — من ${p.price} د.ك` : ''}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
+                {services.length > 0 && (
+                  <optgroup label="خدمات أخرى">
+                    {services.map((s) => (
+                      <option key={s.id} value={`s:${s.id}`}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {products.length > 0 && (
+                  <optgroup label="الأصناف">
+                    {products.map((p) => (
+                      <option key={p.id} value={`p:${p.id}`}>
+                        {p.nameAr}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </Select>
             </Field>
+
+            {pickedPackage && pickedPackage.features.length > 0 && (
+              <div className="rounded-[var(--radius-sm)] border border-accent/30 bg-accent/10 p-3 sm:col-span-2">
+                <p className="mb-1.5 text-[11px] font-semibold text-accent-soft">
+                  تشمل الباقة — تُضاف كبنود متابعة يعلّم عليها الفني
+                </p>
+                <ul className="space-y-1 text-[12px] text-[var(--text-1)]">
+                  {pickedPackage.features.map((f) => (
+                    <li key={f}>• {f}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <Field label="وصف البند" className="sm:col-span-2">
               <Input
@@ -264,7 +372,7 @@ export function JobItemForm({
               />
             </Field>
 
-            <Field label="الكمية">
+            <Field label="الكمية" hint={pickedPackage ? 'الباقة وحدة واحدة' : undefined}>
               <Input
                 type="number"
                 step="0.01"
@@ -273,11 +381,15 @@ export function JobItemForm({
                 onChange={(e) => setValues((v) => ({ ...v, qty: e.target.value }))}
                 dir="ltr"
                 className="tnum text-start"
+                disabled={!!pickedPackage}
                 required
               />
             </Field>
 
-            <Field label="سعر الوحدة (د.ك)">
+            <Field
+              label="سعر الوحدة (د.ك)"
+              hint={pickedPackage ? 'السعر يتغيّر حسب نوع السيارة — عدّله عند الحاجة' : undefined}
+            >
               <Input
                 type="number"
                 step="0.001"
@@ -287,6 +399,126 @@ export function JobItemForm({
                 dir="ltr"
                 className="tnum text-start"
                 required
+              />
+            </Field>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+export function EditJobOrderButton({
+  job,
+  vehicles,
+}: {
+  job: {
+    id: string;
+    vehicleId: string;
+    odometer: string;
+    promisedAt: string;
+    intakeNotes: string;
+    notes: string;
+  };
+  vehicles: Array<{ id: string; label: string }>;
+}) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [values, setValues] = useState(job);
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    startTransition(async () => {
+      const res = await updateJobOrder(values);
+      if (res.ok) {
+        toast.success(res.message ?? 'تم');
+        setOpen(false);
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => {
+          setValues(job);
+          setOpen(true);
+        }}
+      >
+        <Pencil />
+        تعديل البيانات
+      </Button>
+      {open && (
+        <Modal
+          open
+          onClose={() => setOpen(false)}
+          title="تعديل بيانات أمر الشغل"
+          size="lg"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button type="submit" form="job-edit-form" disabled={pending}>
+                {pending && <Loader2 className="animate-spin" />}
+                حفظ
+              </Button>
+            </>
+          }
+        >
+          <form id="job-edit-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
+            <Field label="السيارة">
+              <Select
+                value={values.vehicleId}
+                onChange={(e) => setValues((v) => ({ ...v, vehicleId: e.target.value }))}
+              >
+                <option value="">— بدون سيارة محدّدة —</option>
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field label="قراءة العداد (كم)">
+              <Input
+                type="number"
+                min={0}
+                value={values.odometer}
+                onChange={(e) => setValues((v) => ({ ...v, odometer: e.target.value }))}
+                dir="ltr"
+                className="tnum text-start"
+              />
+            </Field>
+
+            <Field label="موعد التسليم المتوقّع" className="sm:col-span-2">
+              <Input
+                type="datetime-local"
+                value={values.promisedAt}
+                onChange={(e) => setValues((v) => ({ ...v, promisedAt: e.target.value }))}
+                dir="ltr"
+                className="tnum text-start"
+              />
+            </Field>
+
+            <Field label="ملاحظات الاستلام" className="sm:col-span-2">
+              <Textarea
+                value={values.intakeNotes}
+                onChange={(e) => setValues((v) => ({ ...v, intakeNotes: e.target.value }))}
+              />
+            </Field>
+
+            <Field label="ملاحظات داخلية" className="sm:col-span-2">
+              <Textarea
+                value={values.notes}
+                onChange={(e) => setValues((v) => ({ ...v, notes: e.target.value }))}
               />
             </Field>
           </form>

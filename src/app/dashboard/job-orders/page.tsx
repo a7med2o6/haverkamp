@@ -10,7 +10,7 @@ import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge';
 import { JOB_STATUS } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
-import { cn, formatDate, formatKWD, toNumber } from '@/lib/utils';
+import { cn, dueStatus, formatDate, formatKWD, toNumber } from '@/lib/utils';
 import { NewJobOrderButton } from './job-client';
 
 export const metadata: Metadata = { title: 'أوامر الشغل' };
@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
 
 const FILTERS = [
   { key: 'active', label: 'الجارية' },
+  { key: 'late', label: 'متأخرة' },
   { key: 'READY', label: 'جاهزة للتسليم' },
   { key: 'DELIVERED', label: 'مُسلَّمة' },
   { key: 'all', label: 'الكل' },
@@ -35,9 +36,14 @@ export default async function JobOrdersPage({
   const where: Prisma.JobOrderWhereInput =
     filter === 'active'
       ? { status: { in: ['RECEIVED', 'IN_PROGRESS', 'QUALITY_CHECK'] } }
-      : filter === 'all'
-        ? {}
-        : { status: filter as keyof typeof JOB_STATUS };
+      : filter === 'late'
+        ? {
+            status: { in: ['RECEIVED', 'IN_PROGRESS', 'QUALITY_CHECK', 'READY'] },
+            promisedAt: { lt: new Date() },
+          }
+        : filter === 'all'
+          ? {}
+          : { status: filter as keyof typeof JOB_STATUS };
 
   const [jobs, total, customers] = await Promise.all([
     db.jobOrder.findMany({
@@ -134,6 +140,10 @@ export default async function JobOrdersPage({
               jobs.map((j) => {
                 const value = j.items.reduce((s, i) => s + toNumber(i.total), 0);
                 const done = j.items.filter((i) => i.isDone).length;
+                const due = dueStatus(
+                  j.promisedAt,
+                  j.status !== 'DELIVERED' && j.status !== 'CANCELLED'
+                );
                 return (
                   <Tr key={j.id}>
                     <Td className="tnum" dir="ltr">
@@ -171,7 +181,10 @@ export default async function JobOrdersPage({
                     </Td>
                     <Td className="tnum text-[12px]">{formatDate(j.receivedAt)}</Td>
                     <Td>
-                      <Badge tone={JOB_STATUS[j.status].tone}>{JOB_STATUS[j.status].label}</Badge>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <Badge tone={JOB_STATUS[j.status].tone}>{JOB_STATUS[j.status].label}</Badge>
+                        {due && <Badge tone={due.tone}>{due.label}</Badge>}
+                      </div>
                     </Td>
                     <Td className="tnum text-[12px]" dir="ltr">
                       {j.order ? (

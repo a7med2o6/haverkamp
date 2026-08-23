@@ -838,6 +838,13 @@ model JobOrderItem {
   total      Decimal  @db.Decimal(14, 3)
   isDone     Boolean  @default(false)
 
+  // بنود الباقة: البند الأب يحمل السعر، وأبناؤه محتويات الباقة بصفر
+  // يعلّم عليها الفني أولاً بأول. الفاتورة تأخذ الآباء فقط.
+  parentId String?
+  parent   JobOrderItem?  @relation("JobItemChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children JobOrderItem[] @relation("JobItemChildren")
+
+  @@index([parentId])
   @@map("job_order_items")
 }
 

@@ -9,10 +9,11 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { JOB_STATUS } from '@/lib/labels';
-import { formatDate, formatDateTime, formatKWD, toNumber } from '@/lib/utils';
+import { dueStatus, formatDate, formatDateTime, formatKWD, toLocalInput, toNumber } from '@/lib/utils';
 import {
   AssigneePicker,
   CreateInvoiceButton,
+  EditJobOrderButton,
   IssueWarrantyButton,
   JobItemActions,
   JobItemForm,
@@ -43,7 +44,11 @@ export default async function JobOrderDetailPage({
     db.jobOrder.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: {
+          include: {
+            vehicles: { select: { id: true, make: true, model: true, plateNo: true } },
+          },
+        },
         vehicle: true,
         items: { orderBy: { id: 'asc' } },
         assignees: true,
@@ -65,7 +70,16 @@ export default async function JobOrderDetailPage({
     db.service.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },
-      include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
+      include: {
+        translations: { where: { locale: 'ar' }, select: { name: true } },
+        packages: {
+          where: { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            translations: { where: { locale: 'ar' }, select: { name: true, features: true } },
+          },
+        },
+      },
     }),
   ]);
 
@@ -76,10 +90,41 @@ export default async function JobOrderDetailPage({
   const canWarranty = can(session.user.role, 'crm:write');
 
   const totalValue = job.items.reduce((s, i) => s + toNumber(i.total), 0);
+
+  // بنود الباقات تُعرض متداخلة: الأب المسعّر ثم محتوياته كتشيك لست
+  const parentItems = job.items.filter((i) => i.parentId === null);
+  const childrenOf = new Map<string, typeof job.items>();
+  for (const item of job.items) {
+    if (!item.parentId) continue;
+    childrenOf.set(item.parentId, [...(childrenOf.get(item.parentId) ?? []), item]);
+  }
+
   const serviceOptions = services.map((s) => ({
     id: s.id,
     name: s.translations[0]?.name ?? s.slug,
+    price: null,
   }));
+
+  // الخدمات ذات الباقات تُعرض كمجموعات ماركات، والباقي كخدمات مفردة
+  const protections = services
+    .filter((s) => s.packages.length > 0)
+    .map((s) => ({
+      serviceId: s.id,
+      serviceName: s.translations[0]?.name ?? s.slug,
+      packages: s.packages.map((p) => ({
+        id: p.id,
+        name: p.translations[0]?.name ?? 'باقة',
+        price: toNumber(p.price),
+        features: p.translations[0]?.features ?? [],
+      })),
+    }));
+
+  const plainServices = serviceOptions.filter(
+    (s) => !protections.some((b) => b.serviceId === s.id)
+  );
+
+  const isActive = job.status !== 'DELIVERED' && job.status !== 'CANCELLED';
+  const due = dueStatus(job.promisedAt, isActive);
 
   return (
     <>
@@ -98,6 +143,7 @@ export default async function JobOrderDetailPage({
               {job.number}
             </h1>
             <Badge tone={JOB_STATUS[job.status].tone}>{JOB_STATUS[job.status].label}</Badge>
+            {due && <Badge tone={due.tone}>{due.label}</Badge>}
             {job.booking && <Badge tone="accent">من الحجز {job.booking.code}</Badge>}
           </div>
           <p className="mt-1 text-[13px] text-[var(--text-2)]">
@@ -108,6 +154,22 @@ export default async function JobOrderDetailPage({
 
         <div className="flex flex-wrap items-center gap-2">
           {canWrite && <JobStatusSelect id={job.id} status={job.status} />}
+          {canWrite && (
+            <EditJobOrderButton
+              job={{
+                id: job.id,
+                vehicleId: job.vehicleId ?? '',
+                odometer: job.odometer != null ? String(job.odometer) : '',
+                promisedAt: job.promisedAt ? toLocalInput(job.promisedAt) : '',
+                intakeNotes: job.intakeNotes ?? '',
+                notes: job.notes ?? '',
+              }}
+              vehicles={job.customer.vehicles.map((v) => ({
+                id: v.id,
+                label: `${v.make} ${v.model}${v.plateNo ? ` — ${v.plateNo}` : ''}`,
+              }))}
+            />
+          )}
           {canInvoice && !job.order && job.items.length > 0 && (
             <CreateInvoiceButton jobOrderId={job.id} />
           )}
@@ -165,6 +227,14 @@ export default async function JobOrderDetailPage({
                 </p>
               </div>
             )}
+            {job.notes && (
+              <div className="rounded-[var(--radius-sm)] border border-[var(--line)] p-3">
+                <p className="mb-1 text-[11px] font-semibold text-[var(--text-2)]">
+                  ملاحظات داخلية
+                </p>
+                <p className="text-[12px] leading-relaxed text-[var(--text-1)]">{job.notes}</p>
+              </div>
+            )}
           </CardBody>
         </Card>
 
@@ -172,7 +242,14 @@ export default async function JobOrderDetailPage({
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>بنود الشغل — {formatKWD(totalValue)}</CardTitle>
-            {canWrite && <JobItemForm jobOrderId={job.id} products={products.map((p) => ({ ...p, price: toNumber(p.price) }))} />}
+            {canWrite && (
+              <JobItemForm
+                jobOrderId={job.id}
+                products={products.map((p) => ({ ...p, price: toNumber(p.price) }))}
+                services={plainServices}
+                protections={protections}
+              />
+            )}
           </CardHeader>
           <TableWrap className="rounded-none border-0">
             <Table>
@@ -186,14 +263,14 @@ export default async function JobOrderDetailPage({
                 </tr>
               </thead>
               <tbody>
-                {job.items.length === 0 ? (
+                {parentItems.length === 0 ? (
                   <EmptyState
                     title="لا توجد بنود"
-                    description="أضف الخدمات والقطع المطلوبة لهذا الأمر"
+                    description="أضف باقة حماية أو الخدمات والقطع المطلوبة"
                     colSpan={5}
                   />
                 ) : (
-                  job.items.map((item) => (
+                  parentItems.flatMap((item) => [
                     <Tr key={item.id}>
                       <Td
                         className={
@@ -216,8 +293,34 @@ export default async function JobOrderDetailPage({
                           />
                         </Td>
                       )}
-                    </Tr>
-                  ))
+                    </Tr>,
+                    ...(childrenOf.get(item.id) ?? []).map((child) => (
+                      <Tr key={child.id}>
+                        <Td
+                          className={
+                            child.isDone
+                              ? 'ps-8 text-[12px] text-[var(--text-2)] line-through'
+                              : 'ps-8 text-[12px] text-[var(--text-1)]'
+                          }
+                        >
+                          <span className="text-[var(--text-2)]">└ </span>
+                          {child.label}
+                        </Td>
+                        <Td className="text-[var(--text-2)]">—</Td>
+                        <Td className="text-[var(--text-2)]">—</Td>
+                        <Td className="text-[11px] text-[var(--text-2)]">ضمن الباقة</Td>
+                        {canWrite && (
+                          <Td>
+                            <JobItemActions
+                              id={child.id}
+                              jobOrderId={job.id}
+                              isDone={child.isDone}
+                            />
+                          </Td>
+                        )}
+                      </Tr>
+                    )),
+                  ])
                 )}
               </tbody>
             </Table>

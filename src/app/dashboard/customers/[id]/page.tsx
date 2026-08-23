@@ -8,8 +8,8 @@ import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { CUSTOMER_SOURCE, JOB_STATUS, ORDER_STATUS } from '@/lib/labels';
-import { formatDate, formatKWD, toNumber } from '@/lib/utils';
+import { BOOKING_STATUS, CUSTOMER_SOURCE, JOB_STATUS, ORDER_STATUS } from '@/lib/labels';
+import { expiryStatus, formatDate, formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { CustomerFormButton } from '../customer-form';
 import { VehicleFormButton, DeleteVehicleButton } from './vehicle-form';
 
@@ -49,14 +49,53 @@ export default async function CustomerDetailPage({
         orderBy: { createdAt: 'desc' },
         take: 10,
       },
+      bookings: {
+        orderBy: { scheduledAt: 'desc' },
+        take: 10,
+        include: {
+          service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
+          jobOrder: { select: { id: true, number: true } },
+        },
+      },
     },
   });
 
   if (!customer) notFound();
 
+  /**
+   * الإجماليات من تجميع على كل الفواتير لا من العشرة المعروضة —
+   * جمعها من الشريحة يعطي رقماً يزداد خطأً كلما زاد تعامل العميل.
+   */
+  const [money, visits, lastVisit, warranties] = await Promise.all([
+    db.order.aggregate({
+      where: { customerId: id, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+      _sum: { total: true, paidAmount: true },
+      _count: true,
+    }),
+    db.jobOrder.count({ where: { customerId: id, status: { not: 'CANCELLED' } } }),
+    db.jobOrder.findFirst({
+      where: { customerId: id, status: { not: 'CANCELLED' } },
+      orderBy: { receivedAt: 'desc' },
+      select: { receivedAt: true },
+    }),
+    db.warranty.findMany({
+      where: { vehicle: { customerId: id } },
+      orderBy: { endDate: 'desc' },
+      include: {
+        vehicle: { select: { make: true, model: true, plateNo: true } },
+        service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
+      },
+    }),
+  ]);
+
   const canWrite = can(session.user.role, 'crm:write');
   const canDelete = can(session.user.role, 'crm:delete');
-  const totalSpent = customer.orders.reduce((sum, o) => sum + toNumber(o.paidAmount), 0);
+
+  const invoiced = toNumber(money._sum.total ?? 0);
+  const totalSpent = toNumber(money._sum.paidAmount ?? 0);
+  const outstanding = Math.round((invoiced - totalSpent) * 1000) / 1000;
+  const avgInvoice = money._count > 0 ? Math.round((invoiced / money._count) * 1000) / 1000 : 0;
+
   const waNumber = customer.phone.replace(/[^\d]/g, '');
 
   return (
@@ -100,6 +139,21 @@ export default async function CustomerDetailPage({
             }}
           />
         )}
+      </div>
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Metric label="عدد الزيارات" value={String(visits)} />
+        <Metric
+          label="آخر زيارة"
+          value={lastVisit ? formatDate(lastVisit.receivedAt) : '—'}
+          hint={lastVisit ? sinceLabel(lastVisit.receivedAt) : 'لم يزر بعد'}
+        />
+        <Metric label="متوسط الفاتورة" value={formatKWD(avgInvoice)} />
+        <Metric
+          label={outstanding > 0 ? 'مستحق عليه' : 'إجمالي المدفوع'}
+          value={formatKWD(outstanding > 0 ? outstanding : totalSpent)}
+          tone={outstanding > 0 ? 'danger' : 'ok'}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -148,6 +202,12 @@ export default async function CustomerDetailPage({
             <InfoRow label="إجمالي المدفوع">
               <span className="tnum font-semibold text-ok">{formatKWD(totalSpent)}</span>
             </InfoRow>
+
+            {outstanding > 0 && (
+              <InfoRow label="مستحق عليه">
+                <span className="tnum font-semibold text-danger">{formatKWD(outstanding)}</span>
+              </InfoRow>
+            )}
 
             {customer.notes && (
               <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] p-3">
@@ -326,9 +386,140 @@ export default async function CustomerDetailPage({
             </TableWrap>
           </Card>
         )}
+
+        {/* ── الحجوزات ── */}
+        {customer.bookings.length > 0 && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>الحجوزات</CardTitle>
+            </CardHeader>
+            <TableWrap className="rounded-none border-0">
+              <Table>
+                <thead>
+                  <tr>
+                    <Th>الكود</Th>
+                    <Th>الموعد</Th>
+                    <Th>الخدمة</Th>
+                    <Th>الحالة</Th>
+                    <Th>أمر الشغل</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customer.bookings.map((b) => (
+                    <Tr key={b.id}>
+                      <Td className="tnum text-[12px]" dir="ltr">
+                        {b.code}
+                      </Td>
+                      <Td className="tnum text-[12px]">{formatDateTime(b.scheduledAt)}</Td>
+                      <Td className="text-[12px]">
+                        {b.service?.translations[0]?.name ?? '—'}
+                      </Td>
+                      <Td>
+                        <Badge tone={BOOKING_STATUS[b.status].tone}>
+                          {BOOKING_STATUS[b.status].label}
+                        </Badge>
+                      </Td>
+                      <Td className="tnum text-[12px]" dir="ltr">
+                        {b.jobOrder ? (
+                          <Link
+                            href={`/dashboard/job-orders/${b.jobOrder.id}`}
+                            className="text-accent hover:underline"
+                          >
+                            {b.jobOrder.number}
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </Td>
+                    </Tr>
+                  ))}
+                </tbody>
+              </Table>
+            </TableWrap>
+          </Card>
+        )}
+
+        {/* ── الكفالات ── */}
+        {warranties.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>الكفالات ({warranties.length})</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <ul className="space-y-2.5">
+                {warranties.map((w) => {
+                  const status = expiryStatus(w.endDate);
+                  return (
+                    <li
+                      key={w.id}
+                      className="rounded-[var(--radius-sm)] border border-[var(--line)] p-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <Link
+                          href={`/dashboard/warranties/${w.id}`}
+                          className="tnum text-[13px] font-semibold text-accent hover:underline"
+                          dir="ltr"
+                        >
+                          {w.certificateNo}
+                        </Link>
+                        {w.isVoid ? (
+                          <Badge tone="danger">ملغاة</Badge>
+                        ) : (
+                          <Badge tone={status.tone === 'neutral' ? 'neutral' : status.tone}>
+                            {status.label}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[12px] text-[var(--text-2)]">
+                        {w.service?.translations[0]?.name ?? 'كفالة عامة'} —{' '}
+                        {w.vehicle.make} {w.vehicle.model}
+                      </p>
+                      <p className="tnum text-[11px] text-[var(--text-2)]">
+                        حتى {formatDate(w.endDate)}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </CardBody>
+          </Card>
+        )}
       </div>
     </>
   );
+}
+
+/** مؤشر مختصر في شريط أعلى الملف */
+function Metric({
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: 'ok' | 'danger';
+}) {
+  const color = tone === 'ok' ? 'text-ok' : tone === 'danger' ? 'text-danger' : 'text-[var(--text-0)]';
+  return (
+    <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-3">
+      <p className="text-[11px] text-[var(--text-2)]">{label}</p>
+      <p className={`tnum text-base font-bold ${color}`}>{value}</p>
+      {hint && <p className="text-[11px] text-[var(--text-2)]">{hint}</p>}
+    </div>
+  );
+}
+
+/** «منذ ٣ أشهر» — لقراءة آخر زيارة بلمحة */
+function sinceLabel(date: Date) {
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+  if (days <= 0) return 'اليوم';
+  if (days === 1) return 'أمس';
+  if (days < 30) return `منذ ${days} يوم`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `منذ ${months} شهر`;
+  return `منذ ${Math.floor(months / 12)} سنة`;
 }
 
 function InfoRow({

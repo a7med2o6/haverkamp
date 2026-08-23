@@ -287,11 +287,9 @@ export const MIGRATED_BRANDS: Record<string, BrandConfig> = {
         'pkg.feat.nano.seats',
         'pkg.feat.nano.rims',
         'p1f6',
-        'pkg.feat.san',
-        'p1f8',
       ],
-      ['p2f1', 'pkg.feat.tint', 'pkg.feat.ws', 'pkg.feat.nano.seats', 'pkg.feat.nano.rims', 'pkg.feat.san'],
-      ['p3f1', 'pkg.feat.tint', 'pkg.feat.ws', 'pkg.feat.nano.seats', 'pkg.feat.nano.rims', 'pkg.feat.san'],
+      ['p2f1', 'pkg.feat.tint', 'pkg.feat.ws'],
+      ['p3f1', 'pkg.feat.tint'],
     ],
   },
 
@@ -308,9 +306,9 @@ export const MIGRATED_BRANDS: Record<string, BrandConfig> = {
     packageStyle: 'head',
     tiers: [],
     packageFeatures: [
-      ['p1f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'p1f6', 'feat.san', 'p1f8'],
-      ['p2f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'feat.san'],
-      ['p3f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'feat.san'],
+      ['p1f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'p1f6'],
+      ['p2f1', 'feat.tint', 'feat.ws'],
+      ['p3f1', 'feat.tint'],
     ],
   },
 
@@ -327,9 +325,9 @@ export const MIGRATED_BRANDS: Record<string, BrandConfig> = {
     packageStyle: 'tier',
     tiers: ['PLATINUM', 'GOLD', 'SILVER'],
     packageFeatures: [
-      ['p1f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'p1f6', 'feat.san', 'p1f8'],
-      ['p2f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'feat.san'],
-      ['p3f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'feat.san'],
+      ['p1f1', 'feat.tint', 'feat.ws', 'feat.nano.seats', 'feat.nano.rims', 'p1f6'],
+      ['p2f1', 'feat.tint', 'feat.ws'],
+      ['p3f1', 'feat.tint'],
     ],
   },
 };

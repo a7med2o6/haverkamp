@@ -3,12 +3,12 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Ban, HandCoins, Loader2, Pencil, Plus } from 'lucide-react';
+import { Ban, HandCoins, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { formatKWD } from '@/lib/utils';
-import { repayAdvance, saveAdvance, setAdvanceStatus } from '../actions';
+import { deleteRepayment, repayAdvance, saveAdvance, setAdvanceStatus } from '../actions';
 
 export interface AdvanceValues {
   id?: string;
@@ -198,22 +198,39 @@ export function AdvanceFormButton({
   );
 }
 
+/** تاريخ اليوم المحلي بصيغة <input type="date"> */
+function today() {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function RepayButton({
   advanceId,
   remaining,
+  monthlyDeduction,
 }: {
   advanceId: string;
   remaining: number;
+  monthlyDeduction: number;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [amount, setAmount] = useState(String(remaining.toFixed(3)));
   const [note, setNote] = useState('');
+  const [paidAt, setPaidAt] = useState(today());
+
+  /** الافتراضي قسط واحد لا كامل المتبقي — إقفال السلفة يجب أن يكون اختياراً صريحاً */
+  const installment = Math.min(monthlyDeduction, remaining);
+  const [amount, setAmount] = useState(installment.toFixed(3));
+
+  const entered = Number(amount) || 0;
+  const left = Math.round((remaining - entered) * 1000) / 1000;
+  const willSettle = entered > 0 && left <= 0;
 
   function submit() {
     startTransition(async () => {
-      const res = await repayAdvance({ advanceId, amount, note });
+      const res = await repayAdvance({ advanceId, amount, paidAt, note });
       if (res.ok) {
         toast.success(res.message ?? 'تم');
         setOpen(false);
@@ -226,7 +243,17 @@ export function RepayButton({
 
   return (
     <>
-      <Button variant="success" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        variant="success"
+        size="sm"
+        onClick={() => {
+          // نعيد الضبط عند كل فتح — المتبقي يتغيّر بعد كل سداد
+          setAmount(installment.toFixed(3));
+          setPaidAt(today());
+          setNote('');
+          setOpen(true);
+        }}
+      >
         <HandCoins />
         سداد
       </Button>
@@ -263,6 +290,35 @@ export function RepayButton({
                 autoFocus
               />
             </Field>
+
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setAmount(installment.toFixed(3))}
+                className="tnum rounded-full border border-[var(--line)] px-3 py-1.5 text-[12px] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]"
+              >
+                قسط شهري — {formatKWD(installment)}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAmount(remaining.toFixed(3))}
+                className="tnum rounded-full border border-[var(--line)] px-3 py-1.5 text-[12px] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]"
+              >
+                كامل المتبقي — {formatKWD(remaining)}
+              </button>
+            </div>
+
+            <Field label="تاريخ السداد" hint="اليوم الذي استُلم فيه المبلغ فعلاً">
+              <Input
+                type="date"
+                value={paidAt}
+                max={today()}
+                onChange={(e) => setPaidAt(e.target.value)}
+                dir="ltr"
+                className="tnum text-start"
+              />
+            </Field>
+
             <Field label="ملاحظة">
               <Input
                 value={note}
@@ -270,6 +326,19 @@ export function RepayButton({
                 placeholder="سداد نقدي…"
               />
             </Field>
+
+            {entered > 0 &&
+              (willSettle ? (
+                <div className="rounded-[var(--radius-sm)] border border-warn/30 bg-warn/10 px-3.5 py-2.5 text-[13px] font-semibold text-warn">
+                  ⚠ هذا المبلغ يُقفل السلفة بالكامل ويحوّل حالتها إلى «مسدّدة»
+                </div>
+              ) : (
+                <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2.5 text-[13px]">
+                  <span className="text-[var(--text-2)]">سيبقى </span>
+                  <span className="tnum font-bold text-[var(--text-0)]">{formatKWD(left)}</span>
+                  <span className="text-[var(--text-2)]"> بعد هذا السداد</span>
+                </div>
+              ))}
           </div>
         </Modal>
       )}
@@ -326,6 +395,65 @@ export function CancelAdvanceButton({ id }: { id: string }) {
         >
           <p className="text-sm text-[var(--text-1)]">
             سيتوقف خصم القسط من المسيّرات القادمة. الأقساط المسدّدة تبقى مسجّلة.
+          </p>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+
+/** حذف قسط سُجّل بالخطأ — يدوي فقط */
+export function DeleteRepaymentButton({ id, label }: { id: string; label: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false);
+
+  function run() {
+    startTransition(async () => {
+      const res = await deleteRepayment({ id });
+      if (res.ok) {
+        toast.success(res.message ?? 'تم الحذف');
+        setConfirming(false);
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="حذف القسط"
+        onClick={() => setConfirming(true)}
+      >
+        <Trash2 className="text-danger" />
+      </Button>
+
+      {confirming && (
+        <Modal
+          open
+          onClose={() => setConfirming(false)}
+          title="حذف قسط"
+          description={label}
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
+                تراجع
+              </Button>
+              <Button variant="danger" onClick={run} disabled={pending}>
+                {pending && <Loader2 className="animate-spin" />}
+                حذف
+              </Button>
+            </>
+          }
+        >
+          <p className="text-[13px] text-[var(--text-1)]">
+            سيُحذف القسط نهائياً ويُعاد حساب المتبقي وحالة السلفة. استعمله لتصحيح إدخال خاطئ فقط.
           </p>
         </Modal>
       )}

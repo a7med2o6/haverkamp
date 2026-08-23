@@ -159,7 +159,14 @@ export default async function AdvancesPage({
                         {a.employee.code}
                       </span>
                     </Td>
-                    <Td className="tnum font-semibold">{formatKWD(total)}</Td>
+                    <Td className="tnum font-semibold">
+                      <Link
+                        href={`/dashboard/hr/advances/${a.id}`}
+                        className="text-accent hover:underline"
+                      >
+                        {formatKWD(total)}
+                      </Link>
+                    </Td>
                     <Td className="tnum text-ok">{formatKWD(paid)}</Td>
                     <Td className="tnum font-semibold text-warn">
                       {remaining > 0 ? formatKWD(remaining) : '—'}
@@ -189,7 +196,11 @@ export default async function AdvancesPage({
                       <Td>
                         {a.status === 'ACTIVE' && (
                           <div className="flex items-center gap-1">
-                            <RepayButton advanceId={a.id} remaining={remaining} />
+                            <RepayButton
+                              advanceId={a.id}
+                              remaining={remaining}
+                              monthlyDeduction={toNumber(a.monthlyDeduction)}
+                            />
                             <AdvanceFormButton
                               employees={employees.map((e) => ({
                                 id: e.id,

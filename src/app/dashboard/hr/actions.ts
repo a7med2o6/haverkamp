@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, moneySchema, optionalDate, optionalString, phoneSchema } from '@/lib/action-utils';
@@ -581,25 +582,44 @@ export const generatePayroll = action({
           .reduce((sum, i) => sum + Number(i.amount), 0);
 
         // قسط السلفة = الأقل بين القسط الشهري والمتبقّي
-        const advanceInstallments: Array<{ advanceId: string; amount: number }> = [];
+        const plannedInstallments: Array<{ advanceId: string; amount: number }> = [];
         for (const advance of advances) {
           const paid = advance.repayments.reduce((sum, r) => sum + Number(r.amount), 0);
           const remaining = Math.round((Number(advance.amount) - paid) * 1000) / 1000;
           if (remaining <= 0) continue;
           const installment = Math.min(Number(advance.monthlyDeduction), remaining);
           if (installment > 0) {
-            advanceInstallments.push({ advanceId: advance.id, amount: installment });
+            plannedInstallments.push({ advanceId: advance.id, amount: installment });
           }
         }
+
+        /**
+         * السلف لا تُنزل الصافي تحت الصفر.
+         * نخصم منها ما يتّسع له الراتب فقط، بترتيب الأقدم صرفاً، وما لم
+         * يُخصم يبقى في رصيد السلفة فيُستوفى في مسيّر الشهر التالي —
+         * فلا نحتاج جدولاً للمؤجّل، الرصيد نفسه هو الذاكرة.
+         */
+        const earnings =
+          Math.round((base + allowances + overtimePay + manualEarnings) * 1000) / 1000;
+        const fixedDeductions =
+          Math.round((absenceDeduction + unpaidLeaveDeduction + manualDeductions) * 1000) / 1000;
+
+        let advanceBudget = Math.max(0, Math.round((earnings - fixedDeductions) * 1000) / 1000);
+        const advanceInstallments: Array<{ advanceId: string; amount: number }> = [];
+        for (const planned of plannedInstallments) {
+          if (advanceBudget <= 0) break;
+          const amount = Math.min(planned.amount, advanceBudget);
+          advanceInstallments.push({ advanceId: planned.advanceId, amount });
+          advanceBudget = Math.round((advanceBudget - amount) * 1000) / 1000;
+        }
+
         const advanceTotal =
           Math.round(advanceInstallments.reduce((s, a) => s + a.amount, 0) * 1000) / 1000;
 
         const deductions =
-          Math.round(
-            (absenceDeduction + unpaidLeaveDeduction + advanceTotal + manualDeductions) * 1000
-          ) / 1000;
-        const netPay =
-          Math.round((base + allowances + overtimePay + manualEarnings - deductions) * 1000) / 1000;
+          Math.round((fixedDeductions + advanceTotal) * 1000) / 1000;
+        // الغياب أو الجزاءات وحدها قد تتجاوز المستحقات — لا نصرف سالباً
+        const netPay = Math.max(0, Math.round((earnings - deductions) * 1000) / 1000);
 
         totalNet += netPay;
 
@@ -788,9 +808,37 @@ export const saveAdvance = action({
     if (!employee) throw new AppError('الموظف غير موجود');
 
     const salary = Number(employee.baseSalary) + Number(employee.allowance);
-    if (data.monthlyDeduction > salary * 0.5) {
+    const ceiling = Math.round(salary * 0.5 * 1000) / 1000;
+
+    /**
+     * السقف على مجموع أقساط سلف الموظف لا على السلفة الواحدة — ثلاث سلف
+     * كلٌّ بأربعين بالمئة تبتلع الراتب مع أن كلاً منها وحدها ضمن الحد.
+     */
+    const others = await db.employeeAdvance.findMany({
+      where: {
+        employeeId: data.employeeId,
+        status: 'ACTIVE',
+        ...(id ? { id: { not: id } } : {}),
+      },
+      include: { repayments: { select: { amount: true } } },
+    });
+
+    const otherInstallments = others.reduce((sum, a) => {
+      const paid = a.repayments.reduce((s, r) => s + Number(r.amount), 0);
+      // السلف المسدّدة بالكامل لا تُخصم في المسيّر ولو بقيت حالتها نشطة
+      if (paid >= Number(a.amount)) return sum;
+      return sum + Number(a.monthlyDeduction);
+    }, 0);
+
+    const totalInstallments = Math.round((otherInstallments + data.monthlyDeduction) * 1000) / 1000;
+
+    if (totalInstallments > ceiling) {
+      const available = Math.max(0, Math.round((ceiling - otherInstallments) * 1000) / 1000);
       throw new AppError(
-        `القسط الشهري لا يجوز أن يتجاوز نصف الراتب (${(salary / 2).toFixed(3)} د.ك)`
+        otherInstallments > 0
+          ? `على ${employee.fullName} أقساط قائمة بـ ${otherInstallments.toFixed(3)} د.ك — ` +
+            `الحد الأقصى نصف الراتب (${ceiling.toFixed(3)} د.ك)، فالمتاح ${available.toFixed(3)} د.ك فقط`
+          : `القسط الشهري لا يجوز أن يتجاوز نصف الراتب (${ceiling.toFixed(3)} د.ك)`
       );
     }
 
@@ -828,16 +876,47 @@ export const setAdvanceStatus = action({
   },
 });
 
+/**
+ * يوم السداد كطابع زمني محلي عند الظهر.
+ * الظهيرة تحصّن التاريخ من انزياح المناطق الزمنية في العرض، وتبقي الحقل
+ * طابعاً زمنياً حقيقياً كما تكتبه أقساط المسيّر.
+ */
+function paidAtFromInput(value?: string | null): Date {
+  if (!value) return new Date();
+  const [y, m, d] = value.split('-').map(Number);
+  if (!y || !m || !d) return new Date();
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+/** يعيد حساب حالة السلفة من مجموع أقساطها الفعلي */
+async function recalcAdvanceStatus(
+  tx: Prisma.TransactionClient,
+  advanceId: string
+) {
+  const advance = await tx.employeeAdvance.findUnique({
+    where: { id: advanceId },
+    include: { repayments: { select: { amount: true } } },
+  });
+  if (!advance || advance.status === 'CANCELLED') return;
+
+  const paid = advance.repayments.reduce((sum, r) => sum + Number(r.amount), 0);
+  const status = paid >= Number(advance.amount) ? 'SETTLED' : 'ACTIVE';
+  if (status !== advance.status) {
+    await tx.employeeAdvance.update({ where: { id: advanceId }, data: { status } });
+  }
+}
+
 /** سداد يدوي خارج مسيّر الرواتب (نقداً مثلاً) */
 export const repayAdvance = action({
   permission: 'hr:write',
   schema: z.object({
     advanceId: z.string(),
     amount: moneySchema,
+    paidAt: optionalString,
     note: optionalString,
   }),
   audit: { entity: 'AdvanceRepayment', action: 'MANUAL' },
-  handler: async ({ advanceId, amount, note }) => {
+  handler: async ({ advanceId, amount, paidAt, note }) => {
     if (amount <= 0) throw new AppError('المبلغ يجب أن يكون أكبر من صفر');
 
     const advance = await db.employeeAdvance.findUnique({
@@ -853,17 +932,52 @@ export const repayAdvance = action({
       throw new AppError(`المتبقي ${remaining.toFixed(3)} د.ك فقط`);
     }
 
+    const paidDate = paidAtFromInput(paidAt);
+    if (paidDate.getTime() > Date.now()) throw new AppError('تاريخ السداد في المستقبل');
+    if (paidDate < advance.grantedAt) {
+      throw new AppError('تاريخ السداد أسبق من تاريخ صرف السلفة');
+    }
+
     await db.$transaction(async (tx) => {
       await tx.advanceRepayment.create({
-        data: { advanceId, amount, note: note ?? 'سداد يدوي' },
+        data: { advanceId, amount, paidAt: paidDate, note: note ?? 'سداد يدوي' },
       });
-      if (amount >= remaining) {
-        await tx.employeeAdvance.update({ where: { id: advanceId }, data: { status: 'SETTLED' } });
-      }
+      await recalcAdvanceStatus(tx, advanceId);
     });
 
     revalidatePath('/dashboard/hr/advances');
+    revalidatePath(`/dashboard/hr/advances/${advanceId}`);
     return { id: advanceId, message: 'تم تسجيل السداد' };
+  },
+});
+
+/**
+ * حذف قسط سُجّل بالخطأ — يدوي فقط.
+ * أقساط المسيّر تُولَّد معه وتُحذف بإعادة توليده، فحذفها هنا يخلق فرقاً
+ * بين القسيمة والسلفة.
+ */
+export const deleteRepayment = action({
+  permission: 'hr:write',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'AdvanceRepayment', action: 'DELETE' },
+  handler: async ({ id }) => {
+    const repayment = await db.advanceRepayment.findUnique({
+      where: { id },
+      select: { advanceId: true, payrollRunId: true, amount: true },
+    });
+    if (!repayment) throw new AppError('القسط غير موجود');
+    if (repayment.payrollRunId) {
+      throw new AppError('هذا القسط جاء من مسيّر رواتب — يُعدَّل بإعادة توليد المسيّر');
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.advanceRepayment.delete({ where: { id } });
+      await recalcAdvanceStatus(tx, repayment.advanceId);
+    });
+
+    revalidatePath('/dashboard/hr/advances');
+    revalidatePath(`/dashboard/hr/advances/${repayment.advanceId}`);
+    return { id: repayment.advanceId, message: 'تم حذف القسط' };
   },
 });
 

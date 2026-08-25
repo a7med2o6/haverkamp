@@ -17,6 +17,7 @@
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:seed:packages": "tsx prisma/seed-protection-packages.ts",
     "db:import:employees": "tsx prisma/import-employees.ts",
+    "db:import:leaves": "tsx prisma/import-leaves.ts",
     "legacy:sync": "node scripts/sync-legacy.mjs",
     "db:import:testimonials": "tsx prisma/import-testimonials.ts",
     "check:content": "tsx scripts/check-content-coverage.ts",

@@ -365,7 +365,9 @@ function CriticalDate({ label, date }: { label: string; date: Date | null }) {
   return (
     <div className={cn('rounded-[var(--radius-md)] border px-5 py-4 text-center', colors)}>
       <p className="text-[12px] text-[var(--text-2)]">{label}</p>
-      <p className="tnum mt-1.5 text-[18px] font-bold" dir="ltr">
+      {/* لا dir=ltr: التاريخ العربي «1 سبتمبر 2026» تعيد خوارزمية BiDi ترتيبه
+          بصرياً داخل سياق LTR فيظهر «سبتمبر 1 2026» */}
+      <p className="tnum mt-1.5 text-[18px] font-bold">
         {date ? formatDateOnly(date) : '—'}
       </p>
       <p className="mt-1.5 flex items-center justify-center gap-1.5 text-[11px] font-medium">

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { JOB_STATUS } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
 import { cn, dueStatus, formatDate, formatKWD, toNumber } from '@/lib/utils';
+import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { NewJobOrderButton } from './job-client';
 
 export const metadata: Metadata = { title: 'أوامر الشغل' };
@@ -27,13 +28,13 @@ const FILTERS = [
 export default async function JobOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; page?: string; customer?: string }>;
 }) {
   const session = await requirePermission('workshop:read');
-  const { filter = 'active', page: pageParam } = await searchParams;
+  const { filter = 'active', page: pageParam, customer } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
-  const where: Prisma.JobOrderWhereInput =
+  const byFilter: Prisma.JobOrderWhereInput =
     filter === 'active'
       ? { status: { in: ['RECEIVED', 'IN_PROGRESS', 'QUALITY_CHECK'] } }
       : filter === 'late'
@@ -44,6 +45,11 @@ export default async function JobOrdersPage({
         : filter === 'all'
           ? {}
           : { status: filter as keyof typeof JOB_STATUS };
+
+  // تصفية بعميل واحد — يصلها الموظف من رابط «عرض الكل» في ملف العميل
+  const where: Prisma.JobOrderWhereInput = customer
+    ? { AND: [byFilter, { customerId: customer }] }
+    : byFilter;
 
   const [jobs, total, customers] = await Promise.all([
     db.jobOrder.findMany({
@@ -97,11 +103,18 @@ export default async function JobOrdersPage({
         }
       />
 
+      {customer && (
+        <CustomerFilterBar
+          customerId={customer}
+          clearHref={`/dashboard/job-orders?filter=${filter}`}
+        />
+      )}
+
       <div className="mb-4 flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={`/dashboard/job-orders?filter=${f.key}`}
+            href={`/dashboard/job-orders?filter=${f.key}${customer ? `&customer=${customer}` : ''}`}
             className={cn(
               'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
               filter === f.key

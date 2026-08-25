@@ -1,17 +1,24 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { BOOKING_STATUS, CUSTOMER_SOURCE, JOB_STATUS, ORDER_STATUS } from '@/lib/labels';
+import {
+  BOOKING_STATUS,
+  CUSTOMER_NOTE_TYPE,
+  CUSTOMER_SOURCE,
+  JOB_STATUS,
+  ORDER_STATUS,
+} from '@/lib/labels';
 import { expiryStatus, formatDate, formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { CustomerFormButton } from '../customer-form';
 import { VehicleFormButton, DeleteVehicleButton } from './vehicle-form';
+import { AddNoteButton, DeleteNoteButton, FollowUpToggle } from './notes-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +56,10 @@ export default async function CustomerDetailPage({
         orderBy: { createdAt: 'desc' },
         take: 10,
       },
+      interactions: {
+        orderBy: { createdAt: 'desc' },
+        include: { author: { select: { name: true } } },
+      },
       bookings: {
         orderBy: { scheduledAt: 'desc' },
         take: 10,
@@ -66,7 +77,7 @@ export default async function CustomerDetailPage({
    * الإجماليات من تجميع على كل الفواتير لا من العشرة المعروضة —
    * جمعها من الشريحة يعطي رقماً يزداد خطأً كلما زاد تعامل العميل.
    */
-  const [money, visits, lastVisit, warranties] = await Promise.all([
+  const [money, visits, lastVisit, warranties, counts] = await Promise.all([
     db.order.aggregate({
       where: { customerId: id, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
       _sum: { total: true, paidAmount: true },
@@ -86,6 +97,10 @@ export default async function CustomerDetailPage({
         service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
       },
     }),
+    db.customer.findUnique({
+      where: { id },
+      select: { _count: { select: { jobOrders: true, orders: true, bookings: true } } },
+    }),
   ]);
 
   const canWrite = can(session.user.role, 'crm:write');
@@ -97,6 +112,11 @@ export default async function CustomerDetailPage({
   const avgInvoice = money._count > 0 ? Math.round((invoiced / money._count) * 1000) / 1000 : 0;
 
   const waNumber = customer.phone.replace(/[^\d]/g, '');
+
+  // الأقسام تعرض عشرة فقط — الرابط يفتح القائمة كاملة مصفّاة بهذا العميل
+  const totals = counts?._count ?? { jobOrders: 0, orders: 0, bookings: 0 };
+
+  const now = new Date();
 
   return (
     <>
@@ -304,6 +324,11 @@ export default async function CustomerDetailPage({
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>سجل أوامر الشغل</CardTitle>
+              <ShowAll
+                href={`/dashboard/job-orders?filter=all&customer=${customer.id}`}
+                shown={customer.jobOrders.length}
+                total={totals.jobOrders}
+              />
             </CardHeader>
             <TableWrap className="rounded-none border-0">
               <Table>
@@ -348,6 +373,11 @@ export default async function CustomerDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>آخر الفواتير</CardTitle>
+              <ShowAll
+                href={`/dashboard/invoices?customer=${customer.id}`}
+                shown={customer.orders.length}
+                total={totals.orders}
+              />
             </CardHeader>
             <TableWrap className="rounded-none border-0">
               <Table>
@@ -392,6 +422,11 @@ export default async function CustomerDetailPage({
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>الحجوزات</CardTitle>
+              <ShowAll
+                href={`/dashboard/bookings?view=list&customer=${customer.id}`}
+                shown={customer.bookings.length}
+                total={totals.bookings}
+              />
             </CardHeader>
             <TableWrap className="rounded-none border-0">
               <Table>
@@ -484,8 +519,99 @@ export default async function CustomerDetailPage({
             </CardBody>
           </Card>
         )}
+        {/* ── سجل التواصل ── */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>سجل التواصل ({customer.interactions.length})</CardTitle>
+            {canWrite && <AddNoteButton customerId={customer.id} />}
+          </CardHeader>
+          <CardBody>
+            {customer.interactions.length === 0 ? (
+              <p className="text-[13px] text-[var(--text-2)]">
+                لا قيود بعد — سجّل ما يدور مع العميل ليبقى أثره لمن يخدمه بعدك.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {customer.interactions.map((note) => {
+                  const overdue =
+                    note.followUpAt && !note.doneAt && note.followUpAt < now;
+                  return (
+                    <li
+                      key={note.id}
+                      className={
+                        overdue
+                          ? 'rounded-[var(--radius-sm)] border border-danger/30 bg-danger/5 p-3'
+                          : 'rounded-[var(--radius-sm)] border border-[var(--line)] p-3'
+                      }
+                    >
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <Badge tone={CUSTOMER_NOTE_TYPE[note.type].tone}>
+                          {CUSTOMER_NOTE_TYPE[note.type].label}
+                        </Badge>
+                        <span className="tnum text-[11px] text-[var(--text-2)]">
+                          {formatDateTime(note.createdAt)}
+                        </span>
+                        {note.author && (
+                          <span className="text-[11px] text-[var(--text-2)]">
+                            — {note.author.name}
+                          </span>
+                        )}
+                        {canWrite && (
+                          <span className="ms-auto">
+                            <DeleteNoteButton id={note.id} />
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--text-1)]">
+                        {note.body}
+                      </p>
+
+                      {note.followUpAt && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-2">
+                          <span
+                            className={
+                              note.doneAt
+                                ? 'tnum text-[11px] text-ok'
+                                : overdue
+                                  ? 'tnum text-[11px] font-semibold text-danger'
+                                  : 'tnum text-[11px] text-warn'
+                            }
+                          >
+                            {note.doneAt
+                              ? `تمّت المتابعة ${formatDate(note.doneAt)}`
+                              : `متابعة ${formatDate(note.followUpAt)}${overdue ? ' — فات موعدها' : ''}`}
+                          </span>
+                          {canWrite && <FollowUpToggle id={note.id} done={!!note.doneAt} />}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardBody>
+        </Card>
       </div>
     </>
+  );
+}
+
+/**
+ * رابط لبقية السجل. الأقسام تعرض عشرة فقط، وبدون هذا الرابط ينقطع
+ * تاريخ العميل القديم عند العاشر بلا طريق إلى ما قبله.
+ */
+function ShowAll({ href, shown, total }: { href: string; shown: number; total: number }) {
+  if (total <= shown) return null;
+  return (
+    <Link
+      href={href}
+      className="inline-flex items-center gap-1 text-[12px] font-medium text-accent hover:underline"
+    >
+      عرض الكل
+      <span className="tnum text-[var(--text-2)]">({total})</span>
+      <ArrowLeft className="size-3.5" />
+    </Link>
   );
 }
 

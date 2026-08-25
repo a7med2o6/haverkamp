@@ -46,6 +46,7 @@ model User {
   registerSessions RegisterSession[]
   approvedLeaves   LeaveRequest[]    @relation("LeaveApprover")
   reviewsGiven     PerformanceReview[] @relation("ReviewAuthor")
+  customerNotes    CustomerNote[]    @relation("CustomerNoteAuthor")
 
   @@index([role, isActive])
   @@map("users")
@@ -260,6 +261,34 @@ enum CustomerSource {
   OTHER
 }
 
+/// نوع التواصل مع العميل — لقراءة السجل بلمحة
+enum CustomerNoteType {
+  NOTE // ملاحظة عامة
+  CALL // مكالمة
+  WHATSAPP
+  VISIT // زيارة للمعرض
+  COMPLAINT // شكوى
+  FOLLOW_UP // متابعة مطلوبة
+}
+
+/// سجل تواصل ومتابعة مع العميل — يُضاف ولا يُعدَّل فوق سابقه
+model CustomerNote {
+  id         String           @id @default(cuid())
+  customerId String
+  customer   Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?            @relation("CustomerNoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  type       CustomerNoteType @default(NOTE)
+  body       String
+  followUpAt DateTime? // موعد المتابعة المطلوبة
+  doneAt     DateTime? // تمّت المتابعة
+  createdAt  DateTime         @default(now())
+
+  @@index([customerId, createdAt])
+  @@index([followUpAt])
+  @@map("customer_notes")
+}
+
 model Customer {
   id        String         @id @default(cuid())
   code      String         @unique // HK-C-0001
@@ -280,6 +309,7 @@ model Customer {
   bookings  Booking[]
   jobOrders JobOrder[]
   orders    Order[]
+  interactions    CustomerNote[]
 
   @@index([phone])
   @@index([name])

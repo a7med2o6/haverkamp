@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
+import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { SearchBar } from '@/components/dashboard/search-bar';
 import { Pagination } from '@/components/dashboard/pagination';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -19,10 +20,10 @@ export const dynamic = 'force-dynamic';
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; status?: string; customer?: string }>;
 }) {
   await requirePermission('pos:read');
-  const { q, page: pageParam, status } = await searchParams;
+  const { q, page: pageParam, status, customer } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where: Prisma.OrderWhereInput = {
@@ -38,6 +39,8 @@ export default async function InvoicesPage({
     ...(status && status in ORDER_STATUS
       ? { status: status as keyof typeof ORDER_STATUS }
       : {}),
+    // تصفية بعميل واحد — من رابط «عرض الكل» في ملف العميل
+    ...(customer ? { customerId: customer } : {}),
   };
 
   const todayStart = new Date();
@@ -94,6 +97,13 @@ export default async function InvoicesPage({
         />
         <StatCard label="إجمالي الفواتير" value={total} icon="Receipt" />
       </div>
+
+      {customer && (
+        <CustomerFilterBar
+          customerId={customer}
+          clearHref={`/dashboard/invoices${status ? `?status=${status}` : ''}`}
+        />
+      )}
 
       <SearchBar placeholder="ابحث برقم الفاتورة أو اسم العميل…" className="mb-4 max-w-md" />
 

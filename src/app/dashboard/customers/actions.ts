@@ -139,3 +139,80 @@ export const deleteVehicle = action({
     return { id, message: 'تم حذف السيارة' };
   },
 });
+
+
+// ── سجل التواصل ───────────────────────────────────────────
+
+/** يضيف قيداً لسجل تواصل العميل — السجل يُضاف إليه ولا يُكتب فوقه */
+export const addCustomerNote = action({
+  permission: 'crm:write',
+  schema: z.object({
+    customerId: z.string(),
+    type: z.enum(['NOTE', 'CALL', 'WHATSAPP', 'VISIT', 'COMPLAINT', 'FOLLOW_UP']),
+    body: z.string().trim().min(1, 'نص الملاحظة مطلوب'),
+    followUpAt: optionalString,
+  }),
+  audit: { entity: 'CustomerNote', action: 'CREATE' },
+  handler: async ({ customerId, type, body, followUpAt }, { userId }) => {
+    const customer = await db.customer.findUnique({
+      where: { id: customerId },
+      select: { id: true },
+    });
+    if (!customer) throw new AppError('العميل غير موجود');
+
+    let followUp: Date | null = null;
+    if (followUpAt) {
+      const [y, m, d] = followUpAt.split('-').map(Number);
+      if (!y || !m || !d) throw new AppError('تاريخ المتابعة غير صالح');
+      followUp = new Date(y, m - 1, d, 12, 0, 0);
+    }
+
+    const note = await db.customerNote.create({
+      data: { customerId, type, body, followUpAt: followUp, authorId: userId },
+    });
+
+    revalidatePath(`/dashboard/customers/${customerId}`);
+    return { id: note.id, message: 'تمت إضافة القيد' };
+  },
+});
+
+/** يعلّم المتابعة منجزة أو يعيدها مفتوحة */
+export const toggleNoteFollowUp = action({
+  permission: 'crm:write',
+  schema: z.object({ id: z.string(), done: z.boolean() }),
+  audit: { entity: 'CustomerNote', action: 'FOLLOW_UP' },
+  handler: async ({ id, done }) => {
+    const note = await db.customerNote.findUnique({
+      where: { id },
+      select: { customerId: true, followUpAt: true },
+    });
+    if (!note) throw new AppError('القيد غير موجود');
+    if (!note.followUpAt) throw new AppError('لا متابعة مطلوبة على هذا القيد');
+
+    await db.customerNote.update({
+      where: { id },
+      data: { doneAt: done ? new Date() : null },
+    });
+
+    revalidatePath(`/dashboard/customers/${note.customerId}`);
+    return { id, message: done ? 'تمت المتابعة' : 'أُعيدت المتابعة' };
+  },
+});
+
+/** حذف قيد سُجّل بالخطأ */
+export const deleteCustomerNote = action({
+  permission: 'crm:write',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'CustomerNote', action: 'DELETE' },
+  handler: async ({ id }) => {
+    const note = await db.customerNote.findUnique({
+      where: { id },
+      select: { customerId: true },
+    });
+    if (!note) throw new AppError('القيد غير موجود');
+
+    await db.customerNote.delete({ where: { id } });
+    revalidatePath(`/dashboard/customers/${note.customerId}`);
+    return { id: note.customerId, message: 'تم حذف القيد' };
+  },
+});

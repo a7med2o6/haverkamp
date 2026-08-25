@@ -4,6 +4,7 @@ import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
+import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Pagination } from '@/components/dashboard/pagination';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
@@ -31,7 +32,13 @@ const FILTERS = [
 export default async function BookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string; view?: string; week?: string }>;
+  searchParams: Promise<{
+    filter?: string;
+    page?: string;
+    view?: string;
+    week?: string;
+    customer?: string;
+  }>;
 }) {
   const session = await requirePermission('crm:read');
   const {
@@ -39,9 +46,11 @@ export default async function BookingsPage({
     page: pageParam,
     view = 'week',
     week: weekParam,
+    customer,
   } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  const isWeek = view === 'week';
+  // التصفية بعميل تُلزم عرض القائمة — تقويم أسبوعي لعميل واحد بلا معنى
+  const isWeek = view === 'week' && !customer;
 
   // أسبوع التقويم — من المَعلمة أو الأسبوع الحالي
   const anchor = weekParam ? new Date(`${weekParam}T00:00:00`) : new Date();
@@ -55,7 +64,7 @@ export default async function BookingsPage({
   const todayEnd = new Date(todayStart);
   todayEnd.setDate(todayEnd.getDate() + 1);
 
-  const where: Prisma.BookingWhereInput =
+  const byFilter: Prisma.BookingWhereInput =
     filter === 'upcoming'
       ? { scheduledAt: { gte: now }, status: { in: ['PENDING', 'CONFIRMED'] } }
       : filter === 'today'
@@ -63,6 +72,11 @@ export default async function BookingsPage({
         : filter === 'PENDING'
           ? { status: 'PENDING' }
           : {};
+
+  // تصفية بعميل واحد — من رابط «عرض الكل» في ملف العميل
+  const where: Prisma.BookingWhereInput = customer
+    ? { AND: [byFilter, { customerId: customer }] }
+    : byFilter;
 
   const [weekBookings, weekendSetting] = isWeek
     ? await Promise.all([
@@ -125,6 +139,13 @@ export default async function BookingsPage({
           ) : null
         }
       />
+
+      {customer && (
+        <CustomerFilterBar
+          customerId={customer}
+          clearHref="/dashboard/bookings?view=list"
+        />
+      )}
 
       {/* تبويبا العرض */}
       <div className="mb-4 flex gap-1.5">

@@ -12,6 +12,15 @@ export const BOOKING_STATUS = {
   NO_SHOW: { label: 'لم يحضر', tone: 'danger' },
 } satisfies Record<string, Label>;
 
+export const CUSTOMER_NOTE_TYPE = {
+  NOTE: { label: 'ملاحظة', tone: 'neutral' },
+  CALL: { label: 'مكالمة', tone: 'info' },
+  WHATSAPP: { label: 'واتساب', tone: 'ok' },
+  VISIT: { label: 'زيارة', tone: 'accent' },
+  COMPLAINT: { label: 'شكوى', tone: 'danger' },
+  FOLLOW_UP: { label: 'متابعة', tone: 'warn' },
+} satisfies Record<string, Label>;
+
 export const JOB_STATUS = {
   RECEIVED: { label: 'تم الاستلام', tone: 'neutral' },
   IN_PROGRESS: { label: 'قيد التنفيذ', tone: 'info' },

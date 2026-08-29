@@ -38,9 +38,9 @@ export const NAV: NavGroup[] = [
     links: [
       { href: '/dashboard/invoices', label: 'الفواتير', icon: 'Receipt', module: 'pos' },
       { href: '/dashboard/products', label: 'المنتجات', icon: 'Package', module: 'inventory' },
-      { href: '/dashboard/stock', label: 'حركة المخزون', icon: 'ArrowLeftRight', module: 'inventory', soon: true },
-      { href: '/dashboard/purchases', label: 'أوامر الشراء', icon: 'Truck', module: 'inventory', soon: true },
-      { href: '/dashboard/suppliers', label: 'المورّدون', icon: 'Building2', module: 'inventory', soon: true },
+      { href: '/dashboard/stock', label: 'حركة المخزون', icon: 'ArrowLeftRight', module: 'inventory' },
+      { href: '/dashboard/purchases', label: 'أوامر الشراء', icon: 'Truck', module: 'inventory' },
+      { href: '/dashboard/suppliers', label: 'المورّدون', icon: 'Building2', module: 'inventory' },
     ],
   },
   {

@@ -15,6 +15,11 @@ import { DatePicker, EditAttendanceButton, QuickCheckButtons } from './attendanc
 export const metadata: Metadata = { title: 'الحضور والانصراف' };
 export const dynamic = 'force-dynamic';
 
+/** أرقام getUTCDay: الأحد 0 … السبت 6 — تطابق ما يستعمله المسيّر */
+const DAY_INDEX: Record<string, number> = {
+  SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
+};
+
 function timeStr(d: Date | null) {
   if (!d) return '';
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -32,35 +37,63 @@ export default async function AttendancePage({
   const dateStr = dateOnlyToInput(date);
   const isToday = date.getTime() === todayDateOnly().getTime();
 
-  const employees = await db.employee.findMany({
-    where: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
-    orderBy: { code: 'asc' },
-    include: {
-      department: { select: { nameAr: true } },
-      attendance: { where: { date } },
-    },
-  });
+  const [employees, leaves, weekendSetting] = await Promise.all([
+    db.employee.findMany({
+      where: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
+      orderBy: { code: 'asc' },
+      include: {
+        department: { select: { nameAr: true } },
+        attendance: { where: { date } },
+      },
+    }),
+    db.leaveRequest.findMany({
+      where: { status: 'APPROVED', fromDate: { lte: date }, toDate: { gte: date } },
+      select: { employeeId: true },
+    }),
+    db.siteSetting.findUnique({ where: { key: 'hr.weekend' } }),
+  ]);
 
   const canWrite = can(session.user.role, 'hr:write');
 
-  const counts = employees.reduce(
-    (acc, e) => {
-      const status = e.attendance[0]?.status;
-      if (!status) acc.unrecorded++;
-      else if (status === 'PRESENT') acc.present++;
-      else if (status === 'LATE') acc.late++;
-      else if (status === 'ABSENT') acc.absent++;
-      else if (status === 'ON_LEAVE') acc.onLeave++;
+  const weekendDays = new Set(
+    (Array.isArray(weekendSetting?.value) ? (weekendSetting.value as string[]) : ['FRI'])
+      .map((code) => DAY_INDEX[code])
+      .filter((n) => n !== undefined)
+  );
+  const isWeekend = weekendDays.has(date.getUTCDay());
+  const onLeaveIds = new Set(leaves.map((l) => l.employeeId));
+
+  /**
+   * الأصل أن الجميع حاضرون، ولا يُسجَّل إلا الاستثناء.
+   * السجل الصريح يعلو دائماً، وما دونه يُستنتج: عطلة أسبوعية، ثم إجازة
+   * معتمدة تشمل اليوم، وإلا فحاضر. المسيّر لا يخصم إلا سجلاً صريحاً
+   * حالته ABSENT، فالاستنتاج للعرض ولا يمسّ الرواتب.
+   */
+  const rows = employees.map((e) => {
+    const record = e.attendance[0] ?? null;
+    if (record) return { employee: e, record, status: record.status, derived: false };
+
+    const status = isWeekend ? 'HOLIDAY' : onLeaveIds.has(e.id) ? 'ON_LEAVE' : 'PRESENT';
+    return { employee: e, record: null, status, derived: true } as const;
+  });
+
+  const counts = rows.reduce(
+    (acc, r) => {
+      if (r.status === 'PRESENT') acc.present++;
+      else if (r.status === 'LATE') acc.late++;
+      else if (r.status === 'ABSENT') acc.absent++;
+      else if (r.status === 'ON_LEAVE') acc.onLeave++;
+      else if (r.status === 'HOLIDAY') acc.holiday++;
       return acc;
     },
-    { present: 0, late: 0, absent: 0, onLeave: 0, unrecorded: 0 }
+    { present: 0, late: 0, absent: 0, onLeave: 0, holiday: 0 }
   );
 
   return (
     <>
       <PageHeader
         title="الحضور والانصراف"
-        description={isToday ? 'سجل اليوم' : `سجل يوم ${formatDateOnly(date)}`}
+        description={`${isToday ? 'سجل اليوم' : `سجل يوم ${formatDateOnly(date)}`} — الجميع حاضرون ما لم تسجّل خلاف ذلك`}
         actions={
           <div className="flex items-center gap-2">
             <Link
@@ -80,7 +113,7 @@ export default async function AttendancePage({
         <StatCard label="متأخر" value={counts.late} icon="Clock" tone="warn" />
         <StatCard label="غائب" value={counts.absent} icon="UserX" tone="danger" />
         <StatCard label="إجازة" value={counts.onLeave} icon="Palmtree" tone="accent" />
-        <StatCard label="لم يُسجّل" value={counts.unrecorded} icon="CircleDashed" />
+        <StatCard label="عطلة" value={counts.holiday} icon="CircleDashed" />
       </div>
 
       <TableWrap>
@@ -99,15 +132,14 @@ export default async function AttendancePage({
             </tr>
           </thead>
           <tbody>
-            {employees.length === 0 ? (
+            {rows.length === 0 ? (
               <EmptyState
                 title="لا يوجد موظفون نشطون"
                 description="أضف موظفين من صفحة الموظفين أولاً"
                 colSpan={9}
               />
             ) : (
-              employees.map((e) => {
-                const record = e.attendance[0];
+              rows.map(({ employee: e, record, status, derived }) => {
                 return (
                   <Tr key={e.id}>
                     <Td className="tnum text-[12px]" dir="ltr">
@@ -136,13 +168,14 @@ export default async function AttendancePage({
                       )}
                     </Td>
                     <Td>
-                      {record ? (
-                        <Badge tone={ATTENDANCE_STATUS[record.status].tone}>
-                          {ATTENDANCE_STATUS[record.status].label}
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <Badge tone={ATTENDANCE_STATUS[status].tone}>
+                          {ATTENDANCE_STATUS[status].label}
                         </Badge>
-                      ) : (
-                        <Badge>لم يُسجّل</Badge>
-                      )}
+                        {derived && (
+                          <span className="text-[10px] text-[var(--text-2)]">افتراضي</span>
+                        )}
+                      </span>
                     </Td>
                     {canWrite && (
                       <Td>
@@ -160,7 +193,7 @@ export default async function AttendancePage({
                             initial={{
                               checkIn: timeStr(record?.checkIn ?? null),
                               checkOut: timeStr(record?.checkOut ?? null),
-                              status: record?.status ?? 'PRESENT',
+                              status: record?.status ?? status,
                               notes: record?.notes ?? '',
                             }}
                           />

@@ -183,6 +183,28 @@ export const quickCheck = action({
 
     if (kind === 'IN') {
       if (existing?.checkIn) throw new AppError('تم تسجيل الحضور لهذا اليوم مسبقاً');
+
+      /**
+       * الزر السريع يُضغط بالعشرات صباحاً فالخطأ فيه وارد — نمنعه على
+       * من هو في إجازة معتمدة. ومن حضر فعلاً أثناء إجازته يُسجَّل من
+       * نافذة التعديل، فالطريق المتعمَّد يبقى مفتوحاً.
+       */
+      const leave = await db.leaveRequest.findFirst({
+        where: {
+          employeeId,
+          status: 'APPROVED',
+          fromDate: { lte: date },
+          toDate: { gte: date },
+        },
+        select: { toDate: true },
+      });
+
+      if (leave) {
+        throw new AppError(
+          `الموظف في إجازة معتمدة حتى ${leave.toDate.toISOString().slice(0, 10)} — ` +
+            'سجّل حضوره من نافذة التعديل إن حضر فعلاً'
+        );
+      }
       const lateMins = await computeLateMinutes(now);
       const record = await db.attendance.upsert({
         where: { employeeId_date: { employeeId, date } },

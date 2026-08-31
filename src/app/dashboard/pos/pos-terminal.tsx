@@ -382,7 +382,7 @@ export function PosTerminal({
       {cart.length > 0 && (
         <button
           onClick={() => setCartOpen(true)}
-          className="fixed inset-x-4 bottom-4 z-40 flex h-14 items-center justify-between rounded-[var(--radius-md)] bg-accent px-5 text-[#04121f] shadow-lg lg:hidden"
+          className="fixed inset-x-4 bottom-4 z-40 flex h-14 items-center justify-between rounded-[var(--radius-md)] bg-accent px-5 text-[var(--accent-ink)] shadow-lg lg:hidden"
         >
           <span className="flex items-center gap-2 font-semibold">
             <ShoppingCart className="size-5" />

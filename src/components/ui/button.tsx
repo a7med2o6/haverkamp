@@ -8,14 +8,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-accent text-[#04121f] hover:bg-accent-soft shadow-[0_6px_20px_-8px_rgba(94,184,255,0.6)]',
+          'bg-accent text-[var(--accent-ink)] hover:bg-accent-soft shadow-[0_6px_20px_-8px_rgba(94,184,255,0.6)]',
         secondary:
           'bg-[var(--glass-strong)] text-[var(--text-0)] border border-[var(--line)] hover:border-[var(--line-strong)]',
         outline:
           'border border-[var(--line-strong)] text-[var(--text-0)] hover:bg-[var(--glass)]',
         ghost: 'text-[var(--text-1)] hover:bg-[var(--glass-strong)] hover:text-[var(--text-0)]',
-        danger: 'bg-danger text-[#2a0808] hover:brightness-110',
-        success: 'bg-ok text-[#04231a] hover:brightness-110',
+        danger: 'bg-danger text-[var(--danger-ink)] hover:brightness-110',
+        success: 'bg-ok text-[var(--ok-ink)] hover:brightness-110',
       },
       size: {
         sm: 'h-8 px-3 text-[13px]',

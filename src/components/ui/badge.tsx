@@ -8,11 +8,15 @@ const badgeVariants = cva(
     variants: {
       tone: {
         neutral: 'bg-[var(--glass-strong)] text-[var(--text-1)] border border-[var(--line)]',
-        accent: 'bg-accent/15 text-accent-soft',
-        ok: 'bg-ok/15 text-ok',
-        warn: 'bg-warn/15 text-warn',
-        danger: 'bg-danger/15 text-danger',
-        info: 'bg-info/15 text-info',
+        accent: 'bg-[var(--mark-accent)]/18 text-accent',
+        ok: 'bg-[var(--mark-ok)]/18 text-ok',
+        warn: 'bg-[var(--mark-warn)]/18 text-warn',
+        danger: 'bg-[var(--mark-danger)]/18 text-danger',
+        info: 'bg-info/18 text-info',
+        violet: 'bg-[var(--mark-violet)]/18 text-violet',
+        /* حالة منتهية بلا لون قضية — رمادي مُعلَّم لا رمادي خافت */
+        muted:
+          'bg-[var(--mark-muted)]/18 text-[var(--text-1)] border border-[var(--line-strong)]',
       },
     },
     defaultVariants: { tone: 'neutral' },

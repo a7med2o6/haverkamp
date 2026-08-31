@@ -1,15 +1,29 @@
 /** تسميات عربية موحّدة لقيم الـ enums + لون الشارة المناسب */
 
-type Tone = 'neutral' | 'accent' | 'ok' | 'warn' | 'danger' | 'info';
+type Tone = 'neutral' | 'accent' | 'ok' | 'warn' | 'danger' | 'info' | 'violet' | 'muted';
 type Label = { label: string; tone: Tone };
 
+/*
+  ست حالات، لون كلٍّ منها يشرح معناها لا يزيّنها فحسب:
+
+  · بانتظار التأكيد → كهرماني: لون الانتظار والتنبيه في كل واجهة.
+  · مؤكد           → أخضر: موافقة ومضيّ، والعميل قادم.
+  · قيد التنفيذ    → أزرق: لون العمل الجاري في أشرطة التقدّم.
+  · منتهي          → بنفسجي: مُغلق بنجاح — كما تُعلَّم الطلبات المدموجة.
+  · ملغي           → أحمر: حدث سلبي وقع ويستحق أن يُرى.
+  · لم يحضر        → رمادي مُعلَّم: سجلّ مات، ولأن أحمرين متجاورين
+                     لا يُفرَّق بينهما أصلاً.
+
+  الألوان الست نفسها تُستعمل في الوضعين، وقيمها في globals.css مفصولة
+  إلى «علامة» و«حبر» — انظر التعليق هناك.
+*/
 export const BOOKING_STATUS = {
   PENDING: { label: 'بانتظار التأكيد', tone: 'warn' },
-  CONFIRMED: { label: 'مؤكد', tone: 'accent' },
-  IN_PROGRESS: { label: 'قيد التنفيذ', tone: 'info' },
-  COMPLETED: { label: 'منتهي', tone: 'ok' },
-  CANCELLED: { label: 'ملغي', tone: 'neutral' },
-  NO_SHOW: { label: 'لم يحضر', tone: 'danger' },
+  CONFIRMED: { label: 'مؤكد', tone: 'ok' },
+  IN_PROGRESS: { label: 'قيد التنفيذ', tone: 'accent' },
+  COMPLETED: { label: 'منتهي', tone: 'violet' },
+  CANCELLED: { label: 'ملغي', tone: 'danger' },
+  NO_SHOW: { label: 'لم يحضر', tone: 'muted' },
 } satisfies Record<string, Label>;
 
 export const CUSTOMER_NOTE_TYPE = {
@@ -157,3 +171,49 @@ export function toOptions<T extends Record<string, Label>>(map: T) {
     label: map[value].label,
   }));
 }
+
+/** مهن الموظفين — تُقرأ في نموذج الموظف وقوائم إسناد الشغل */
+export const EMPLOYEE_SKILL = {
+  TINT: { label: 'عازل', tone: 'accent' },
+  PROTECTION: { label: 'حماية', tone: 'violet' },
+  PAINT: { label: 'صبغ', tone: 'warn' },
+  WASHING: { label: 'غسيل', tone: 'ok' },
+  POLISH: { label: 'بوليش', tone: 'ok' },
+  CLEANING: { label: 'تنظيف', tone: 'ok' },
+  GLASS: { label: 'إصلاح جام', tone: 'info' },
+  BLACKSMITH: { label: 'حداد', tone: 'muted' },
+  ELECTRICIAN: { label: 'كهربائي', tone: 'muted' },
+  AC: { label: 'تكييف', tone: 'muted' },
+  TAILOR: { label: 'خياط', tone: 'muted' },
+  BUFFET: { label: 'بوفية', tone: 'muted' },
+  DRIVER: { label: 'سائق', tone: 'muted' },
+  MANAGEMENT: { label: 'إدارة', tone: 'neutral' },
+} satisfies Record<string, Label>;
+
+/**
+ * المهن مرتّبة أبجدياً بالعربية.
+ * `localeCompare` بلغة عربية لا الترتيب الافتراضي: الأخير يرتّب بترميز
+ * الحروف فيضع الهمزة والألف في موضعين متباعدين، ويفرّق «إدارة» عن «احمد».
+ */
+export const EMPLOYEE_SKILLS_SORTED = (
+  Object.entries(EMPLOYEE_SKILL) as [keyof typeof EMPLOYEE_SKILL, Label][]
+).sort((a, b) => a[1].label.localeCompare(b[1].label, 'ar'));
+
+/**
+ * المهارة التي تؤهّل للعمل على خدمة.
+ * يُقصر قائمة «من اشتغل على هذه القطعة» على أهلها: السائق وعامل البوفيه
+ * لا يركّبان عازلاً، وظهورهما في القائمة يبطئ الاختيار ويفتح باب الخطأ.
+ */
+export const SERVICE_SKILL: Record<string, keyof typeof EMPLOYEE_SKILL> = {
+  body: 'PROTECTION',
+  tint: 'TINT',
+  front_glass: 'PROTECTION',
+  rims: 'PROTECTION',
+  nano: 'POLISH',
+  rims_paint: 'PAINT',
+  blackout: 'TINT',
+  polish_exterior: 'POLISH',
+  polish_interior: 'POLISH',
+  mats: 'CLEANING',
+  ozone: 'CLEANING',
+};

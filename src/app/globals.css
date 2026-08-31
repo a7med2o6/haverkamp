@@ -25,6 +25,8 @@
   --color-warn: #fbbf24;
   --color-danger: #f87171;
   --color-info: #60a5fa;
+  /* «قيد التنفيذ» كان يستعير الأزرق فيلتبس بـ«مؤكد» — البنفسجي يفصلهما */
+  --color-violet: #c084fc;
 
   /* ── الخطوط ── */
   --font-sans: var(--font-arabic), "IBM Plex Sans Arabic", system-ui, sans-serif;
@@ -45,28 +47,88 @@
   --surface-3: #16293f;
   --text-0: #f4f8ff;
   --text-1: #b8c8de;
-  --text-2: #6c7e9a;
+  --text-2: #7387a3;
   --line: rgba(255, 255, 255, 0.09);
   --line-strong: rgba(255, 255, 255, 0.18);
   --glass: rgba(255, 255, 255, 0.04);
   --glass-strong: rgba(255, 255, 255, 0.07);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.06) inset,
     0 20px 50px -20px rgba(0, 0, 0, 0.6), 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+  /*
+    لون «العلامة» مقابل لون «الحبر».
+
+    المربّع في دليل الألوان وحافة بطاقة الحجز عنصر رسومي: يكفيه 3:1
+    ويجب أن يحمل هوية الحالة. ونصّ الشارة نصّ: يلزمه 4.5:1. خلطهما في
+    متغيّر واحد كلّف الكهرماني هويته — فالأصفر لا يبلغ 4.5:1 فوق الأبيض
+    إلا بعد أن يفقد 56% من سطوعه فيُقرأ بنّياً. فصلناهما.
+
+    في الداكن يتطابق الدوران: الألوان الزاهية تصلح للاثنين فوق خلفية داكنة.
+  */
+  --mark-warn: #fbbf24;
+  --mark-accent: #5eb8ff;
+  --mark-violet: #c084fc;
+  --mark-ok: #34d399;
+  --mark-danger: #f87171;
+  --mark-muted: #7387a3;
+
+  /* نص الأزرار ذات الخلفية اللونية — داكن فوق ألوان فاتحة */
+  --accent-ink: #04121f;
+  --danger-ink: #2a0808;
+  --ok-ink: #04231a;
 }
 
+/*
+  الوضع الفاتح.
+
+  ألوان الحالة أعلاه مضبوطة لخلفية داكنة: فوق الأبيض يعطي #34d399 تبايناً
+  1.8:1 و#fbbf24 يعطي 1.6:1 — أي شارات تكاد لا تُقرأ. فنعيد تعريف نفس
+  المتغيّرات هنا بنسخ داكنة مشبعة، فتتبعها كل أدوات tailwind تلقائياً
+  (text-ok وbg-warn/15 وborder-s-danger …) بلا تعديل في المكوّنات.
+  كل القيم التالية تتجاوز 4.5:1 فوق الأبيض.
+*/
 [data-theme="light"] {
-  --surface-0: #f2f5fa;
+  --surface-0: #eef2f8;
   --surface-1: #ffffff;
-  --surface-2: #f7f9fd;
-  --surface-3: #eaeff7;
+  /* كان #f7f9fd — لا يكاد ينفصل عن بطاقة بيضاء، فتضيع البطاقات داخلها */
+  --surface-2: #eef3fa;
+  --surface-3: #e2e9f4;
   --text-0: #0a1424;
-  --text-1: #3b4d68;
-  --text-2: #6c7e9a;
-  --line: rgba(13, 31, 51, 0.10);
-  --line-strong: rgba(13, 31, 51, 0.20);
-  --glass: rgba(255, 255, 255, 0.7);
-  --glass-strong: rgba(255, 255, 255, 0.9);
+  --text-1: #35475f;
+  /* كان #6c7e9a — 3.9:1، ونصّه بحجم 11px فالرسوب مضاعف */
+  --text-2: #55657f;
+  --line: rgba(13, 31, 51, 0.14);
+  --line-strong: rgba(13, 31, 51, 0.28);
+  --glass: rgba(13, 31, 51, 0.04);
+  --glass-strong: rgba(13, 31, 51, 0.07);
   --shadow-card: 0 1px 2px rgba(13, 31, 51, 0.06), 0 8px 24px -12px rgba(13, 31, 51, 0.14);
+
+  /*
+    ألوان الحالة — النسب أدناه محسوبة داخل الشارة نفسها لا فوق الأبيض:
+    خلفية الشارة هي اللون ذاته بشفافية 15% فوق الأبيض، فترفع أرضية
+    القياس وتأكل نحو 1.2 نقطة من النسبة. القياس فوق الأبيض وحده يعطي
+    رقماً متفائلاً لا يصف ما يراه المستخدم.
+  */
+  --color-accent: #0a63b5;      /* شارة 4.9:1 · أبيض 6.1:1 */
+  --color-accent-soft: #08528f; /* 8.0:1 — الأدكن هنا هو «الأبرز» */
+  --color-accent-deep: #063d6c;
+  --color-ok: #047354;          /* شارة 4.7:1 */
+  --color-warn: #8e5706;        /* شارة 4.8:1 */
+  --color-danger: #c02222;      /* شارة 4.7:1 */
+  --color-info: #1d4ed8;
+  --color-violet: #7738e4;      /* شارة 4.8:1 */
+
+  /* العلامات تبقى زاهية — 3:1 يكفي للعنصر الرسومي، والهوية اللونية تُصان */
+  --mark-warn: #d97706;    /* 32° · تشبّع 97% — كهرماني لا بنّي */
+  --mark-accent: #1273cc;
+  --mark-violet: #8b3dfa;
+  --mark-ok: #0a9e6e;
+  --mark-danger: #e02424;
+  --mark-muted: #64748b;
+
+  /* الألوان صارت داكنة، فحبر الأزرار فوقها يقلب إلى الأبيض */
+  --accent-ink: #ffffff;
+  --danger-ink: #ffffff;
+  --ok-ink: #ffffff;
 }
 
 @layer base {
@@ -99,7 +161,7 @@
 
   ::selection {
     background: var(--color-accent);
-    color: #04121f;
+    color: var(--accent-ink);
   }
 
   /* شريط تمرير رفيع */
@@ -160,9 +222,19 @@
     background: var(--glass-strong);
     color: var(--text-0);
   }
+  /*
+    العنصر النشط: كان يلوّن نصّه بـaccent-soft، وهو #8ad4ff — على سايدبار
+    أبيض تباينه 1.5:1 فيختفي تماماً. صار اللون يتبع الثيم، ومعه شريط جانبي
+    ووزن أثقل حتى لا يبقى اللون وحده هو الدليل على الموضع الحالي.
+  */
   .nav-item[data-active="true"] {
-    background: color-mix(in oklab, var(--color-accent) 16%, transparent);
+    background: color-mix(in oklab, var(--color-accent) 14%, transparent);
     color: var(--color-accent-soft);
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 0 var(--color-accent);
+  }
+  html[dir="rtl"] .nav-item[data-active="true"] {
+    box-shadow: inset -3px 0 0 0 var(--color-accent);
   }
 }
 

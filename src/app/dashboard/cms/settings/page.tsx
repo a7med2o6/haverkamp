@@ -28,6 +28,10 @@ const LABELS: Record<string, string> = {
   'hr.workDayStart': 'بداية الدوام',
   'hr.workDayEnd': 'نهاية الدوام',
   'hr.lateGraceMins': 'سماح التأخير (دقيقة)',
+  'bookings.slotCapacity': 'أقصى عدد حجوزات في الموعد الواحد',
+  'bookings.slotMinutes': 'طول الموعد (دقيقة)',
+  'bookings.windowDays': 'مدى الحجز المتاح للعميل (يوم)',
+  'bookings.leadHours': 'أقل مهلة قبل الموعد (ساعة)',
 };
 
 const GROUP_TITLES: Record<string, string> = {
@@ -38,6 +42,7 @@ const GROUP_TITLES: Record<string, string> = {
   pos: 'نقطة البيع',
   hr: 'الموارد البشرية',
   tracking: 'التتبّع والإعلانات',
+  bookings: 'حجوزات العملاء الذاتية',
 };
 
 /** إعدادات بنية معقّدة أو حسّاسة لا تُحرَّر كنص بسيط */

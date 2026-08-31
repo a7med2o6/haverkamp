@@ -113,7 +113,15 @@ export type ExpiryTone = 'ok' | 'warn' | 'danger' | 'neutral';
  * حالة تاريخ انتهاء وثيقة: منتهية / توشك / سارية.
  * العتبات: 30 يوم = خطر، 90 يوم = تنبيه.
  */
-export function expiryStatus(date: Date | string | null | undefined): {
+export function expiryStatus(
+  date: Date | string | null | undefined,
+  /*
+    عتبات التنبيه بالأيام.
+    الافتراضي يناسب الإقامة، والجواز يمرّرها أوسع بكثير لأن تجديد الإقامة
+    يشترط بقاء سنة فيه — فالجواز يصير عائقاً قبل انتهائه بسنة.
+  */
+  { danger = 30, warn = 90 }: { danger?: number; warn?: number } = {}
+): {
   days: number | null;
   tone: ExpiryTone;
   label: string;
@@ -127,9 +135,15 @@ export function expiryStatus(date: Date | string | null | undefined): {
 
   if (days < 0) return { days, tone: 'danger', label: `منتهية منذ ${Math.abs(days)} يوم` };
   if (days === 0) return { days, tone: 'danger', label: 'تنتهي اليوم' };
-  if (days <= 30) return { days, tone: 'danger', label: `${days} يوم متبقٍ` };
-  if (days <= 90) return { days, tone: 'warn', label: `${days} يوم متبقٍ` };
+  if (days <= danger) return { days, tone: 'danger', label: labelFor(days) };
+  if (days <= warn) return { days, tone: 'warn', label: labelFor(days) };
   return { days, tone: 'ok', label: 'سارية' };
+}
+
+/** «١٤ يوم متبقٍ» للقريب و«٧ أشهر متبقية» للبعيد — العدّ باليوم يضيع فوق الشهرين */
+function labelFor(days: number): string {
+  if (days <= 60) return `${days} يوم متبقٍ`;
+  return `${Math.round(days / 30)} شهر متبقٍ`;
 }
 
 /**
@@ -213,6 +227,9 @@ function kuwaitDay(d: Date): Date {
   return new Date(y, m - 1, day);
 }
 
+/** رموز أيام الأسبوع بترتيب getDay — تطابق إعداد العطلة الأسبوعية hr.weekend */
+export const DAY_CODES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
 /** أول يوم في سبت الأسبوع الذي يقع فيه التاريخ (بتوقيت الكويت) */
 export function startOfWeek(d: Date): Date {
   const out = kuwaitDay(d);
@@ -274,4 +291,48 @@ export function formatBookingTime(d: Date): string | null {
 export function dayKey(d: Date): string {
   const { y, m, d: day } = kuwaitParts(d);
   return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/** أول يوم في الشهر الذي يقع فيه التاريخ (بتوقيت الكويت) */
+export function startOfMonth(d: Date): Date {
+  const { y, m } = kuwaitParts(d);
+  return new Date(y, m - 1, 1);
+}
+
+/**
+ * خانات تقويم الشهر: أسابيع كاملة من السبت إلى الجمعة.
+ * تُكمَّل الأطراف بأيام الشهرين المجاورين ليبقى كل صف سبعة أعمدة —
+ * فبقاء الشبكة مستطيلة أسهل على العين من صفوف ناقصة.
+ */
+export function monthGridDays(monthStart: Date): Date[] {
+  // 6 = السبت بداية الأسبوع — كم يوماً نرجع للخلف لنبلغه
+  const lead = (monthStart.getDay() + 1) % 7;
+  const start = new Date(monthStart);
+  start.setDate(start.getDate() - lead);
+
+  const inMonth = new Date(
+    monthStart.getFullYear(),
+    monthStart.getMonth() + 1,
+    0
+  ).getDate();
+  const cells = Math.ceil((lead + inMonth) / 7) * 7;
+
+  return Array.from({ length: cells }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
+/** «أغسطس 2026» لترويسة التقويم الشهري */
+export function formatMonthLabel(d: Date): string {
+  return new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+}
+
+/** مفتاح شهر للروابط: YYYY-MM */
+export function monthKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }

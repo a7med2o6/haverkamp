@@ -356,6 +356,10 @@ model Booking {
   vehicle     Vehicle?      @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
   serviceId   String?
   service     Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  /// مفتاح الخدمة في كتالوج الحجز — قائمة الاستقبال لا قائمة الموقع
+  serviceKey  String?
+  /// الاختيار الفرعي: ماركة الفيلم، أو «داخلي»، أو «حقن شروخ»
+  serviceSpec String?
   // بيانات مُدخلة من نموذج الموقع قبل إنشاء ملف عميل
   guestName   String?
   guestPhone  String?
@@ -367,10 +371,22 @@ model Booking {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  // تذكير الموعد — يُرسل قبل يوم مع رابط تأكيد يفتحه العميل بلا تسجيل دخول
+  /// توكن رابط التأكيد العام — عشوائي لا مشتقّ من الكود، فالأكواد تسلسلية
+  /// ومن عرف كوده استنتج أكواد غيره فأكّد مواعيدهم أو اطّلع على بياناتهم
+  confirmToken   String    @unique @default(uuid(4))
+  /// متى أُرسل التذكير — وجوده يمنع تكرار الإرسال
+  reminderSentAt DateTime?
+  /// متى أكّد العميل موعده من الرابط — نميّزه عن تأكيد الموظف
+  confirmedAt    DateTime?
+  /// متى غيّر العميل موعده بنفسه — الاستقبال يحتاج يعرف أن الموعد تحرّك
+  rescheduledAt  DateTime?
+
   jobOrder JobOrder?
 
   @@index([status, scheduledAt])
   @@index([scheduledAt])
+  @@index([reminderSentAt])
   @@map("bookings")
 }
 
@@ -408,6 +424,33 @@ model Department {
   @@map("departments")
 }
 
+/**
+ * ما يُتقنه الموظف.
+ *
+ * قائمة لا قيمة واحدة: الفني الواحد قد يركّب العازل والحماية معاً، وهي
+ * أكثر التركيبات شيوعاً في الورشة. والقسم لا يعبّر عنها لأن الموظف يقع
+ * في قسم واحد.
+ *
+ * البوفيه والسواقة والإدارة ليست مهارات سيارات، لكنها هنا لأن التصنيف
+ * واحد: من يظهر في قائمة «من اشتغل على هذه القطعة» ومن لا يظهر.
+ */
+enum EmployeeSkill {
+  TINT // عازل
+  PROTECTION // حماية
+  PAINT // صبغ
+  WASHING // غسيل
+  POLISH // بوليش
+  CLEANING // تنظيف
+  GLASS // إصلاح جام
+  BLACKSMITH // حداد
+  ELECTRICIAN // كهربائي
+  AC // تكييف
+  TAILOR // خياط
+  BUFFET // بوفية
+  DRIVER // سائق
+  MANAGEMENT // إدارة
+}
+
 enum EmployeeStatus {
   ACTIVE
   ON_LEAVE
@@ -436,6 +479,8 @@ model Employee {
   contractEnd  DateTime?
   sponsor      String? // الكفيل — الجهة التي تحمل الإقامة
   status       EmployeeStatus @default(ACTIVE)
+  /// ما يتقنه — يحدّد ظهوره في قوائم إسناد الشغل
+  skills       EmployeeSkill[]
   baseSalary   Decimal        @db.Decimal(12, 3)
   allowance    Decimal        @default(0) @db.Decimal(12, 3)
   bankName     String? // اسم البنك (KIB، NBK …)
@@ -452,7 +497,7 @@ model Employee {
   payslips     Payslip[]
   documents    EmployeeDocument[]
   reviews      PerformanceReview[]
-  jobOrders    JobOrderAssignee[]
+  jobItems     JobOrderItemAssignee[]
   advances     EmployeeAdvance[]
 
   @@index([status])
@@ -841,12 +886,14 @@ model JobOrder {
   deliveredAt DateTime?
   intakeNotes String? // ملاحظات الاستلام (خدوش موجودة ...)
   intakePhotos String[] // صور حالة السيارة عند الاستلام
+  /// رقم «بيان التشغيل» الورقي المطبوع — جسر الفترة الانتقالية: التوقيع
+  /// يبقى على الورقة، وهذا ما يدلّ على أي ورقة تخصّ هذا الأمر عند النزاع
+  paperRef    String?
   notes       String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   items      JobOrderItem[]
-  assignees  JobOrderAssignee[]
   warranties Warranty[]
   order      Order?
 
@@ -864,6 +911,9 @@ model JobOrderItem {
   productId  String?
   product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   label      String
+  /// الاختيار المحدَّد للبند: درجة العازل، أو ماركة الحماية، أو «دائم مطفي»
+  /// — كان يُكتب نصّاً حرّاً في ملاحظات الاستلام فلا تقرؤه الكفالة ولا تقرير
+  spec       String?
   qty        Decimal  @default(1) @db.Decimal(12, 2)
   unitPrice  Decimal  @db.Decimal(12, 3)
   total      Decimal  @db.Decimal(14, 3)
@@ -875,19 +925,30 @@ model JobOrderItem {
   parent   JobOrderItem?  @relation("JobItemChildren", fields: [parentId], references: [id], onDelete: Cascade)
   children JobOrderItem[] @relation("JobItemChildren")
 
+  assignees JobOrderItemAssignee[]
+
   @@index([parentId])
   @@map("job_order_items")
 }
 
-model JobOrderAssignee {
-  jobOrderId String
-  jobOrder   JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+/**
+ * من اشتغل على أيّ قطعة.
+ *
+ * الإسناد على مستوى الأمر لا يكفي: العازل يُركَّب على ستّ قطع زجاج قد
+ * يتقاسمها خمسة فنيين، وقطعة واحدة قد يشتغل عليها اثنان. وحين تظهر
+ * مشكلة في باب بعينه بعد شهر، المطلوب اسم من ركّب ذلك الباب لا قائمة
+ * كل من مرّ على السيارة — وهذا الجدول هو ما يجيب عن ذلك.
+ */
+model JobOrderItemAssignee {
+  itemId     String
+  item       JobOrderItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  assignedAt DateTime @default(now())
+  employee   Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  assignedAt DateTime     @default(now())
 
-  @@id([jobOrderId, employeeId])
-  @@map("job_order_assignees")
+  @@id([itemId, employeeId])
+  @@index([employeeId])
+  @@map("job_order_item_assignees")
 }
 
 // ═══════════════════════════════════════════════════════════

@@ -8,9 +8,14 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { expiryStatus, formatDateOnly, formatDateTime, formatKWD, toNumber, todayDateOnly } from '@/lib/utils';
+import { cn, expiryStatus, formatDateOnly, formatDateTime, formatKWD, toNumber, todayDateOnly } from '@/lib/utils';
 import { BOOKING_STATUS, DOCUMENT_TYPE, JOB_STATUS } from '@/lib/labels';
-import { RESIDENCY_ALERT_DAYS, RESIDENCY_DOC_TYPES } from '@/lib/constants';
+import {
+  PASSPORT_ALERT_DAYS,
+  PASSPORT_CRITICAL_DAYS,
+  RESIDENCY_ALERT_DAYS,
+  RESIDENCY_DOC_TYPES,
+} from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +31,13 @@ export default async function DashboardHome() {
   const session = await requireAuth();
   const role = session.user.role;
   const { start, end } = dayBounds();
-  const in30Days = new Date();
-  in30Days.setDate(in30Days.getDate() + 30);
-
   // عتبة تنبيه الإقامات — تشمل المنتهية بالفعل (بلا حدّ أدنى)
   const residencyDeadline = new Date(
     todayDateOnly().getTime() + RESIDENCY_ALERT_DAYS * 86400000
+  );
+  // الجواز نافذته سنة: تجديد الإقامة يشترط بقاء سنة فيه
+  const passportDeadline = new Date(
+    todayDateOnly().getTime() + PASSPORT_ALERT_DAYS * 86400000
   );
 
   const [
@@ -42,7 +48,6 @@ export default async function DashboardHome() {
     presentToday,
     pendingLeaves,
     expiringResidencies,
-    expiringWarranties,
     upcomingBookings,
     recentJobs,
   ] = await Promise.all([
@@ -61,20 +66,26 @@ export default async function DashboardHome() {
       where: { date: { gte: start, lt: end }, status: { in: ['PRESENT', 'LATE', 'HALF_DAY'] } },
     }),
     db.leaveRequest.count({ where: { status: 'PENDING' } }),
-    // الإقامات وأذونات العمل المنتهية أو التي تنتهي خلال 15 يوم — الأقرب أولاً
+    /*
+      وثائق تحتاج تحرّكاً — الأقرب أولاً.
+      الجواز داخل هنا بنافذته الخاصة: كان خارج المراقبة كلّها، فجواز
+      باقٍ له سبعة أشهر لا يظهر في أي مكان رغم أنه يمنع تجديد الإقامة.
+    */
     db.employeeDocument.findMany({
       where: {
-        type: { in: [...RESIDENCY_DOC_TYPES] },
-        expiryDate: { not: null, lte: residencyDeadline },
+        OR: [
+          {
+            type: { in: [...RESIDENCY_DOC_TYPES] },
+            expiryDate: { not: null, lte: residencyDeadline },
+          },
+          { type: 'PASSPORT', expiryDate: { not: null, lte: passportDeadline } },
+        ],
         employee: { status: { in: ['ACTIVE', 'ON_LEAVE'] } },
       },
       orderBy: { expiryDate: 'asc' },
       include: {
         employee: { select: { id: true, fullName: true, code: true, position: true } },
       },
-    }),
-    db.warranty.count({
-      where: { isVoid: false, endDate: { lte: in30Days, gte: new Date() } },
     }),
     db.booking.findMany({
       where: { scheduledAt: { gte: new Date() }, status: { in: ['PENDING', 'CONFIRMED'] } },
@@ -97,6 +108,37 @@ export default async function DashboardHome() {
   ]);
 
   const lowStockCount = Number(lowStock[0]?.count ?? 0);
+
+  /*
+    أشدّ الوثائق حالاً يحدّد لون التنبيه.
+    تلوين القسم أحمر دائماً يجعل الأحمر بلا معنى: جواز باقٍ له سبعة أشهر
+    يحتاج تحرّكاً لا استنفاراً، وإقامة انتهت أمس تحتاج الاثنين.
+  */
+  const expiringPassports = expiringResidencies.filter((d) => d.type === 'PASSPORT');
+  const expiringPassportCount = expiringPassports.length;
+  const expiringResidencyCount = expiringResidencies.length - expiringPassportCount;
+
+  const passportTone = expiringPassports.some(
+    (d) =>
+      expiryStatus(d.expiryDate, {
+        danger: PASSPORT_CRITICAL_DAYS,
+        warn: PASSPORT_ALERT_DAYS,
+      }).tone === 'danger'
+  )
+    ? ('danger' as const)
+    : ('warn' as const);
+
+  const docsTone = expiringResidencies.some(
+    (d) =>
+      expiryStatus(
+        d.expiryDate,
+        d.type === 'PASSPORT'
+          ? { danger: PASSPORT_CRITICAL_DAYS, warn: PASSPORT_ALERT_DAYS }
+          : undefined
+      ).tone === 'danger'
+  )
+    ? ('danger' as const)
+    : ('warn' as const);
 
   return (
     <>
@@ -161,31 +203,34 @@ export default async function DashboardHome() {
             />
             <StatCard
               label={`إقامات تنتهي خلال ${RESIDENCY_ALERT_DAYS} يوم`}
-              value={expiringResidencies.length}
+              value={expiringResidencyCount}
               icon="FileWarning"
-              tone={expiringResidencies.length > 0 ? 'danger' : 'neutral'}
+              tone={expiringResidencyCount > 0 ? 'danger' : 'neutral'}
+              href="/dashboard/hr/employees?expiring=1"
+            />
+            <StatCard
+              label="جوازات تحتاج تجديد"
+              value={expiringPassportCount}
+              icon="BookUser"
+              tone={expiringPassportCount > 0 ? passportTone : 'neutral'}
               href="/dashboard/hr/employees?expiring=1"
             />
           </>
-        )}
-        {can(role, 'crm:read') && (
-          <StatCard
-            label="كفالات تنتهي قريباً"
-            value={expiringWarranties}
-            icon="ShieldAlert"
-            tone={expiringWarranties > 0 ? 'warn' : 'neutral'}
-            href="/dashboard/warranties"
-          />
         )}
       </div>
 
       {/* ── تنبيه الإقامات — يظهر فقط عند وجود ما يحتاج إجراء ── */}
       {can(role, 'hr:read') && expiringResidencies.length > 0 && (
-        <Card className="mt-6 border-danger/35">
-          <CardHeader className="bg-danger/[0.07]">
-            <CardTitle className="flex items-center gap-2 text-danger">
+        <Card className={cn('mt-6', docsTone === 'danger' ? 'border-danger/35' : 'border-warn/35')}>
+          <CardHeader className={docsTone === 'danger' ? 'bg-danger/[0.07]' : 'bg-warn/[0.07]'}>
+            <CardTitle
+              className={cn(
+                'flex items-center gap-2',
+                docsTone === 'danger' ? 'text-danger' : 'text-warn'
+              )}
+            >
               <TriangleAlert className="size-4" />
-              إقامات تحتاج تجديد عاجل
+              وثائق تحتاج تجديد
             </CardTitle>
             <Link
               href="/dashboard/hr/employees?expiring=1"
@@ -207,7 +252,13 @@ export default async function DashboardHome() {
               </thead>
               <tbody>
                 {expiringResidencies.map((doc) => {
-                  const status = expiryStatus(doc.expiryDate);
+                  // الجواز يُقاس بعتباته: سنة تنبيه وستة أشهر خطر
+                  const status = expiryStatus(
+                    doc.expiryDate,
+                    doc.type === 'PASSPORT'
+                      ? { danger: PASSPORT_CRITICAL_DAYS, warn: PASSPORT_ALERT_DAYS }
+                      : undefined
+                  );
                   return (
                     <Tr key={doc.id}>
                       <Td>
@@ -364,7 +415,7 @@ export default async function DashboardHome() {
             </div>
             <Link
               href="/dashboard/pos"
-              className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-sm)] bg-accent px-4 text-sm font-semibold text-[#04121f] hover:bg-accent-soft"
+              className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-sm)] bg-accent px-4 text-sm font-semibold text-[var(--accent-ink)] hover:bg-accent-soft"
             >
               فتح نقطة البيع
             </Link>

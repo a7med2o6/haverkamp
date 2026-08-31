@@ -10,7 +10,7 @@ import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Combobox } from '@/components/ui/combobox';
 import { BOOKING_SERVICES, bookingService } from '@/lib/intake';
 import { BOOKING_STATUS, toOptions } from '@/lib/labels';
-import { toLocalInput } from '@/lib/utils';
+import { formatPhone, toLocalInput } from '@/lib/utils';
 import { convertBookingToJob, saveBooking, setBookingStatus } from './actions';
 
 export interface BookingValues {
@@ -110,14 +110,13 @@ export function BookingFormButton({
               <Combobox
                 value={values.customerId ?? ''}
                 onChange={(v) => set('customerId', v)}
-                placeholder="— زائر جديد (أدخل البيانات أدناه) —"
-                searchPlaceholder="ابحث بالاسم أو الهاتف…"
+                placeholder="اكتب اسم العميل أو رقمه…"
                 emptyLabel="لا يوجد عميل بهذا الاسم أو الرقم"
                 pinned={{ value: '', label: '— زائر جديد (أدخل البيانات أدناه) —' }}
                 options={customers.map((c) => ({
                   value: c.id,
                   label: c.name,
-                  hint: c.phone,
+                  hint: formatPhone(c.phone),
                 }))}
               />
             </Field>

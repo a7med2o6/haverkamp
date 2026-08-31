@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronDown, Search, X } from 'lucide-react';
+import { Check, ChevronDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface ComboOption {
@@ -12,21 +12,20 @@ export interface ComboOption {
 }
 
 /**
- * قائمة اختيار بالبحث.
+ * حقل اختيار بالكتابة.
  *
- * قائمة <select> الأصلية تصلح لعشرة خيارات لا لخمسمائة عميل: لا تُرشَّح
- * ولا تُطابَق إلا بأول حرف، فيضطرّ الموظف إلى التمرير أمام العميل. هنا
- * يكتب جزءاً من الاسم أو من الرقم فتُرشَّح القائمة.
+ * الحقل نفسه حقل كتابة لا زرّ يفتح قائمة فيها حقل بحث: الموظف يستلم
+ * والعميل واقف، فيكتب أول حروف الاسم مباشرة بدل نقرة تسبق كل بحث.
+ * ولذلك تُرشَّح الخيارات مع أول حرف ولا تُنتظر نقرة أخرى.
  *
  * البحث يشمل التلميح لأن الاستقبال كثيراً ما يعرف رقم العميل ولا يتذكّر
- * كيف كُتب اسمه.
+ * كيف كُتب اسمه، ويتجاهل تنسيق الرقم فـ«55443322» يجد «+965 5544 3322».
  */
 export function Combobox({
   options,
   value,
   onChange,
-  placeholder = 'اختر…',
-  searchPlaceholder = 'اكتب للبحث…',
+  placeholder = 'اكتب للبحث أو اختر…',
   emptyLabel = 'لا نتائج',
   /** خيار ثابت أعلى القائمة لا يخضع للبحث */
   pinned,
@@ -36,13 +35,13 @@ export function Combobox({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  searchPlaceholder?: string;
   emptyLabel?: string;
   pinned?: ComboOption;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [active, setActive] = useState(0);
   const box = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
 
@@ -62,129 +61,123 @@ export function Combobox({
     });
   }, [options, query]);
 
-  /** الإغلاق يمسح البحث معه — قائمة تُفتح على بحث سابق تربك */
+  const list = pinned && !query.trim() ? [pinned, ...results] : results;
+
+  /** الإغلاق يمسح البحث ويعيد النصّ إلى المختار */
   const close = useCallback(() => {
     setOpen(false);
     setQuery('');
+    setActive(0);
   }, []);
 
-  // النقر خارج القائمة يغلقها — وإلا بقيت مفتوحة فوق بقية النموذج
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
       if (box.current && !box.current.contains(e.target as Node)) close();
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-    };
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => document.removeEventListener('mousedown', onDown);
   }, [open, close]);
-
-  // مزامنة مع الـDOM لا مع حالة React — التركيز على الحقل عند الفتح
-  useEffect(() => {
-    if (open) input.current?.focus();
-  }, [open]);
 
   function choose(next: string) {
     onChange(next);
     close();
+    input.current?.blur();
+  }
+
+  function onKey(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') return close();
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) return setOpen(true);
+      setActive((i) => {
+        const next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+        return Math.max(0, Math.min(list.length - 1, next));
+      });
+    }
+    if (e.key === 'Enter' && open && list[active]) {
+      e.preventDefault();
+      choose(list[active].value);
+    }
   }
 
   return (
     <div ref={box} className={cn('relative', className)}>
-      <button
-        type="button"
-        onClick={() => (open ? close() : setOpen(true))}
-        className="flex h-10 w-full items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 text-start text-sm text-[var(--text-0)] transition-colors hover:border-[var(--line-strong)] focus:border-accent focus:outline-none"
-      >
-        <span className={cn('truncate', !selected && 'text-[var(--text-2)]')}>
-          {selected ? selected.label : placeholder}
-          {selected?.hint && (
-            <span className="tnum ms-2 text-[12px] text-[var(--text-2)]" dir="ltr">
-              {selected.hint}
-            </span>
+      <div className="relative">
+        <input
+          ref={input}
+          // مفتوحاً يعرض ما يُكتب، ومغلقاً يعرض المختار
+          value={open ? query : (selected?.label ?? '')}
+          placeholder={placeholder}
+          onFocus={() => setOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setActive(0);
+            if (!open) setOpen(true);
+          }}
+          onKeyDown={onKey}
+          className="h-10 w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 pe-14 text-sm text-[var(--text-0)] placeholder:text-[var(--text-2)] focus:border-accent focus:outline-none"
+        />
+
+        <div className="absolute inset-y-0 end-2 flex items-center gap-0.5">
+          {selected && !open && (
+            <button
+              type="button"
+              aria-label="مسح الاختيار"
+              onClick={() => onChange('')}
+              className="grid size-5 place-items-center rounded-full text-[var(--text-2)] hover:bg-[var(--glass-strong)] hover:text-[var(--text-0)]"
+            >
+              <X className="size-3.5" />
+            </button>
           )}
-        </span>
-        <ChevronDown className="size-4 shrink-0 text-[var(--text-2)]" />
-      </button>
+          <button
+            type="button"
+            aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
+            tabIndex={-1}
+            onClick={() => (open ? close() : input.current?.focus())}
+            className="grid size-5 place-items-center text-[var(--text-2)]"
+          >
+            <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
+          </button>
+        </div>
+      </div>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line-strong)] bg-[var(--surface-1)] shadow-[var(--shadow-card)]">
-          <div className="relative border-b border-[var(--line)]">
-            <Search className="pointer-events-none absolute inset-y-0 start-3 my-auto size-4 text-[var(--text-2)]" />
-            <input
-              ref={input}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="h-10 w-full bg-transparent ps-9 pe-8 text-sm text-[var(--text-0)] placeholder:text-[var(--text-2)] focus:outline-none"
-            />
-            {query && (
+        <div className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--line-strong)] bg-[var(--surface-1)] p-1 shadow-[var(--shadow-card)]">
+          {list.length === 0 ? (
+            <p className="px-3 py-6 text-center text-[13px] text-[var(--text-2)]">
+              {emptyLabel}
+            </p>
+          ) : (
+            list.map((o, i) => (
               <button
+                key={o.value || 'none'}
                 type="button"
-                onClick={() => setQuery('')}
-                aria-label="مسح البحث"
-                className="absolute inset-y-0 end-2 my-auto text-[var(--text-2)] hover:text-[var(--text-0)]"
+                onMouseDown={(e) => e.preventDefault()}
+                onMouseEnter={() => setActive(i)}
+                onClick={() => choose(o.value)}
+                className={cn(
+                  'flex w-full items-center justify-between gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-start text-[13px] transition-colors',
+                  i === active
+                    ? 'bg-[var(--glass-strong)] text-[var(--text-0)]'
+                    : 'text-[var(--text-1)]',
+                  o.value === value && 'text-accent'
+                )}
               >
-                <X className="size-4" />
+                <span className="truncate">{o.label}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {o.hint && (
+                    <span className="tnum text-[11px] text-[var(--text-2)]" dir="ltr">
+                      {o.hint}
+                    </span>
+                  )}
+                  {o.value === value && <Check className="size-3.5" />}
+                </span>
               </button>
-            )}
-          </div>
-
-          <div className="max-h-64 overflow-y-auto p-1">
-            {pinned && !query && (
-              <Row option={pinned} active={value === pinned.value} onPick={choose} />
-            )}
-            {results.length === 0 ? (
-              <p className="px-3 py-6 text-center text-[13px] text-[var(--text-2)]">
-                {emptyLabel}
-              </p>
-            ) : (
-              results.map((o) => (
-                <Row key={o.value} option={o} active={value === o.value} onPick={choose} />
-              ))
-            )}
-          </div>
+            ))
+          )}
         </div>
       )}
     </div>
-  );
-}
-
-function Row({
-  option,
-  active,
-  onPick,
-}: {
-  option: ComboOption;
-  active: boolean;
-  onPick: (v: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onPick(option.value)}
-      className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-[var(--radius-sm)] px-3 py-2 text-start text-[13px] transition-colors',
-        active
-          ? 'bg-accent/15 text-accent'
-          : 'text-[var(--text-1)] hover:bg-[var(--glass-strong)] hover:text-[var(--text-0)]'
-      )}
-    >
-      <span className="truncate">{option.label}</span>
-      <span className="flex shrink-0 items-center gap-2">
-        {option.hint && (
-          <span className="tnum text-[11px] text-[var(--text-2)]" dir="ltr">
-            {option.hint}
-          </span>
-        )}
-        {active && <Check className="size-3.5" />}
-      </span>
-    </button>
   );
 }

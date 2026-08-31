@@ -111,9 +111,16 @@ export function SupplierFormButton({ supplier }: { supplier?: Supplier }) {
               />
             </Field>
 
-            <Field label="البريد الإلكتروني">
+            {/*
+              `type=email` يرفض الإرسال عند أي نصّ ليس بريداً — برسالة
+              إنجليزية من المتصفّح تُقرأ كأن الحقل إجباري، وكثيراً ما يملأ
+              المتصفّح الحقل تلقائياً بما ليس بريداً. والحقل اختياري أصلاً،
+              والتحقّق من صيغته يجري في الخادم برسالة عربية.
+            */}
+            <Field label="البريد الإلكتروني" hint="اختياري">
               <Input
-                type="email"
+                type="text"
+                inputMode="email"
                 value={values.email}
                 onChange={(e) => setValues((v) => ({ ...v, email: e.target.value }))}
                 dir="ltr"

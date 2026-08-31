@@ -12,15 +12,7 @@ import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS, CUSTOMER_SOURCE } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
-import {
-  cn,
-  formatDateTime,
-  monthGridDays,
-  startOfMonth,
-  startOfWeek,
-  toLocalInput,
-  weekDays,
-} from '@/lib/utils';
+import { cn, formatDateTime, formatPhone, monthGridDays, startOfMonth, startOfWeek, toLocalInput, weekDays } from '@/lib/utils';
 import { queueWhere, reminderInclude, tomorrowKey } from '@/lib/reminders';
 import { bookingServiceLabel } from '@/lib/intake';
 import type { CalendarBooking } from './calendar';
@@ -340,7 +332,7 @@ export default async function BookingsPage({
                       </span>
                     )}
                     <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
-                      {b.customer?.phone ?? b.guestPhone ?? ''}
+                      {formatPhone(b.customer?.phone ?? b.guestPhone)}
                     </span>
                   </Td>
                   <Td className="text-[12px]">

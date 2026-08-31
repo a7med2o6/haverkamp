@@ -38,7 +38,7 @@ export default async function JobOrderDetailPage({
   const session = await requirePermission('workshop:read');
   const { id } = await params;
 
-  const [job, products, services] = await Promise.all([
+  const [job, services] = await Promise.all([
     db.jobOrder.findUnique({
       where: { id },
       include: {
@@ -48,21 +48,11 @@ export default async function JobOrderDetailPage({
           },
         },
         vehicle: true,
-        items: {
-          orderBy: { id: 'asc' },
-          include: {
-            assignees: { include: { employee: { select: { id: true, fullName: true } } } },
-          },
-        },
+        items: { orderBy: { id: 'asc' } },
         warranties: { include: { service: { include: { translations: { where: { locale: 'ar' } } } } } },
         order: { select: { id: true, number: true } },
         booking: { select: { code: true } },
       },
-    }),
-    db.product.findMany({
-      where: { isActive: true },
-      orderBy: { nameAr: 'asc' },
-      select: { id: true, nameAr: true, price: true },
     }),
     db.service.findMany({
       where: { isActive: true },
@@ -208,11 +198,7 @@ export default async function JobOrderDetailPage({
           <CardHeader>
             <CardTitle>بنود الشغل — {formatKWD(totalValue)}</CardTitle>
             {canWrite && (
-              <JobItemForm
-                jobOrderId={job.id}
-                products={products.map((p) => ({ ...p, price: toNumber(p.price) }))}
-                services={serviceOptions}
-              />
+              <JobItemForm jobOrderId={job.id} />
             )}
           </CardHeader>
           <JobItems
@@ -226,7 +212,6 @@ export default async function JobOrderDetailPage({
               unitPrice: toNumber(i.unitPrice),
               total: toNumber(i.total),
               isDone: i.isDone,
-              techs: i.assignees.map((a) => a.employee.fullName),
               // درجات قطع هذه الخدمة — يراها المستقبل بلا فتح شيء
               grades: [
                 ...new Set(

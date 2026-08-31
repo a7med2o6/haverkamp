@@ -8,7 +8,7 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { cn, expiryStatus, formatDateOnly, formatDateTime, formatKWD, toNumber, todayDateOnly } from '@/lib/utils';
+import { cn, expiryStatus, formatDateOnly, formatDateTime, formatKWD, formatPhone, toNumber, todayDateOnly } from '@/lib/utils';
 import { BOOKING_STATUS, DOCUMENT_TYPE, JOB_STATUS } from '@/lib/labels';
 import {
   PASSPORT_ALERT_DAYS,
@@ -327,7 +327,7 @@ export default async function DashboardHome() {
                             {b.customer?.name ?? b.guestName ?? '—'}
                           </span>
                           <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
-                            {b.customer?.phone ?? b.guestPhone ?? ''}
+                            {formatPhone(b.customer?.phone ?? b.guestPhone)}
                           </span>
                         </Td>
                         <Td>{b.service?.translations[0]?.name ?? '—'}</Td>

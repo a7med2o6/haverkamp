@@ -7,15 +7,7 @@ import { can } from '@/lib/rbac';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { DOCUMENT_TILES, EMPLOYEE_STATUS, LEAVE_STATUS, LEAVE_TYPE } from '@/lib/labels';
-import {
-  cn,
-  dateOnlyToInput,
-  expiryStatus,
-  formatDateOnly,
-  formatKWD,
-  toNumber,
-  yearsSince,
-} from '@/lib/utils';
+import { cn, dateOnlyToInput, expiryStatus, formatDateOnly, formatKWD, formatPhone, toNumber, yearsSince } from '@/lib/utils';
 import { Avatar } from '../employee-list';
 import { EmployeeFormButton } from '../employee-form';
 import { AddLeaveButton, DocumentTile, RenewDocumentsButton } from './profile-client';
@@ -155,7 +147,7 @@ export default async function EmployeeProfilePage({
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <InfoCard label="الرقم المدني" value={employee.civilId} ltr />
           <InfoCard label="الجنسية" value={employee.nationality} />
-          <InfoCard label="الهاتف" value={employee.phone} ltr highlight="accent" />
+          <InfoCard label="الهاتف" value={formatPhone(employee.phone)} ltr highlight="accent" />
           <InfoCard label="الكفيل" value={employee.sponsor} />
           <InfoCard
             label="التعيين"

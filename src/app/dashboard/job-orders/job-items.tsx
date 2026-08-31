@@ -1,7 +1,7 @@
 'use client';
 
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { cn, formatKWD } from '@/lib/utils';
+import { formatKWD } from '@/lib/utils';
 import { JobItemActions } from './job-client';
 
 export interface JobItemRow {
@@ -11,8 +11,6 @@ export interface JobItemRow {
   spec: string | null;
   unitPrice: number;
   total: number;
-  isDone: boolean;
-  techs: string[];
   /** درجات العزل الفريدة تحت هذه الخدمة — «شفاف · 30%» */
   grades: string[];
 }
@@ -44,13 +42,17 @@ export function JobItems({
 
   return (
     <TableWrap className="rounded-none border-0">
-      <Table>
+      {/*
+        `min-w-max` الافتراضي يجعل عرض الجدول عرضَ محتواه الأقصى، وأسماء
+        الفنيين شرائح تلتفّ — فيحسبها المتصفّح في سطر واحد ويمدّ الجدول
+        حتى يخرج عمود السعر من الشاشة. بعرض أدنى ثابت تلتفّ
+        الشرائح داخل عمودها.
+      */}
+      <Table className="min-w-0">
         <thead>
           <tr>
             <Th>ما طلبه العميل</Th>
-            <Th>الفنيون</Th>
             <Th>السعر</Th>
-            <Th>التقدّم</Th>
             {canWrite && <Th />}
           </tr>
         </thead>
@@ -59,26 +61,18 @@ export function JobItems({
             <EmptyState
               title="لا توجد بنود"
               description="أنشئ بيان تشغيل أو أضف بنداً"
-              colSpan={5}
+              colSpan={3}
             />
           ) : (
             parents.map((item) => {
               const parts = partsOf.get(item.id) ?? [];
-              const done = parts.filter((p) => p.isDone).length;
-              // فنيّو الخدمة هم مجموع من اشتغلوا على قطعها
-              const techs = [...new Set(parts.flatMap((p) => p.techs))];
 
               return (
                 <Tr key={item.id}>
                   <Td>
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={cn(
-                          'font-medium',
-                          item.isDone
-                            ? 'text-[var(--text-2)] line-through'
-                            : 'text-[var(--text-0)]'
-                        )}
+                        className="font-medium text-[var(--text-0)]"
                       >
                         {item.label}
                       </span>
@@ -87,33 +81,31 @@ export function JobItems({
                           {item.spec}
                         </span>
                       )}
-                      {item.grades.length > 0 && (
-                        <span className="text-[11px] text-[var(--text-1)]">
-                          {item.grades.join(' · ')}
-                        </span>
-                      )}
+                      {/*
+                        نحذف من المواصفات ما يقوله اسم البند أصلاً:
+                        «حماية البدي — بدي كامل» قطعُها كلّها «كامل»، فعرضها
+                        تكرارٌ للاسم. ودرجات العزل («شفاف»، «٣٠٪») لا يقولها
+                        الاسم فتبقى.
+                      */}
+                      {(() => {
+                        const grades = item.grades.filter((g) => !item.label.includes(g));
+                        if (grades.length === 0) return null;
+                        return (
+                          <span className="text-[11px] text-[var(--text-1)]">
+                            {grades.join(' · ')}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </Td>
-                  <Td>
-                    <TechList names={techs} />
-                  </Td>
                   <Td className="tnum font-semibold">{formatKWD(item.total)}</Td>
-                  <Td className="tnum text-[12px] text-[var(--text-2)]">
-                    {parts.length > 0
-                      ? `${done} / ${parts.length}`
-                      : item.isDone
-                        ? 'منجز'
-                        : '—'}
-                  </Td>
                   {canWrite && (
                     <Td>
                       <JobItemActions
                         id={item.id}
                         jobOrderId={jobOrderId}
-                        isDone={item.isDone}
                         label={item.label}
                         childCount={parts.length}
-                        hideCheckbox={parts.length > 0}
                       />
                     </Td>
                   )}
@@ -124,23 +116,5 @@ export function JobItems({
         </tbody>
       </Table>
     </TableWrap>
-  );
-}
-
-function TechList({ names }: { names: string[] }) {
-  if (names.length === 0) {
-    return <span className="text-[11px] text-[var(--text-2)]">—</span>;
-  }
-  return (
-    <div className="flex flex-wrap gap-1">
-      {names.map((n) => (
-        <span
-          key={n}
-          className="rounded-full bg-[var(--glass-strong)] px-2 py-0.5 text-[11px] text-[var(--text-1)]"
-        >
-          {n}
-        </span>
-      ))}
-    </div>
   );
 }

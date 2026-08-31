@@ -70,9 +70,7 @@ export default async function JobOrdersPage({
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         vehicle: { select: { make: true, model: true, plateNo: true } },
-        items: {
-          select: { id: true, total: true, isDone: true, parentId: true },
-        },
+        items: { select: { total: true } },
         order: { select: { id: true, number: true } },
       },
     }),
@@ -120,18 +118,35 @@ export default async function JobOrdersPage({
         ))}
       </div>
 
+      {/*
+        لا عمود يمتصّ الفائض هنا.
+        عمود مرن واحد (w-full) يبتلع الزيادة كلّها — بلغت ١١٠٩ بكسل من
+        أصل ١٩٠٠ — فتتكوّم فجوة في وسط الصف بين السيارة واللوحة وتفقد
+        العين الصفَّ وهي تعبره. وبلا عمود مرن يوزّع المتصفّح الزيادة على
+        الأعمدة الثمانية فتبقى متقاربة، وهو ما لم يكن يصلح حين كانت
+        الأعمدة ستة: نصيب العمود من الزيادة يكبر كلّما قلّت الأعمدة.
+      */}
       <TableWrap>
-        <Table>
+        {/*
+          عرض أدنى صريح بدل `min-w-max` الافتراضي: يُمرَّر الجدول أفقياً
+          على الشاشات الضيّقة بدل أن تنضغط الأعمدة حتى تُقطَّع الأسماء.
+        */}
+        <Table className="min-w-[820px]">
           <thead>
             <tr>
               <Th>الرقم</Th>
+              {/*
+                هذا العمود وحده يمتصّ الفراغ الزائد.
+                الجدول يمتدّ لعرض الشاشة، وبلا عمود مرن تتوزّع الزيادة على
+                الأعمدة كلّها فتتباعد الخلايا حتى يصعب تتبّع الصف الواحد.
+              */}
               <Th>العميل</Th>
               <Th>السيارة</Th>
-              <Th>التقدّم</Th>
+              <Th>اللوحة</Th>
               <Th>القيمة</Th>
+              <Th>الفاتورة</Th>
               <Th>الاستلام</Th>
               <Th>الحالة</Th>
-              <Th>الفاتورة</Th>
             </tr>
           </thead>
           <tbody>
@@ -144,25 +159,13 @@ export default async function JobOrdersPage({
             ) : (
               jobs.map((j) => {
                 const value = j.items.reduce((s, i) => s + toNumber(i.total), 0);
-                /*
-                  التقدّم يُعدّ وحدات العمل الحقيقية: القطع حيث وُجدت،
-                  والخدمة نفسها حيث لا قطع لها. عدّ الآباء مع أبنائهم كان
-                  يخلط «الخدمة» بـ«قطعها» في مقام واحد فيصير «٢ من ٦» لغزاً.
-                */
-                const parentsWithParts = new Set(
-                  j.items.map((i) => i.parentId).filter(Boolean)
-                );
-                const units = j.items.filter(
-                  (i) => i.parentId !== null || !parentsWithParts.has(i.id)
-                );
-                const done = units.filter((i) => i.isDone).length;
                 const due = dueStatus(
                   j.promisedAt,
                   j.status !== 'DELIVERED' && j.status !== 'CANCELLED'
                 );
                 return (
                   <Tr key={j.id}>
-                    <Td className="tnum" dir="ltr">
+                    <Td className="tnum whitespace-nowrap" dir="ltr">
                       <Link
                         href={`/dashboard/job-orders/${j.id}`}
                         className="font-medium text-accent hover:underline"
@@ -170,34 +173,40 @@ export default async function JobOrdersPage({
                         {j.number}
                       </Link>
                     </Td>
-                    <Td>
+                    {/* العميل وسيارته سطر واحد — أيّهما وحده لا يعرّف الأمر */}
+                    <Td className="whitespace-nowrap">
                       <Link
                         href={`/dashboard/customers/${j.customer.id}`}
-                        className="hover:text-accent hover:underline"
+                        className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
                       >
                         {j.customer.name}
                       </Link>
                     </Td>
+
                     <Td className="text-[12px]">
-                      {j.vehicle ? `${j.vehicle.make} ${j.vehicle.model}` : '—'}
-                      {j.vehicle?.plateNo && (
-                        <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
-                          {j.vehicle.plateNo}
+                      {j.vehicle ? (
+                        <span className="block truncate text-[var(--text-1)]">
+                          {j.vehicle.make} {j.vehicle.model}
                         </span>
+                      ) : (
+                        <span className="text-[var(--text-2)]">—</span>
                       )}
                     </Td>
-                    <Td className="tnum text-[12px]">
-                      {units.length > 0 ? `${done} / ${units.length}` : '—'}
+
+                    {/*
+                      اللوحة عمودها الخاصّ لتُقرأ في رتل واحد.
+                      و`dir=ltr` لازم: «10-839999» بلا اتجاه صريح ينعكس إلى
+                      «839999-10» — قِيس الترتيب المرسوم حرفاً حرفاً لا نصّه.
+                    */}
+                    <Td className="tnum whitespace-nowrap text-[12px]" dir="ltr">
+                      {j.vehicle?.plateNo ?? (
+                        <span className="text-[var(--text-2)]">—</span>
+                      )}
                     </Td>
-                    <Td className="tnum font-semibold">{formatKWD(value)}</Td>
-                    <Td className="tnum text-[12px]">{formatDate(j.receivedAt)}</Td>
-                    <Td>
-                      <div className="flex flex-wrap items-center gap-1">
-                        <Badge tone={JOB_STATUS[j.status].tone}>{JOB_STATUS[j.status].label}</Badge>
-                        {due && <Badge tone={due.tone}>{due.label}</Badge>}
-                      </div>
-                    </Td>
-                    <Td className="tnum text-[12px]" dir="ltr">
+
+                    <Td className="tnum whitespace-nowrap font-semibold">{formatKWD(value)}</Td>
+
+                    <Td className="tnum whitespace-nowrap text-[12px]" dir="ltr">
                       {j.order ? (
                         <Link
                           href={`/dashboard/invoices/${j.order.id}`}
@@ -206,8 +215,18 @@ export default async function JobOrdersPage({
                           {j.order.number}
                         </Link>
                       ) : (
-                        '—'
+                        <span className="text-[var(--text-2)]">—</span>
                       )}
+                    </Td>
+
+                    <Td className="tnum whitespace-nowrap text-[12px]">
+                      {formatDate(j.receivedAt)}
+                    </Td>
+                    <Td className="whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <Badge tone={JOB_STATUS[j.status].tone}>{JOB_STATUS[j.status].label}</Badge>
+                        {due && <Badge tone={due.tone}>{due.label}</Badge>}
+                      </div>
                     </Td>
                   </Tr>
                 );
@@ -221,3 +240,4 @@ export default async function JobOrdersPage({
     </>
   );
 }
+

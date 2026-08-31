@@ -7,7 +7,8 @@ import { ClipboardCheck, Loader2 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
-import { cn, formatKWD } from '@/lib/utils';
+import { Combobox } from '@/components/ui/combobox';
+import { cn, formatKWD, formatPhone } from '@/lib/utils';
 import {
   GLASS_GROUPS,
   GLASS_PARTS,
@@ -156,18 +157,24 @@ export function IntakeForm({
           <CardTitle>العميل والسيارة</CardTitle>
         </CardHeader>
         <CardBody className="grid gap-3 sm:grid-cols-2">
+          {/*
+            قائمة بالبحث لا <select>.
+            الاستلام يجري والعميل واقف، وقائمة بمئات الأسماء لا تُرشَّح
+            تعني تمريراً أمامه. والبحث يشمل الرقم لأن الاستقبال كثيراً ما
+            يعرفه ولا يتذكّر كيف كُتب الاسم.
+          */}
           <Field label="العميل" className="sm:col-span-2" error={errors.customerId?.[0]}>
-            <Select
+            <Combobox
               value={head.customerId}
-              onChange={(e) => setHead({ ...head, customerId: e.target.value, vehicleId: '' })}
-            >
-              <option value="">— اختر العميل —</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} — {c.phone}
-                </option>
-              ))}
-            </Select>
+              onChange={(v) => setHead({ ...head, customerId: v, vehicleId: '' })}
+              placeholder="اكتب اسم العميل أو رقمه…"
+              emptyLabel="لا يوجد عميل بهذا الاسم أو الرقم"
+              options={customers.map((c) => ({
+                value: c.id,
+                label: c.name,
+                hint: formatPhone(c.phone),
+              }))}
+            />
           </Field>
 
           <Field label="السيارة">

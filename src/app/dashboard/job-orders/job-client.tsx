@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { JOB_STATUS, toOptions } from '@/lib/labels';
 import { cn } from '@/lib/utils';
+import { INTAKE_SERVICES, intakeService } from '@/lib/intake';
 import {
   createInvoiceFromJob,
   deleteJobItem,
@@ -16,7 +17,6 @@ import {
   saveJobItem,
   setItemAssignees,
   setJobStatus,
-  toggleJobItemDone,
   updateJobOrder,
 } from './actions';
 
@@ -53,64 +53,31 @@ export function JobStatusSelect({ id, status }: { id: string; status: string }) 
 }
 
 const EMPTY_ITEM = {
-  productId: '',
-  serviceId: '',
+  serviceKey: '',
   label: '',
   qty: '1',
   unitPrice: '',
 };
 
 /**
- * إضافة بند مفرد بعد الاستلام — لتصحيح بيان التشغيل أو إضافة صنف نسيه.
- * الباقات لا تُضاف من هنا: بيان التشغيل هو من ينشئها بقطعها، وإضافتها
- * هنا كانت تنتج «أبناءً» بمعنى ثانٍ (محتويات باقة لا قطع سيارة) في نفس
- * الجدول، فيلتبس ما يُسنَد لفني بما هو مجرد وصف تسويقي.
+ * إضافة بند مفرد بعد الاستلام — لتصحيح بيان التشغيل أو إضافة خدمة نُسيت.
+ *
+ * الخدمات من كتالوج بيان التشغيل لا من جدول خدمات الموقع: الأخير يعرض
+ * «حماية هافركامب» و«حماية كلايف» خدماتٍ مستقلّة — وهي ماركات لخدمة
+ * واحدة — فيُضاف بند لا يطابق ما كُتب في بيان التشغيل.
+ *
+ * وأصناف المخزون ليست بنود شغل: «لفة فيلم ١٫٥٢م» مادّة تُستهلك في تنفيذ
+ * الخدمة لا خدمة يطلبها العميل، ومكانها الفاتورة.
  */
-export function JobItemForm({
-  jobOrderId,
-  products,
-  services,
-}: {
-  jobOrderId: string;
-  products: Array<{ id: string; nameAr: string; price: number }>;
-  services: Array<{ id: string; name: string; price: number | null }>;
-}) {
+export function JobItemForm({ jobOrderId }: { jobOrderId: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(EMPTY_ITEM);
 
-  /** مفتاح موحّد للقائمة الواحدة: `s:` خدمة، `p:` صنف */
-  const picked = values.serviceId
-    ? `s:${values.serviceId}`
-    : values.productId
-      ? `p:${values.productId}`
-      : '';
-
   function pick(key: string) {
-    const [kind, id] = key.split(':');
-
-    if (kind === 's') {
-      const s = services.find((x) => x.id === id);
-      setValues((v) => ({
-        ...v,
-        serviceId: id,
-        productId: '',
-        label: s?.name ?? v.label,
-        unitPrice: s?.price != null ? String(s.price) : v.unitPrice,
-      }));
-    } else if (kind === 'p') {
-      const p = products.find((x) => x.id === id);
-      setValues((v) => ({
-        ...v,
-        productId: id,
-        serviceId: '',
-        label: p?.nameAr ?? v.label,
-        unitPrice: p ? String(p.price) : v.unitPrice,
-      }));
-    } else {
-      setValues((v) => ({ ...v, productId: '', serviceId: '' }));
-    }
+    const svc = intakeService(key);
+    setValues((v) => ({ ...v, serviceKey: key, label: svc?.label ?? '' }));
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -154,27 +121,14 @@ export function JobItemForm({
           }
         >
           <form id="job-item-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="اختر خدمة أو صنفاً" className="sm:col-span-2">
-              <Select value={picked} onChange={(e) => pick(e.target.value)}>
+            <Field label="الخدمة" className="sm:col-span-2">
+              <Select value={values.serviceKey} onChange={(e) => pick(e.target.value)}>
                 <option value="">— بند مخصّص —</option>
-                {services.length > 0 && (
-                  <optgroup label="الخدمات">
-                    {services.map((s) => (
-                      <option key={s.id} value={`s:${s.id}`}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {products.length > 0 && (
-                  <optgroup label="الأصناف">
-                    {products.map((p) => (
-                      <option key={p.id} value={`p:${p.id}`}>
-                        {p.nameAr}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+                {INTAKE_SERVICES.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
+                ))}
               </Select>
             </Field>
 
@@ -340,22 +294,31 @@ export function EditJobOrderButton({
   );
 }
 
+/**
+ * حذف بند من أمر الشغل.
+ *
+ * لم يعد معه تعليم «منجز»: الخدمة ذات القطع تنتهي بانتهاء قطعها لا
+ * بعلامة مستقلّة قد تكذّبها، فبقيت الخانة على بعض البنود دون بعض —
+ * وعلامةٌ نصفُ موجودة أسوأ من غيابها.
+ */
+/**
+ * حذف بند من أمر الشغل.
+ *
+ * لم يعد معه تعليم «منجز»: الخدمة ذات القطع تنتهي بانتهاء قطعها لا
+ * بعلامة مستقلّة قد تكذّبها، فبقيت الخانة على بعض البنود دون بعض —
+ * وعلامةٌ نصفُ موجودة أسوأ من غيابها.
+ */
 export function JobItemActions({
   id,
   jobOrderId,
-  isDone,
   label,
   childCount,
-  hideCheckbox = false,
 }: {
   id: string;
   jobOrderId: string;
-  isDone: boolean;
   label: string;
   /** عدد القطع تحت هذا البند — تُحذف معه */
   childCount: number;
-  /** الخدمة ذات القطع تُنجَز بإنجاز قطعها لا بخانة مستقلة تكذّبها */
-  hideCheckbox?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -364,23 +327,6 @@ export function JobItemActions({
   return (
     <>
       <div className="flex items-center gap-1">
-        {!hideCheckbox && (
-        <input
-          type="checkbox"
-          checked={isDone}
-          disabled={pending}
-          aria-label="تعليم البند كمنجز"
-          className="size-4 accent-[var(--color-accent)]"
-          onChange={(e) => {
-            const next = e.target.checked;
-            startTransition(async () => {
-              const res = await toggleJobItemDone({ id, jobOrderId, isDone: next });
-              if (res.ok) router.refresh();
-              else toast.error(res.error);
-            });
-          }}
-        />
-        )}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -393,9 +339,8 @@ export function JobItemActions({
       </div>
 
       {/*
-        الحذف كان يقع بضغطة واحدة بلا رجعة — وبند الباقة الأب يجرّ معه
-        محتوياته كلها في قاعدة البيانات. بقية اللوحة تسأل قبل الحذف،
-        وهذا كان الاستثناء الوحيد.
+        الحذف كان يقع بضغطة واحدة بلا رجعة — والخدمة تجرّ معها قطعها كلها
+        في قاعدة البيانات. بقية اللوحة تسأل قبل الحذف.
       */}
       {confirming && (
         <Modal
@@ -437,7 +382,7 @@ export function JobItemActions({
               </p>
               {childCount > 0 && (
                 <p className="mt-1.5 font-semibold text-danger">
-                  وسيُحذف معه {childCount} من بنود الباقة التابعة له.
+                  وسيُحذف معه {childCount} من قطعه.
                 </p>
               )}
               <p className="mt-1.5 text-[var(--text-2)]">لا يمكن التراجع عن هذا الإجراء.</p>

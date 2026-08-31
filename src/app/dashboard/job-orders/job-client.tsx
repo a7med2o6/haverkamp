@@ -3,155 +3,22 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FileText, Loader2, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react';
+import { FileText, Loader2, Pencil, Plus, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { JOB_STATUS, toOptions } from '@/lib/labels';
+import { cn } from '@/lib/utils';
 import {
-  addJobPackage,
-  assignTechnician,
   createInvoiceFromJob,
-  createJobOrder,
   deleteJobItem,
   issueWarranty,
   saveJobItem,
+  setItemAssignees,
   setJobStatus,
   toggleJobItemDone,
   updateJobOrder,
 } from './actions';
-
-export function NewJobOrderButton({
-  customers,
-}: {
-  customers: Array<{ id: string; name: string; phone: string; vehicles: Array<{ id: string; label: string }> }>;
-}) {
-  const [open, setOpen] = useState(false);
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [values, setValues] = useState({
-    customerId: '',
-    vehicleId: '',
-    odometer: '',
-    promisedAt: '',
-    intakeNotes: '',
-    notes: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
-
-  const vehicles = customers.find((c) => c.id === values.customerId)?.vehicles ?? [];
-
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors({});
-    startTransition(async () => {
-      const res = await createJobOrder(values);
-      if (res.ok) {
-        toast.success(res.message ?? 'تم الإنشاء');
-        setOpen(false);
-        router.push(`/dashboard/job-orders/${res.id}`);
-      } else {
-        setErrors(res.fieldErrors ?? {});
-        toast.error(res.error);
-      }
-    });
-  }
-
-  return (
-    <>
-      <Button onClick={() => setOpen(true)}>
-        <Plus />
-        أمر شغل جديد
-      </Button>
-      {open && (
-        <Modal
-          open
-          onClose={() => setOpen(false)}
-          title="أمر شغل جديد"
-          description="سجّل استلام السيارة وملاحظات حالتها"
-          size="lg"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
-                إلغاء
-              </Button>
-              <Button type="submit" form="job-form" disabled={pending}>
-                {pending && <Loader2 className="animate-spin" />}
-                إنشاء
-              </Button>
-            </>
-          }
-        >
-          <form id="job-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="العميل" className="sm:col-span-2" error={errors.customerId?.[0]}>
-              <Select
-                value={values.customerId}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, customerId: e.target.value, vehicleId: '' }))
-                }
-                required
-              >
-                <option value="">— اختر العميل —</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} — {c.phone}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-
-            <Field label="السيارة">
-              <Select
-                value={values.vehicleId}
-                onChange={(e) => setValues((v) => ({ ...v, vehicleId: e.target.value }))}
-                disabled={!values.customerId}
-              >
-                <option value="">— بدون سيارة محدّدة —</option>
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.label}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-
-            <Field label="قراءة العداد (كم)">
-              <Input
-                type="number"
-                min={0}
-                value={values.odometer}
-                onChange={(e) => setValues((v) => ({ ...v, odometer: e.target.value }))}
-                dir="ltr"
-                className="tnum text-start"
-              />
-            </Field>
-
-            <Field label="موعد التسليم المتوقّع" className="sm:col-span-2">
-              <Input
-                type="datetime-local"
-                value={values.promisedAt}
-                onChange={(e) => setValues((v) => ({ ...v, promisedAt: e.target.value }))}
-                dir="ltr"
-                className="tnum text-start"
-              />
-            </Field>
-
-            <Field
-              label="ملاحظات الاستلام"
-              className="sm:col-span-2"
-              hint="خدوش موجودة، أضرار سابقة، أغراض داخل السيارة…"
-            >
-              <Textarea
-                value={values.intakeNotes}
-                onChange={(e) => setValues((v) => ({ ...v, intakeNotes: e.target.value }))}
-              />
-            </Field>
-          </form>
-        </Modal>
-      )}
-    </>
-  );
-}
 
 export function JobStatusSelect({ id, status }: { id: string; status: string }) {
   const router = useRouter();
@@ -186,7 +53,6 @@ export function JobStatusSelect({ id, status }: { id: string; status: string }) 
 }
 
 const EMPTY_ITEM = {
-  packageId: '',
   productId: '',
   serviceId: '',
   label: '',
@@ -194,62 +60,41 @@ const EMPTY_ITEM = {
   unitPrice: '',
 };
 
-export type ProtectionBrand = {
-  serviceId: string;
-  serviceName: string;
-  packages: Array<{ id: string; name: string; price: number; features: string[] }>;
-};
-
+/**
+ * إضافة بند مفرد بعد الاستلام — لتصحيح بيان التشغيل أو إضافة صنف نسيه.
+ * الباقات لا تُضاف من هنا: بيان التشغيل هو من ينشئها بقطعها، وإضافتها
+ * هنا كانت تنتج «أبناءً» بمعنى ثانٍ (محتويات باقة لا قطع سيارة) في نفس
+ * الجدول، فيلتبس ما يُسنَد لفني بما هو مجرد وصف تسويقي.
+ */
 export function JobItemForm({
   jobOrderId,
   products,
   services,
-  protections,
 }: {
   jobOrderId: string;
   products: Array<{ id: string; nameAr: string; price: number }>;
   services: Array<{ id: string; name: string; price: number | null }>;
-  protections: ProtectionBrand[];
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(EMPTY_ITEM);
 
-  /** مفتاح موحّد للقائمة الواحدة: `k:` باقة، `s:` خدمة، `p:` صنف */
-  const picked = values.packageId
-    ? `k:${values.packageId}`
-    : values.serviceId
-      ? `s:${values.serviceId}`
-      : values.productId
-        ? `p:${values.productId}`
-        : '';
-
-  const pickedPackage = values.packageId
-    ? protections.flatMap((b) => b.packages).find((p) => p.id === values.packageId)
-    : undefined;
+  /** مفتاح موحّد للقائمة الواحدة: `s:` خدمة، `p:` صنف */
+  const picked = values.serviceId
+    ? `s:${values.serviceId}`
+    : values.productId
+      ? `p:${values.productId}`
+      : '';
 
   function pick(key: string) {
     const [kind, id] = key.split(':');
 
-    if (kind === 'k') {
-      const brand = protections.find((b) => b.packages.some((p) => p.id === id));
-      const pkg = brand?.packages.find((p) => p.id === id);
-      setValues((v) => ({
-        ...v,
-        packageId: id,
-        serviceId: '',
-        productId: '',
-        qty: '1',
-        label: brand && pkg ? `${brand.serviceName} — ${pkg.name}` : v.label,
-        unitPrice: pkg ? String(pkg.price) : v.unitPrice,
-      }));
-    } else if (kind === 's') {
+    if (kind === 's') {
       const s = services.find((x) => x.id === id);
       setValues((v) => ({
         ...v,
         serviceId: id,
-        packageId: '',
         productId: '',
         label: s?.name ?? v.label,
         unitPrice: s?.price != null ? String(s.price) : v.unitPrice,
@@ -259,27 +104,19 @@ export function JobItemForm({
       setValues((v) => ({
         ...v,
         productId: id,
-        packageId: '',
         serviceId: '',
         label: p?.nameAr ?? v.label,
         unitPrice: p ? String(p.price) : v.unitPrice,
       }));
     } else {
-      setValues((v) => ({ ...v, packageId: '', productId: '', serviceId: '' }));
+      setValues((v) => ({ ...v, productId: '', serviceId: '' }));
     }
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = values.packageId
-        ? await addJobPackage({
-            jobOrderId,
-            packageId: values.packageId,
-            label: values.label,
-            unitPrice: values.unitPrice,
-          })
-        : await saveJobItem({ jobOrderId, ...values });
+      const res = await saveJobItem({ jobOrderId, ...values });
 
       if (res.ok) {
         toast.success(res.message ?? 'تم');
@@ -317,21 +154,11 @@ export function JobItemForm({
           }
         >
           <form id="job-item-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="اختر باقة حماية أو خدمة أو صنفاً" className="sm:col-span-2">
+            <Field label="اختر خدمة أو صنفاً" className="sm:col-span-2">
               <Select value={picked} onChange={(e) => pick(e.target.value)}>
                 <option value="">— بند مخصّص —</option>
-                {protections.map((brand) => (
-                  <optgroup key={brand.serviceId} label={brand.serviceName}>
-                    {brand.packages.map((p) => (
-                      <option key={p.id} value={`k:${p.id}`}>
-                        {p.name}
-                        {p.price > 0 ? ` — من ${p.price} د.ك` : ''}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
                 {services.length > 0 && (
-                  <optgroup label="خدمات أخرى">
+                  <optgroup label="الخدمات">
                     {services.map((s) => (
                       <option key={s.id} value={`s:${s.id}`}>
                         {s.name}
@@ -351,19 +178,6 @@ export function JobItemForm({
               </Select>
             </Field>
 
-            {pickedPackage && pickedPackage.features.length > 0 && (
-              <div className="rounded-[var(--radius-sm)] border border-accent/30 bg-accent/10 p-3 sm:col-span-2">
-                <p className="mb-1.5 text-[11px] font-semibold text-accent-soft">
-                  تشمل الباقة — تُضاف كبنود متابعة يعلّم عليها الفني
-                </p>
-                <ul className="space-y-1 text-[12px] text-[var(--text-1)]">
-                  {pickedPackage.features.map((f) => (
-                    <li key={f}>• {f}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <Field label="وصف البند" className="sm:col-span-2">
               <Input
                 value={values.label}
@@ -372,7 +186,7 @@ export function JobItemForm({
               />
             </Field>
 
-            <Field label="الكمية" hint={pickedPackage ? 'الباقة وحدة واحدة' : undefined}>
+            <Field label="الكمية">
               <Input
                 type="number"
                 step="0.01"
@@ -381,14 +195,12 @@ export function JobItemForm({
                 onChange={(e) => setValues((v) => ({ ...v, qty: e.target.value }))}
                 dir="ltr"
                 className="tnum text-start"
-                disabled={!!pickedPackage}
                 required
               />
             </Field>
 
             <Field
               label="سعر الوحدة (د.ك)"
-              hint={pickedPackage ? 'السعر يتغيّر حسب نوع السيارة — عدّله عند الحاجة' : undefined}
             >
               <Input
                 type="number"
@@ -532,94 +344,108 @@ export function JobItemActions({
   id,
   jobOrderId,
   isDone,
+  label,
+  childCount,
+  hideCheckbox = false,
 }: {
   id: string;
   jobOrderId: string;
   isDone: boolean;
+  label: string;
+  /** عدد القطع تحت هذا البند — تُحذف معه */
+  childCount: number;
+  /** الخدمة ذات القطع تُنجَز بإنجاز قطعها لا بخانة مستقلة تكذّبها */
+  hideCheckbox?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex items-center gap-1">
-      <input
-        type="checkbox"
-        checked={isDone}
-        disabled={pending}
-        aria-label="تعليم البند كمنجز"
-        className="size-4 accent-[var(--color-accent)]"
-        onChange={(e) => {
-          const next = e.target.checked;
-          startTransition(async () => {
-            const res = await toggleJobItemDone({ id, jobOrderId, isDone: next });
-            if (res.ok) router.refresh();
-            else toast.error(res.error);
-          });
-        }}
-      />
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="حذف البند"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const res = await deleteJobItem({ id, jobOrderId });
-            if (res.ok) {
-              toast.success(res.message ?? 'تم الحذف');
-              router.refresh();
-            } else toast.error(res.error);
-          })
-        }
-      >
-        <Trash2 className="text-danger" />
-      </Button>
-    </div>
-  );
-}
+    <>
+      <div className="flex items-center gap-1">
+        {!hideCheckbox && (
+        <input
+          type="checkbox"
+          checked={isDone}
+          disabled={pending}
+          aria-label="تعليم البند كمنجز"
+          className="size-4 accent-[var(--color-accent)]"
+          onChange={(e) => {
+            const next = e.target.checked;
+            startTransition(async () => {
+              const res = await toggleJobItemDone({ id, jobOrderId, isDone: next });
+              if (res.ok) router.refresh();
+              else toast.error(res.error);
+            });
+          }}
+        />
+        )}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="حذف البند"
+          disabled={pending}
+          onClick={() => setConfirming(true)}
+        >
+          <Trash2 className="text-danger" />
+        </Button>
+      </div>
 
-export function AssigneePicker({
-  jobOrderId,
-  employees,
-  assigned,
-}: {
-  jobOrderId: string;
-  employees: Array<{ id: string; fullName: string }>;
-  assigned: string[];
-}) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
-  function toggle(employeeId: string, remove: boolean) {
-    startTransition(async () => {
-      const res = await assignTechnician({ jobOrderId, employeeId, remove });
-      if (res.ok) {
-        toast.success(res.message ?? 'تم');
-        router.refresh();
-      } else toast.error(res.error);
-    });
-  }
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {employees.map((e) => {
-        const isAssigned = assigned.includes(e.id);
-        return (
-          <button
-            key={e.id}
-            disabled={pending}
-            onClick={() => toggle(e.id, isAssigned)}
-            className={
-              isAssigned
-                ? 'rounded-full border border-accent bg-accent/15 px-3 py-1.5 text-[12px] font-medium text-accent-soft'
-                : 'rounded-full border border-[var(--line)] px-3 py-1.5 text-[12px] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]'
-            }
-          >
-            {e.fullName}
-          </button>
-        );
-      })}
-    </div>
+      {/*
+        الحذف كان يقع بضغطة واحدة بلا رجعة — وبند الباقة الأب يجرّ معه
+        محتوياته كلها في قاعدة البيانات. بقية اللوحة تسأل قبل الحذف،
+        وهذا كان الاستثناء الوحيد.
+      */}
+      {confirming && (
+        <Modal
+          open
+          onClose={() => setConfirming(false)}
+          title="حذف البند"
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button
+                variant="danger"
+                disabled={pending}
+                onClick={() =>
+                  startTransition(async () => {
+                    const res = await deleteJobItem({ id, jobOrderId });
+                    if (res.ok) {
+                      toast.success(res.message ?? 'تم الحذف');
+                      setConfirming(false);
+                      router.refresh();
+                    } else toast.error(res.error);
+                  })
+                }
+              >
+                {pending && <Loader2 className="animate-spin" />}
+                تأكيد الحذف
+              </Button>
+            </>
+          }
+        >
+          <div className="flex items-start gap-3">
+            <Trash2 className="mt-0.5 size-5 shrink-0 text-danger" />
+            <div className="text-sm text-[var(--text-1)]">
+              <p>
+                سيتم حذف <span className="font-semibold text-[var(--text-0)]">{label}</span>{' '}
+                نهائياً.
+              </p>
+              {childCount > 0 && (
+                <p className="mt-1.5 font-semibold text-danger">
+                  وسيُحذف معه {childCount} من بنود الباقة التابعة له.
+                </p>
+              )}
+              <p className="mt-1.5 text-[var(--text-2)]">لا يمكن التراجع عن هذا الإجراء.</p>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -730,6 +556,133 @@ export function IssueWarrantyButton({
                 placeholder="ما تغطيه الكفالة وما تستثنيه…"
               />
             </Field>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+
+/**
+ * فنيّو القطعة.
+ *
+ * يظهر أسماء من اشتغلوا على هذه القطعة، والنقر يفتح اختيارهم. القطعة قد
+ * يتقاسمها اثنان — الكبوت يركّبه فنيّان معاً — فالاختيار متعدّد لا مفرد.
+ */
+export function ItemAssignees({
+  itemId,
+  jobOrderId,
+  employees,
+  assigned,
+  canWrite,
+}: {
+  itemId: string;
+  jobOrderId: string;
+  employees: Array<{ id: string; fullName: string }>;
+  assigned: Array<{ id: string; fullName: string }>;
+  canWrite: boolean;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<string[]>(assigned.map((a) => a.id));
+
+  const names = assigned.map((a) => a.fullName).join('، ');
+
+  if (!canWrite) {
+    return (
+      <span className="text-[11px] text-[var(--text-2)]">{names || '—'}</span>
+    );
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => {
+          setPicked(assigned.map((a) => a.id));
+          setOpen(true);
+        }}
+        className={cn(
+          'inline-flex max-w-[190px] items-center gap-1.5 rounded-[var(--radius-sm)] border px-2 py-1 text-[11px] transition-colors',
+          assigned.length > 0
+            ? 'border-[var(--line)] text-[var(--text-1)] hover:border-accent hover:text-accent'
+            : 'border-dashed border-[var(--line-strong)] text-[var(--text-2)] hover:border-accent hover:text-accent'
+        )}
+      >
+        {assigned.length > 0 ? (
+          <Users className="size-3.5 shrink-0" />
+        ) : (
+          <UserPlus className="size-3.5 shrink-0" />
+        )}
+        <span className="truncate">{names || 'إسناد فني'}</span>
+      </button>
+
+      {open && (
+        <Modal
+          open
+          onClose={() => setOpen(false)}
+          title="من اشتغل على هذه القطعة؟"
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button
+                disabled={pending}
+                onClick={() =>
+                  startTransition(async () => {
+                    const res = await setItemAssignees({
+                      itemId,
+                      jobOrderId,
+                      employeeIds: picked,
+                    });
+                    if (res.ok) {
+                      toast.success(res.message ?? 'تم');
+                      setOpen(false);
+                      router.refresh();
+                    } else toast.error(res.error);
+                  })
+                }
+              >
+                {pending && <Loader2 className="animate-spin" />}
+                حفظ
+              </Button>
+            </>
+          }
+        >
+          <div className="max-h-72 space-y-1 overflow-y-auto">
+            {employees.length === 0 ? (
+              <p className="text-[13px] text-[var(--text-2)]">لا يوجد موظفون نشطون</p>
+            ) : (
+              employees.map((e) => {
+                const on = picked.includes(e.id);
+                return (
+                  <label
+                    key={e.id}
+                    className={cn(
+                      'flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-sm)] border px-3 py-2 text-[13px] transition-colors',
+                      on
+                        ? 'border-accent bg-accent/10 text-[var(--text-0)]'
+                        : 'border-[var(--line)] text-[var(--text-1)] hover:border-[var(--line-strong)]'
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      className="size-4 accent-[var(--color-accent)]"
+                      onChange={() =>
+                        setPicked((p) =>
+                          p.includes(e.id) ? p.filter((x) => x !== e.id) : [...p, e.id]
+                        )
+                      }
+                    />
+                    {e.fullName}
+                  </label>
+                );
+              })
+            )}
           </div>
         </Modal>
       )}

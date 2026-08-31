@@ -12,7 +12,8 @@ import { JOB_STATUS } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
 import { cn, dueStatus, formatDate, formatKWD, toNumber } from '@/lib/utils';
 import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
-import { NewJobOrderButton } from './job-client';
+import { Plus } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 
 export const metadata: Metadata = { title: 'أوامر الشغل' };
 export const dynamic = 'force-dynamic';
@@ -31,8 +32,17 @@ export default async function JobOrdersPage({
   searchParams: Promise<{ filter?: string; page?: string; customer?: string }>;
 }) {
   const session = await requirePermission('workshop:read');
-  const { filter = 'active', page: pageParam, customer } = await searchParams;
+  const { filter: filterParam, page: pageParam, customer } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+
+  /*
+    المَعلمة تصل من الرابط فتقبل أي نصّ، وكانت تُمرَّر خاماً إلى Prisma
+    كقيمة enum — فـ?filter=x يُسقط الصفحة بـPrismaClientValidationError.
+    نقصرها على المفاتيح المعروفة ونرتدّ إلى الافتراضي عند غيرها.
+  */
+  const filter = FILTERS.some((f) => f.key === filterParam)
+    ? (filterParam as (typeof FILTERS)[number]['key'])
+    : 'active';
 
   const byFilter: Prisma.JobOrderWhereInput =
     filter === 'active'
@@ -44,14 +54,14 @@ export default async function JobOrdersPage({
           }
         : filter === 'all'
           ? {}
-          : { status: filter as keyof typeof JOB_STATUS };
+          : { status: filter };
 
   // تصفية بعميل واحد — يصلها الموظف من رابط «عرض الكل» في ملف العميل
   const where: Prisma.JobOrderWhereInput = customer
     ? { AND: [byFilter, { customerId: customer }] }
     : byFilter;
 
-  const [jobs, total, customers] = await Promise.all([
+  const [jobs, total] = await Promise.all([
     db.jobOrder.findMany({
       where,
       orderBy: { receivedAt: 'desc' },
@@ -60,23 +70,13 @@ export default async function JobOrdersPage({
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         vehicle: { select: { make: true, model: true, plateNo: true } },
-        items: { select: { total: true, isDone: true } },
-        assignees: { include: { employee: { select: { fullName: true } } } },
+        items: {
+          select: { id: true, total: true, isDone: true, parentId: true },
+        },
         order: { select: { id: true, number: true } },
       },
     }),
     db.jobOrder.count({ where }),
-    db.customer.findMany({
-      where: { isBlocked: false },
-      orderBy: { name: 'asc' },
-      take: 500,
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        vehicles: { select: { id: true, make: true, model: true, plateNo: true } },
-      },
-    }),
   ]);
 
   const canWrite = can(session.user.role, 'workshop:write');
@@ -88,17 +88,10 @@ export default async function JobOrdersPage({
         description={`${total} أمر شغل`}
         actions={
           canWrite ? (
-            <NewJobOrderButton
-              customers={customers.map((c) => ({
-                id: c.id,
-                name: c.name,
-                phone: c.phone,
-                vehicles: c.vehicles.map((v) => ({
-                  id: v.id,
-                  label: `${v.make} ${v.model}${v.plateNo ? ` — ${v.plateNo}` : ''}`,
-                })),
-              }))}
-            />
+            <Link href="/dashboard/job-orders/new" className={buttonVariants()}>
+              <Plus />
+              بيان تشغيل جديد
+            </Link>
           ) : null
         }
       />
@@ -136,7 +129,6 @@ export default async function JobOrdersPage({
               <Th>السيارة</Th>
               <Th>التقدّم</Th>
               <Th>القيمة</Th>
-              <Th>الفنيون</Th>
               <Th>الاستلام</Th>
               <Th>الحالة</Th>
               <Th>الفاتورة</Th>
@@ -147,12 +139,23 @@ export default async function JobOrdersPage({
               <EmptyState
                 title="لا توجد أوامر شغل"
                 description="أنشئ أمر شغل جديد أو حوّل حجزاً قائماً"
-                colSpan={9}
+                colSpan={8}
               />
             ) : (
               jobs.map((j) => {
                 const value = j.items.reduce((s, i) => s + toNumber(i.total), 0);
-                const done = j.items.filter((i) => i.isDone).length;
+                /*
+                  التقدّم يُعدّ وحدات العمل الحقيقية: القطع حيث وُجدت،
+                  والخدمة نفسها حيث لا قطع لها. عدّ الآباء مع أبنائهم كان
+                  يخلط «الخدمة» بـ«قطعها» في مقام واحد فيصير «٢ من ٦» لغزاً.
+                */
+                const parentsWithParts = new Set(
+                  j.items.map((i) => i.parentId).filter(Boolean)
+                );
+                const units = j.items.filter(
+                  (i) => i.parentId !== null || !parentsWithParts.has(i.id)
+                );
+                const done = units.filter((i) => i.isDone).length;
                 const due = dueStatus(
                   j.promisedAt,
                   j.status !== 'DELIVERED' && j.status !== 'CANCELLED'
@@ -184,14 +187,9 @@ export default async function JobOrdersPage({
                       )}
                     </Td>
                     <Td className="tnum text-[12px]">
-                      {j.items.length > 0 ? `${done} / ${j.items.length}` : '—'}
+                      {units.length > 0 ? `${done} / ${units.length}` : '—'}
                     </Td>
                     <Td className="tnum font-semibold">{formatKWD(value)}</Td>
-                    <Td className="text-[11px]">
-                      {j.assignees.length > 0
-                        ? j.assignees.map((a) => a.employee.fullName).join('، ')
-                        : '—'}
-                    </Td>
                     <Td className="tnum text-[12px]">{formatDate(j.receivedAt)}</Td>
                     <Td>
                       <div className="flex flex-wrap items-center gap-1">

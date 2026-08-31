@@ -5,39 +5,57 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString } from '@/lib/action-utils';
+import { intakeLabel, intakeService } from '@/lib/intake';
 
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
-export const createJobOrder = action({
-  permission: 'workshop:write',
-  schema: z.object({
-    customerId: z.string().min(1, 'العميل مطلوب'),
-    vehicleId: optionalString,
-    odometer: optionalString,
-    promisedAt: optionalString,
-    intakeNotes: optionalString,
-    notes: optionalString,
-  }),
-  audit: { entity: 'JobOrder', action: 'CREATE' },
-  handler: async (input) => {
-    const job = await db.jobOrder.create({
-      data: {
-        number: await nextNumber('job'),
-        customerId: input.customerId,
-        vehicleId: input.vehicleId || null,
-        odometer: input.odometer ? Number(input.odometer) : null,
-        promisedAt: input.promisedAt ? new Date(input.promisedAt) : null,
-        intakeNotes: input.intakeNotes,
-        notes: input.notes,
-      },
-    });
+/**
+ * يتحقّق أن السيارة تخصّ عميل الأمر.
+ * السيارة تُختار من قائمة سيارات العميل في الواجهة، لكن الطلب يصل من
+ * المتصفّح فيقبل أي معرّف — وسيارة عميل آخر في أمر شغل تفسد الكفالة
+ * وسجلّ صيانة السيارتين معاً.
+ */
+async function assertVehicleBelongs(vehicleId: string, customerId: string) {
+  const vehicle = await db.vehicle.findUnique({
+    where: { id: vehicleId },
+    select: { customerId: true },
+  });
+  if (!vehicle || vehicle.customerId !== customerId) {
+    throw new AppError('السيارة لا تخصّ عميل هذا الأمر');
+  }
+}
 
-    revalidatePath('/dashboard/job-orders');
-    return { id: job.id, message: `تم إنشاء أمر الشغل ${job.number}` };
-  },
-});
+/** قراءة عداد صالحة أو null — نصّ فارغ ليس صفراً، و«abc» ليس رقماً */
+function parseOdometer(raw: string | null | undefined): number | null {
+  if (!raw) return null;
+  const km = Number(raw);
+  if (!Number.isFinite(km) || km < 0) throw new AppError('قراءة العداد غير صالحة');
+  return Math.round(km);
+}
+
+function parseWhen(raw: string | null | undefined, label: string): Date | null {
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) throw new AppError(`${label} غير صالح`);
+  return d;
+}
+
+/**
+ * يتحقّق أن البند تابع فعلاً للأمر المذكور.
+ * `jobOrderId` يصل من المتصفّح، و`saveJobItem` يكتبه في التحديث — فبدون
+ * هذا الفحص يمكن لطلب واحد أن ينقل بنداً من أمر شغل إلى آخر أو يحذف
+ * بند أمر لا يخصّه.
+ */
+async function assertItemInJob(itemId: string, jobOrderId: string) {
+  const item = await db.jobOrderItem.findUnique({
+    where: { id: itemId },
+    select: { jobOrderId: true },
+  });
+  if (!item) throw new AppError('البند غير موجود');
+  if (item.jobOrderId !== jobOrderId) throw new AppError('البند لا يخصّ أمر الشغل هذا');
+}
 
 export const updateJobOrder = action({
   permission: 'workshop:write',
@@ -54,27 +72,14 @@ export const updateJobOrder = action({
     const job = await db.jobOrder.findUnique({ where: { id }, select: { customerId: true } });
     if (!job) throw new AppError('أمر الشغل غير موجود');
 
-    if (vehicleId) {
-      const vehicle = await db.vehicle.findUnique({
-        where: { id: vehicleId },
-        select: { customerId: true },
-      });
-      if (!vehicle || vehicle.customerId !== job.customerId)
-        throw new AppError('السيارة لا تخصّ عميل هذا الأمر');
-    }
-
-    const km = odometer ? Number(odometer) : null;
-    if (km !== null && (!Number.isFinite(km) || km < 0)) throw new AppError('قراءة العداد غير صالحة');
-
-    const promised = promisedAt ? new Date(promisedAt) : null;
-    if (promised && Number.isNaN(promised.getTime())) throw new AppError('موعد التسليم غير صالح');
+    if (vehicleId) await assertVehicleBelongs(vehicleId, job.customerId);
 
     await db.jobOrder.update({
       where: { id },
       data: {
         vehicleId: vehicleId || null,
-        odometer: km === null ? null : Math.round(km),
-        promisedAt: promised,
+        odometer: parseOdometer(odometer),
+        promisedAt: parseWhen(promisedAt, 'موعد التسليم'),
         intakeNotes: intakeNotes ?? null,
         notes: notes ?? null,
       },
@@ -101,12 +106,29 @@ export const setJobStatus = action({
   }),
   audit: { entity: 'JobOrder', action: 'STATUS' },
   handler: async ({ id, status }) => {
+    const job = await db.jobOrder.findUnique({
+      where: { id },
+      select: { completedAt: true, deliveredAt: true },
+    });
+    if (!job) throw new AppError('أمر الشغل غير موجود');
+
+    /*
+      الطابع يُكتب عند بلوغ الحالة ويُمسح عند التراجع عنها.
+      كان يُكتب بـundefined عند غير حالته، وهي في Prisma تعني «لا تغيّر»
+      — فأمر عُلّم «مُسلَّم» بالخطأ ثم أُعيد إلى الورشة يحتفظ بتاريخ
+      تسليمه إلى الأبد، فيكذب كل تقرير عن أوقات التسليم.
+      وعند التقدّم من «جاهز» إلى «مُسلَّم» نُبقي الطابع الأول: لحظة
+      الجاهزية لا تتغيّر لأن السيارة سُلّمت.
+    */
+    const done = status === 'READY' || status === 'DELIVERED';
+
     await db.jobOrder.update({
       where: { id },
       data: {
         status,
-        completedAt: status === 'READY' ? new Date() : undefined,
-        deliveredAt: status === 'DELIVERED' ? new Date() : undefined,
+        completedAt: done ? (job.completedAt ?? new Date()) : null,
+        deliveredAt:
+          status === 'DELIVERED' ? (job.deliveredAt ?? new Date()) : null,
       },
     });
 
@@ -132,6 +154,8 @@ export const saveJobItem = action({
     if (!Number.isFinite(qty) || qty <= 0) throw new AppError('الكمية غير صالحة');
     if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new AppError('السعر غير صالح');
 
+    if (id) await assertItemInJob(id, jobOrderId);
+
     const data = {
       jobOrderId,
       productId: productId || null,
@@ -153,76 +177,12 @@ export const saveJobItem = action({
   },
 });
 
-/**
- * يضيف باقة حماية كبند واحد مسعّر، وتحته محتوياتها كبنود بصفر
- * يعلّم عليها الفني أولاً بأول. السعر قابل للتعديل لأنه يتغيّر حسب نوع السيارة.
- */
-export const addJobPackage = action({
-  permission: 'workshop:write',
-  schema: z.object({
-    jobOrderId: z.string(),
-    packageId: z.string(),
-    label: optionalString,
-    unitPrice: z.union([z.string(), z.number()]).transform(Number),
-  }),
-  audit: { entity: 'JobOrderItem', action: 'ADD_PACKAGE' },
-  handler: async ({ jobOrderId, packageId, label, unitPrice }) => {
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new AppError('السعر غير صالح');
-
-    const pkg = await db.servicePackage.findUnique({
-      where: { id: packageId },
-      include: {
-        service: {
-          include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
-        },
-        translations: { where: { locale: 'ar' }, select: { name: true, features: true } },
-      },
-    });
-
-    if (!pkg) throw new AppError('الباقة غير موجودة');
-
-    const serviceName = pkg.service.translations[0]?.name ?? pkg.service.slug;
-    const packageName = pkg.translations[0]?.name ?? 'باقة';
-    const price = fils(unitPrice);
-
-    await db.$transaction(async (tx) => {
-      const parent = await tx.jobOrderItem.create({
-        data: {
-          jobOrderId,
-          serviceId: pkg.serviceId,
-          label: label || `${serviceName} — ${packageName}`,
-          qty: 1,
-          unitPrice: price,
-          total: price,
-        },
-      });
-
-      const features = pkg.translations[0]?.features ?? [];
-      if (features.length > 0) {
-        await tx.jobOrderItem.createMany({
-          data: features.map((feature) => ({
-            jobOrderId,
-            parentId: parent.id,
-            serviceId: pkg.serviceId,
-            label: feature,
-            qty: 1,
-            unitPrice: 0,
-            total: 0,
-          })),
-        });
-      }
-    });
-
-    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
-    return { id: jobOrderId, message: `تمت إضافة ${packageName}` };
-  },
-});
-
 export const deleteJobItem = action({
   permission: 'workshop:write',
   schema: z.object({ id: z.string(), jobOrderId: z.string() }),
   audit: { entity: 'JobOrderItem', action: 'DELETE' },
   handler: async ({ id, jobOrderId }) => {
+    await assertItemInJob(id, jobOrderId);
     await db.jobOrderItem.delete({ where: { id } });
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
     return { id, message: 'تم حذف البند' };
@@ -233,35 +193,10 @@ export const toggleJobItemDone = action({
   permission: 'workshop:write',
   schema: z.object({ id: z.string(), jobOrderId: z.string(), isDone: z.boolean() }),
   handler: async ({ id, jobOrderId, isDone }) => {
+    await assertItemInJob(id, jobOrderId);
     await db.jobOrderItem.update({ where: { id }, data: { isDone } });
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
     return { id };
-  },
-});
-
-export const assignTechnician = action({
-  permission: 'workshop:write',
-  schema: z.object({
-    jobOrderId: z.string(),
-    employeeId: z.string(),
-    remove: z.boolean().default(false),
-  }),
-  audit: { entity: 'JobOrderAssignee', action: 'ASSIGN' },
-  handler: async ({ jobOrderId, employeeId, remove }) => {
-    if (remove) {
-      await db.jobOrderAssignee.delete({
-        where: { jobOrderId_employeeId: { jobOrderId, employeeId } },
-      });
-    } else {
-      await db.jobOrderAssignee.upsert({
-        where: { jobOrderId_employeeId: { jobOrderId, employeeId } },
-        create: { jobOrderId, employeeId },
-        update: {},
-      });
-    }
-
-    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
-    return { id: jobOrderId, message: remove ? 'تم إلغاء الإسناد' : 'تم إسناد الفني' };
   },
 });
 
@@ -347,5 +282,201 @@ export const issueWarranty = action({
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
     revalidatePath('/dashboard/warranties');
     return { id: warranty.id, message: `تم إصدار الكفالة ${warranty.certificateNo}` };
+  },
+});
+
+/**
+ * يضبط فنيّي القطعة الواحدة.
+ *
+ * يستبدل القائمة كاملة بدل إضافة/حذف مفرد: الواجهة تعرض مربّعات اختيار
+ * فتُرسل ما استقرّ عليه الموظف، ولا معنى لتتبّع الفروق بينهما.
+ *
+ * الغرض من هذا السجل المسؤولية لا التشغيل: حين تظهر مشكلة في باب بعينه
+ * بعد أسابيع، يُعرف من ركّبه.
+ */
+export const setItemAssignees = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    itemId: z.string(),
+    jobOrderId: z.string(),
+    employeeIds: z.array(z.string()),
+  }),
+  audit: { entity: 'JobOrderItemAssignee', action: 'SET' },
+  handler: async ({ itemId, jobOrderId, employeeIds }) => {
+    await assertItemInJob(itemId, jobOrderId);
+
+    // موظف واحد مرّتين في الطلب لا يعني صفّين
+    const ids = [...new Set(employeeIds)];
+
+    if (ids.length > 0) {
+      const found = await db.employee.count({
+        where: { id: { in: ids }, status: 'ACTIVE' },
+      });
+      if (found !== ids.length) throw new AppError('أحد الفنيين غير موجود أو غير نشط');
+    }
+
+    await db.$transaction([
+      db.jobOrderItemAssignee.deleteMany({ where: { itemId } }),
+      ...(ids.length > 0
+        ? [
+            db.jobOrderItemAssignee.createMany({
+              data: ids.map((employeeId) => ({ itemId, employeeId })),
+            }),
+          ]
+        : []),
+    ]);
+
+    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    return { id: itemId, message: 'تم حفظ الفنيين' };
+  },
+});
+
+/**
+ * «بيان تشغيل» — إنشاء أمر شغل من نموذج الاستلام كاملاً.
+ *
+ * يستبدل الدفتر الورقي: يسجّل الخدمات المطلوبة بخياراتها، ودرجة العزل
+ * لكل قطعة زجاج، والقطع المشمولة بالحماية — كلها بنوداً قابلة للإسناد
+ * والمتابعة بدل فقرة نصّ في «ملاحظات إضافية» لا يقرؤها شيء.
+ *
+ * القطع تُنشأ أبناءً للخدمة: الأب يحمل السعر والابن يحمل المواصفة ومن
+ * اشتغل عليه — وهي البنية التي تفهمها الفاتورة أصلاً (تأخذ الآباء فقط).
+ *
+ * التوقيع يبقى على الورقة في الفترة الانتقالية، و`paperRef` هو ما يربط
+ * السجل الرقمي بورقته عند النزاع.
+ */
+export const createIntake = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    customerId: z.string().min(1, 'العميل مطلوب'),
+    vehicleId: optionalString,
+    odometer: optionalString,
+    promisedAt: optionalString,
+    paperRef: optionalString,
+    intakeNotes: optionalString,
+    lines: z
+      .array(
+        z.object({
+          /** مفتاح الخدمة في كتالوج بيان التشغيل */
+          key: z.string().min(1),
+          /** الخيارات الفرعية: «بدي كامل»، أو «داخلي» و«خارجي» معاً */
+          options: z.array(z.string()).default([]),
+          /** معرّف خدمة ماركة فيلم الحماية */
+          brand: optionalString,
+          price: z.union([z.string(), z.number()]).transform(Number),
+          /** القطع: اسمها ومواصفتها (درجة العازل) ومن يشتغل عليها */
+          parts: z
+            .array(
+              z.object({
+                label: z.string().min(1),
+                spec: optionalString,
+                employeeIds: z.array(z.string()).default([]),
+              })
+            )
+            .default([]),
+        })
+      )
+      .min(1, 'اختر خدمة واحدة على الأقل'),
+  }),
+  audit: { entity: 'JobOrder', action: 'INTAKE' },
+  handler: async (input) => {
+    if (input.vehicleId) await assertVehicleBelongs(input.vehicleId, input.customerId);
+
+    for (const line of input.lines) {
+      if (!Number.isFinite(line.price) || line.price < 0) {
+        throw new AppError('سعر غير صالح — الصفر يعني «ضمن الباقة»');
+      }
+    }
+
+    // كل الفنيين المذكورين في النموذج — نتحقّق منهم مرة قبل فتح المعاملة
+    const techIds = [
+      ...new Set(input.lines.flatMap((l) => l.parts.flatMap((p) => p.employeeIds))),
+    ];
+    if (techIds.length > 0) {
+      const found = await db.employee.count({
+        where: { id: { in: techIds }, status: 'ACTIVE' },
+      });
+      if (found !== techIds.length) throw new AppError('أحد الفنيين غير موجود أو غير نشط');
+    }
+
+    const job = await db.$transaction(async (tx) => {
+      /*
+        الرقم يُحجز داخل المعاملة لا قبلها: كان يُؤخذ أولاً فتبتلعه كل
+        محاولة تفشل بعده، فتظهر فجوات في تسلسل أوامر الشغل (0002 ثم 0005)
+        — وتسلسل فيه فجوات لا يصلح مرجعاً أمام عميل ولا مراجع حسابات.
+      */
+      const created = await tx.jobOrder.create({
+        data: {
+          number: await nextNumber('job'),
+          customerId: input.customerId,
+          vehicleId: input.vehicleId || null,
+          odometer: parseOdometer(input.odometer),
+          promisedAt: parseWhen(input.promisedAt, 'موعد التسليم'),
+          paperRef: input.paperRef,
+          intakeNotes: input.intakeNotes,
+        },
+      });
+
+      for (const line of input.lines) {
+        const service = intakeService(line.key);
+        if (!service) throw new AppError('خدمة غير معروفة في بيان التشغيل');
+
+        /*
+          الماركة تصل معرّفاً لأن القائمة تعرض خدمات قاعدة البيانات.
+          نخزّن اسمها في `spec` — المعرّف لا يُقرأ في جدول ولا في كفالة —
+          ونربط البند بخدمتها في `serviceId` ليبقى الرابط قائماً للتقارير
+          والكفالة.
+        */
+        let brandName: string | null = null;
+        if (line.brand) {
+          const brand = await tx.service.findUnique({
+            where: { id: line.brand },
+            include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
+          });
+          if (!brand) throw new AppError('الماركة غير موجودة');
+          brandName = brand.translations[0]?.name ?? brand.slug;
+        }
+
+        const price = fils(line.price);
+        const parent = await tx.jobOrderItem.create({
+          data: {
+            jobOrderId: created.id,
+            label: intakeLabel(service, line.options),
+            serviceId: line.brand || null,
+            // الماركة مواصفة البند لا اسمه — فيبقى الاسم مطابقاً للورقة
+            spec: brandName,
+            qty: 1,
+            unitPrice: price,
+            total: price,
+          },
+        });
+
+        // القطع تُنشأ واحدة واحدة لا دفعة: نحتاج معرّف كلٍّ منها لنسند فنييها
+        for (const part of line.parts) {
+          const child = await tx.jobOrderItem.create({
+            data: {
+              jobOrderId: created.id,
+              parentId: parent.id,
+              label: part.label,
+              spec: part.spec,
+              qty: 1,
+              unitPrice: 0,
+              total: 0,
+            },
+          });
+
+          const ids = [...new Set(part.employeeIds)];
+          if (ids.length > 0) {
+            await tx.jobOrderItemAssignee.createMany({
+              data: ids.map((employeeId) => ({ itemId: child.id, employeeId })),
+            });
+          }
+        }
+      }
+
+      return created;
+    });
+
+    revalidatePath('/dashboard/job-orders');
+    return { id: job.id, message: `تم إنشاء بيان التشغيل ${job.number}` };
   },
 });

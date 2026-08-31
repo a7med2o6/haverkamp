@@ -7,12 +7,26 @@ import { can } from '@/lib/rbac';
 import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Pagination } from '@/components/dashboard/pagination';
+import { SearchBar } from '@/components/dashboard/search-bar';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS, CUSTOMER_SOURCE } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
-import { cn, formatDateTime, startOfWeek, toLocalInput, weekDays } from '@/lib/utils';
-import { WeekView, type WeekBooking } from './week-view';
+import {
+  cn,
+  formatDateTime,
+  monthGridDays,
+  startOfMonth,
+  startOfWeek,
+  toLocalInput,
+  weekDays,
+} from '@/lib/utils';
+import { queueWhere, reminderInclude, tomorrowKey } from '@/lib/reminders';
+import { bookingServiceLabel } from '@/lib/intake';
+import type { CalendarBooking } from './calendar';
+import { MonthView } from './month-view';
+import { RemindersView } from './reminders-view';
+import { WeekView } from './week-view';
 import {
   BookingFormButton,
   BookingStatusSelect,
@@ -29,6 +43,13 @@ const FILTERS = [
   { key: 'all', label: 'الكل' },
 ] as const;
 
+const VIEWS = [
+  { key: 'month', label: 'الشهر' },
+  { key: 'week', label: 'الأسبوع' },
+  { key: 'reminders', label: 'التذكيرات' },
+  { key: 'list', label: 'القائمة' },
+] as const;
+
 export default async function BookingsPage({
   searchParams,
 }: {
@@ -37,6 +58,9 @@ export default async function BookingsPage({
     page?: string;
     view?: string;
     week?: string;
+    month?: string;
+    day?: string;
+    q?: string;
     customer?: string;
   }>;
 }) {
@@ -44,19 +68,49 @@ export default async function BookingsPage({
   const {
     filter = 'upcoming',
     page: pageParam,
-    view = 'week',
+    view,
     week: weekParam,
+    month: monthParam,
+    day: dayParam,
+    q,
     customer,
   } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
-  // التصفية بعميل تُلزم عرض القائمة — تقويم أسبوعي لعميل واحد بلا معنى
-  const isWeek = view === 'week' && !customer;
 
-  // أسبوع التقويم — من المَعلمة أو الأسبوع الحالي
-  const anchor = weekParam ? new Date(`${weekParam}T00:00:00`) : new Date();
-  const weekStart = startOfWeek(Number.isNaN(anchor.getTime()) ? new Date() : anchor);
-  const weekEnd = new Date(weekDays(weekStart)[6]);
-  weekEnd.setHours(23, 59, 59, 999);
+  // الشهر هو الافتراضي — النظرة الشاملة أولاً، والأسبوع للتفاصيل.
+  // التصفية بعميل تُلزم عرض القائمة: تقويم لعميل واحد بلا معنى.
+  const mode =
+    customer || view === 'list'
+      ? 'list'
+      : view === 'week'
+        ? 'week'
+        : view === 'reminders'
+          ? 'reminders'
+          : 'month';
+
+  // مرساة التقويم — من المَعلمة أو التاريخ الحالي
+  const monthAnchor = monthParam ? new Date(`${monthParam}-01T00:00:00`) : new Date();
+  const monthStart = startOfMonth(
+    Number.isNaN(monthAnchor.getTime()) ? new Date() : monthAnchor
+  );
+  const monthCells = monthGridDays(monthStart);
+
+  // يوم طابور التذكيرات — الغد افتراضاً
+  const reminderDay = /^\d{4}-\d{2}-\d{2}$/.test(dayParam ?? '')
+    ? dayParam!
+    : tomorrowKey();
+
+  const weekAnchor = weekParam ? new Date(`${weekParam}T00:00:00`) : new Date();
+  const weekStart = startOfWeek(
+    Number.isNaN(weekAnchor.getTime()) ? new Date() : weekAnchor
+  );
+
+  // مدى ما يُعرض على الشبكة — يشمل أطراف الشهر من الشهرين المجاورين
+  const calStart = mode === 'month' ? monthCells[0] : weekStart;
+  const calEnd = new Date(
+    mode === 'month' ? monthCells[monthCells.length - 1] : weekDays(weekStart)[6]
+  );
+  calEnd.setHours(23, 59, 59, 999);
 
   const now = new Date();
   const todayStart = new Date(now);
@@ -73,15 +127,39 @@ export default async function BookingsPage({
           ? { status: 'PENDING' }
           : {};
 
-  // تصفية بعميل واحد — من رابط «عرض الكل» في ملف العميل
-  const where: Prisma.BookingWhereInput = customer
-    ? { AND: [byFilter, { customerId: customer }] }
-    : byFilter;
+  // بحث القائمة — بكود الحجز أو اسم العميل أو هاتفه، ومنه تُفتح بطاقة التقويم
+  const bySearch: Prisma.BookingWhereInput = q
+    ? {
+        OR: [
+          { code: { contains: q, mode: 'insensitive' } },
+          { guestName: { contains: q, mode: 'insensitive' } },
+          { guestPhone: { contains: q } },
+          { customer: { name: { contains: q, mode: 'insensitive' } } },
+          { customer: { phone: { contains: q } } },
+        ],
+      }
+    : {};
 
-  const [weekBookings, weekendSetting] = isWeek
+  const filters: Prisma.BookingWhereInput[] = [byFilter, bySearch];
+  // تصفية بعميل واحد — من رابط «عرض الكل» في ملف العميل
+  if (customer) filters.push({ customerId: customer });
+  const where: Prisma.BookingWhereInput = { AND: filters };
+
+  const isCalendar = mode === 'month' || mode === 'week';
+
+  const reminders =
+    mode === 'reminders'
+      ? await db.booking.findMany({
+          where: queueWhere(reminderDay),
+          orderBy: { scheduledAt: 'asc' },
+          include: reminderInclude,
+        })
+      : [];
+
+  const [calBookings, weekendSetting] = isCalendar
     ? await Promise.all([
         db.booking.findMany({
-          where: { scheduledAt: { gte: weekStart, lte: weekEnd } },
+          where: { scheduledAt: { gte: calStart, lte: calEnd } },
           orderBy: { scheduledAt: 'asc' },
           include: {
             customer: { select: { name: true } },
@@ -94,7 +172,7 @@ export default async function BookingsPage({
       ])
     : [[], null];
 
-  const [bookings, total, customers, services] = await Promise.all([
+  const [bookings, total, customers] = await Promise.all([
     db.booking.findMany({
       where,
       orderBy: { scheduledAt: filter === 'all' ? 'desc' : 'asc' },
@@ -114,28 +192,36 @@ export default async function BookingsPage({
       take: 500,
       select: { id: true, name: true, phone: true },
     }),
-    db.service.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: 'asc' },
-      include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
-    }),
   ]);
 
   const canWrite = can(session.user.role, 'crm:write');
   const canWorkshop = can(session.user.role, 'workshop:write');
-  const serviceOptions = services.map((s) => ({
-    id: s.id,
-    name: s.translations[0]?.name ?? s.slug,
+  const weekend = (weekendSetting?.value as string[] | undefined) ?? ['FRI'];
+  const calendar = calBookings.map<CalendarBooking>((b) => ({
+    id: b.id,
+    code: b.code,
+    scheduledAt: b.scheduledAt,
+    status: b.status,
+    name: b.customer?.name ?? b.guestName ?? 'زائر',
+    car: b.vehicle ? `${b.vehicle.make} ${b.vehicle.model}` : (b.guestCar ?? ''),
+    service: bookingServiceLabel(b) ?? '',
+    hasJob: !!b.jobOrder,
   }));
 
   return (
     <>
       <PageHeader
         title="الحجوزات"
-        description={`${total} حجز`}
+        description={
+          isCalendar
+            ? `${calendar.length} حجز في المدى المعروض`
+            : mode === 'reminders'
+              ? `${reminders.filter((b) => !b.reminderSentAt).length} تذكير بانتظار الإرسال`
+              : `${total} حجز`
+        }
         actions={
           canWrite ? (
-            <BookingFormButton customers={customers} services={serviceOptions} />
+            <BookingFormButton customers={customers} />
           ) : null
         }
       />
@@ -147,18 +233,15 @@ export default async function BookingsPage({
         />
       )}
 
-      {/* تبويبا العرض */}
+      {/* تبويبات العرض */}
       <div className="mb-4 flex gap-1.5">
-        {[
-          { key: 'week', label: 'التقويم' },
-          { key: 'list', label: 'القائمة' },
-        ].map((v) => (
+        {VIEWS.map((v) => (
           <Link
             key={v.key}
-            href={v.key === 'week' ? '/dashboard/bookings?view=week' : '/dashboard/bookings?view=list'}
+            href={`/dashboard/bookings?view=${v.key}`}
             className={cn(
               'rounded-[var(--radius-sm)] border px-4 py-1.5 text-[13px] font-semibold transition-colors',
-              (v.key === 'week') === isWeek
+              v.key === mode
                 ? 'border-accent bg-accent/15 text-accent-soft'
                 : 'border-[var(--line)] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]'
             )}
@@ -168,22 +251,29 @@ export default async function BookingsPage({
         ))}
       </div>
 
-      {isWeek ? (
+      {mode === 'month' ? (
+        <MonthView
+          monthStart={monthStart}
+          days={monthCells}
+          today={new Date()}
+          canWrite={canWrite}
+          weekend={weekend}
+          bookings={calendar}
+        />
+      ) : mode === 'week' ? (
         <WeekView
           start={weekStart}
           today={new Date()}
           canWrite={canWrite}
-          weekend={(weekendSetting?.value as string[] | undefined) ?? ['FRI']}
-          bookings={weekBookings.map<WeekBooking>((b) => ({
-            id: b.id,
-            code: b.code,
-            scheduledAt: b.scheduledAt,
-            status: b.status,
-            name: b.customer?.name ?? b.guestName ?? 'زائر',
-            car: b.vehicle ? `${b.vehicle.make} ${b.vehicle.model}` : (b.guestCar ?? ''),
-            service: b.service?.translations[0]?.name ?? '',
-            hasJob: !!b.jobOrder,
-          }))}
+          weekend={weekend}
+          bookings={calendar}
+        />
+      ) : mode === 'reminders' ? (
+        <RemindersView
+          day={reminderDay}
+          dayDate={new Date(`${reminderDay}T12:00:00+03:00`)}
+          bookings={reminders}
+          canWrite={canWrite}
         />
       ) : (
       <>
@@ -191,7 +281,7 @@ export default async function BookingsPage({
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={`/dashboard/bookings?view=list&filter=${f.key}`}
+            href={`/dashboard/bookings?view=list&filter=${f.key}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
             className={cn(
               'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
               filter === f.key
@@ -203,6 +293,11 @@ export default async function BookingsPage({
           </Link>
         ))}
       </div>
+
+      <SearchBar
+        placeholder="ابحث بكود الحجز أو اسم العميل أو هاتفه…"
+        className="mb-4 max-w-md"
+      />
 
       <TableWrap>
         <Table>
@@ -253,8 +348,15 @@ export default async function BookingsPage({
                       ? `${b.vehicle.make} ${b.vehicle.model}`
                       : (b.guestCar ?? '—')}
                   </Td>
-                  <Td className="text-[12px]">{b.service?.translations[0]?.name ?? '—'}</Td>
-                  <Td className="tnum text-[12px]">{formatDateTime(b.scheduledAt)}</Td>
+                  <Td className="text-[12px]">{bookingServiceLabel(b) ?? '—'}</Td>
+                  <Td className="tnum text-[12px]">
+                    {formatDateTime(b.scheduledAt)}
+                    {b.rescheduledAt && (
+                      <span className="block text-[11px] font-semibold text-info">
+                        غيّره العميل
+                      </span>
+                    )}
+                  </Td>
                   <Td>
                     <Badge tone={CUSTOMER_SOURCE[b.source].tone}>
                       {CUSTOMER_SOURCE[b.source].label}
@@ -286,12 +388,12 @@ export default async function BookingsPage({
                         )}
                         <BookingFormButton
                           customers={customers}
-                          services={serviceOptions}
                           booking={{
                             id: b.id,
                             customerId: b.customerId,
                             vehicleId: b.vehicleId,
-                            serviceId: b.serviceId,
+                            serviceKey: b.serviceKey,
+                            serviceSpec: b.serviceSpec,
                             guestName: b.guestName,
                             guestPhone: b.guestPhone,
                             guestCar: b.guestCar,

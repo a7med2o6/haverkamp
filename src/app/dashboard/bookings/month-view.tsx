@@ -1,51 +1,48 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BOOKING_STATUS } from '@/lib/labels';
-import { DAY_CODES, cn, dayKey, formatDayLabel, weekDays } from '@/lib/utils';
+import { DAY_CODES, cn, dayKey, formatMonthLabel, monthKey } from '@/lib/utils';
 import { LEGEND_STATUSES, STATUS_EDGE, type CalendarBooking } from './calendar';
-import { WeekGrid, type DayColumn } from './week-grid';
+import { MonthGrid, type MonthDay } from './month-grid';
 
 /**
- * تقويم الحجوزات الأسبوعي.
- * الأسبوع أفق التفاصيل: الخانة تتّسع لاسم العميل وخدمته وسيارته.
- * للنظرة الشاملة على الشهر كاملاً هناك عرض الشهر.
+ * تقويم الحجوزات الشهري — الشهر كاملاً في شاشة واحدة.
+ * أفق التخطيط عند الاستقبال شهر لا أسبوع: توزّع الضغط ومواعيد العملاء
+ * البعيدة لا تظهر في سبعة أيام. الخانة الضيقة تكفي للساعة والاسم،
+ * ومن أراد التفاصيل نقر على اليوم فانتقل إلى عرض الأسبوع.
  */
-export function WeekView({
-  start,
+export function MonthView({
+  monthStart,
+  days,
   bookings,
   weekend,
   today,
   canWrite,
 }: {
-  start: Date;
+  monthStart: Date;
+  /** خانات الشبكة — أسابيع كاملة تتجاوز حدّي الشهر */
+  days: Date[];
   bookings: CalendarBooking[];
   /** رموز أيام العطلة من إعدادات الدوام: FRI … */
   weekend: string[];
   today: Date;
   canWrite: boolean;
 }) {
-  const days = weekDays(start);
-  const end = days[6];
-
   const byDay = new Map<string, CalendarBooking[]>();
   for (const b of bookings) {
     const k = dayKey(b.scheduledAt);
     byDay.set(k, [...(byDay.get(k) ?? []), b]);
   }
 
-  const shift = (weeks: number) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + weeks * 7);
-    return dayKey(d);
-  };
-
   const todayK = dayKey(today);
+  const month = monthStart.getMonth();
 
-  const columns: DayColumn[] = days.map((d) => {
+  const cells: MonthDay[] = days.map((d) => {
     const k = dayKey(d);
     return {
       key: k,
       date: d,
+      inMonth: d.getMonth() === month,
       isOff: weekend.includes(DAY_CODES[d.getDay()]),
       isToday: k === todayK,
       bookings: (byDay.get(k) ?? []).sort(
@@ -54,30 +51,41 @@ export function WeekView({
     };
   });
 
+  const inMonthCount = cells.reduce(
+    (n, c) => n + (c.inMonth ? c.bookings.length : 0),
+    0
+  );
+
+  const shift = (months: number) =>
+    monthKey(new Date(monthStart.getFullYear(), month + months, 1));
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[15px] font-bold text-[var(--text-0)]">
-          {formatDayLabel(start)} — {formatDayLabel(end)}
+          {formatMonthLabel(monthStart)}
+          <span className="tnum ms-2 text-[13px] font-medium text-[var(--text-2)]">
+            {inMonthCount} حجز
+          </span>
         </h2>
 
         <div className="flex items-center gap-1.5">
-          <NavLink href={`?view=week&week=${shift(-1)}`} label="الأسبوع السابق">
+          <NavLink href={`?view=month&month=${shift(-1)}`} label="الشهر السابق">
             <ChevronRight className="size-4" />
           </NavLink>
           <Link
-            href="?view=week"
+            href="?view=month"
             className="rounded-[var(--radius-sm)] border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--text-1)] transition-colors hover:border-accent hover:text-accent"
           >
-            هذا الأسبوع
+            هذا الشهر
           </Link>
-          <NavLink href={`?view=week&week=${shift(1)}`} label="الأسبوع التالي">
+          <NavLink href={`?view=month&month=${shift(1)}`} label="الشهر التالي">
             <ChevronLeft className="size-4" />
           </NavLink>
         </div>
       </div>
 
-      <WeekGrid days={columns} canWrite={canWrite} />
+      <MonthGrid days={cells} canWrite={canWrite} />
 
       {/* دليل الألوان */}
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-2)]">

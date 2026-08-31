@@ -7,6 +7,8 @@ import { Loader2, Pencil, Plus, Wrench } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
+import { Combobox } from '@/components/ui/combobox';
+import { BOOKING_SERVICES, bookingService } from '@/lib/intake';
 import { BOOKING_STATUS, toOptions } from '@/lib/labels';
 import { toLocalInput } from '@/lib/utils';
 import { convertBookingToJob, saveBooking, setBookingStatus } from './actions';
@@ -15,7 +17,8 @@ export interface BookingValues {
   id?: string;
   customerId?: string | null;
   vehicleId?: string | null;
-  serviceId?: string | null;
+  serviceKey?: string | null;
+  serviceSpec?: string | null;
   guestName?: string | null;
   guestPhone?: string | null;
   guestCar?: string | null;
@@ -27,11 +30,9 @@ export interface BookingValues {
 export function BookingFormButton({
   booking,
   customers,
-  services,
 }: {
   booking?: BookingValues;
   customers: Array<{ id: string; name: string; phone: string }>;
-  services: Array<{ id: string; name: string }>;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -42,7 +43,8 @@ export function BookingFormButton({
   const [values, setValues] = useState<BookingValues>(() =>
     booking ?? {
       customerId: '',
-      serviceId: '',
+      serviceKey: '',
+      serviceSpec: '',
       guestName: '',
       guestPhone: '',
       guestCar: '',
@@ -105,17 +107,19 @@ export function BookingFormButton({
         >
           <form id="booking-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
             <Field label="العميل المسجّل" className="sm:col-span-2">
-              <Select
+              <Combobox
                 value={values.customerId ?? ''}
-                onChange={(e) => set('customerId', e.target.value)}
-              >
-                <option value="">— زائر جديد (أدخل البيانات أدناه) —</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} — {c.phone}
-                  </option>
-                ))}
-              </Select>
+                onChange={(v) => set('customerId', v)}
+                placeholder="— زائر جديد (أدخل البيانات أدناه) —"
+                searchPlaceholder="ابحث بالاسم أو الهاتف…"
+                emptyLabel="لا يوجد عميل بهذا الاسم أو الرقم"
+                pinned={{ value: '', label: '— زائر جديد (أدخل البيانات أدناه) —' }}
+                options={customers.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                  hint: c.phone,
+                }))}
+              />
             </Field>
 
             {!values.customerId && (
@@ -146,17 +150,41 @@ export function BookingFormButton({
 
             <Field label="الخدمة">
               <Select
-                value={values.serviceId ?? ''}
-                onChange={(e) => set('serviceId', e.target.value)}
+                value={values.serviceKey ?? ''}
+                onChange={(e) => {
+                  set('serviceKey', e.target.value);
+                  // الاختيار الفرعي يخصّ خدمته — تغييرها يُسقطه
+                  set('serviceSpec', '');
+                }}
               >
                 <option value="">— غير محدّدة —</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
+                {BOOKING_SERVICES.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
                   </option>
                 ))}
               </Select>
             </Field>
+
+            {(() => {
+              const svc = bookingService(values.serviceKey);
+              if (!svc?.options) return <div className="hidden sm:block" />;
+              return (
+                <Field label={svc.optionLabel ?? 'الاختيار'}>
+                  <Select
+                    value={values.serviceSpec ?? ''}
+                    onChange={(e) => set('serviceSpec', e.target.value)}
+                  >
+                    <option value="">— غير محدّد —</option>
+                    {svc.options.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              );
+            })()}
 
             <Field label="الحالة">
               <Select value={values.status} onChange={(e) => set('status', e.target.value)}>

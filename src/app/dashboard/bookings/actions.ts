@@ -5,12 +5,14 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
+import { bookingService, bookingServiceLabel } from '@/lib/intake';
 
 const bookingSchema = z.object({
   id: z.string().optional(),
   customerId: optionalString,
   vehicleId: optionalString,
-  serviceId: optionalString,
+  serviceKey: optionalString,
+  serviceSpec: optionalString,
   guestName: optionalString,
   guestPhone: optionalString,
   guestCar: optionalString,
@@ -37,14 +39,37 @@ export const saveBooking = action({
       throw new AppError('اختر عميلاً مسجّلاً أو أدخل اسم الزائر');
     }
 
+    /*
+      الخدمة تصل بمفتاح الكتالوج، ونستنبط منها `serviceId` بالسلَق ليبقى
+      الحجز مربوطاً بجدول الخدمات حيث يوجد مقابل — «حماية الرنقات» لا
+      مقابل لها فتبقى بلا رابط، ومفتاحها هو ما يحفظ معناها.
+    */
+    const catalogue = bookingService(data.serviceKey);
+    if (data.serviceKey && !catalogue) throw new AppError('خدمة غير معروفة');
+
+    const serviceId = catalogue?.slug
+      ? ((await db.service.findUnique({
+          where: { slug: catalogue.slug },
+          select: { id: true },
+        }))?.id ?? null)
+      : null;
+
     if (id) {
-      const updated = await db.booking.update({ where: { id }, data });
+      const updated = await db.booking.update({
+        where: { id },
+        data: { ...data, serviceId },
+      });
       revalidatePath('/dashboard/bookings');
       return { id: updated.id, message: 'تم تحديث الحجز' };
     }
 
     const created = await db.booking.create({
-      data: { ...data, code: await nextNumber('booking'), source: 'WALK_IN' },
+      data: {
+        ...data,
+        serviceId,
+        code: await nextNumber('booking'),
+        source: 'WALK_IN',
+      },
     });
     revalidatePath('/dashboard/bookings');
     return { id: created.id, message: `تم إنشاء الحجز ${created.code}` };
@@ -167,7 +192,7 @@ export const convertBookingToJob = action({
           ? {
               create: {
                 serviceId: booking.serviceId,
-                label: booking.service?.translations[0]?.name ?? 'خدمة',
+                label: bookingServiceLabel(booking) ?? 'خدمة',
                 qty: 1,
                 unitPrice: 0,
                 total: 0,
@@ -182,5 +207,25 @@ export const convertBookingToJob = action({
     revalidatePath('/dashboard/bookings');
     revalidatePath('/dashboard/job-orders');
     return { id: job.id, message: `تم إنشاء أمر الشغل ${job.number}` };
+  },
+});
+
+/**
+ * يسجّل أن تذكير الحجز أُرسل.
+ * يُستدعى من زر الإرسال اليدوي بعد فتح الواتساب. لا يضمن أن الموظف ضغط
+ * «إرسال» في التطبيق، لكنه يكفي لإخراج الحجز من الطابور ومنع تذكير
+ * مكرّر من المهمة المجدولة — وإعادة الإرسال متاحة دائماً.
+ */
+export const markReminderSent = action({
+  permission: 'crm:write',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'Booking', action: 'REMINDER' },
+  handler: async ({ id }) => {
+    await db.booking.update({
+      where: { id },
+      data: { reminderSentAt: new Date() },
+    });
+    revalidatePath('/dashboard/bookings');
+    return { id, message: 'تم تسجيل التذكير' };
   },
 });

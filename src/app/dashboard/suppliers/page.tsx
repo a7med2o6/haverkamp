@@ -7,7 +7,7 @@ import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { SearchBar } from '@/components/dashboard/search-bar';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { formatKWD, toNumber } from '@/lib/utils';
+import { formatKWD, formatPhone, toNumber } from '@/lib/utils';
 import { DeleteSupplierButton, SupplierFormButton } from './supplier-form';
 
 export const metadata: Metadata = { title: 'المورّدون' };
@@ -88,7 +88,7 @@ export default async function SuppliersPage({
                     </Td>
                     <Td className="text-[12px]">{s.country ?? '—'}</Td>
                     <Td className="tnum text-[12px]" dir="ltr">
-                      {s.phone ?? '—'}
+                      {formatPhone(s.phone)}
                     </Td>
                     <Td className="text-[12px]" dir="ltr">
                       {s.email ? (

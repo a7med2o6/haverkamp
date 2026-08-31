@@ -5,7 +5,7 @@ import { can, ROLE_LABELS } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { formatDateTime } from '@/lib/utils';
+import { formatDateTime, formatPhone } from '@/lib/utils';
 import { ToggleUserButton, UserFormButton } from './user-form';
 
 export const metadata: Metadata = { title: 'المستخدمون' };
@@ -60,7 +60,7 @@ export default async function UsersPage() {
                     {u.email}
                   </Td>
                   <Td className="tnum text-[12px]" dir="ltr">
-                    {u.phone ?? '—'}
+                    {formatPhone(u.phone)}
                   </Td>
                   <Td>
                     <Badge tone={u.role === 'OWNER' ? 'accent' : 'neutral'}>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { BellRing, CalendarClock, CheckCircle2, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
-import { cn, formatBookingTime, formatDayLabel, formatWeekday } from '@/lib/utils';
+import { cn, formatBookingTime, formatDayLabel, formatPhone, formatWeekday } from '@/lib/utils';
 import {
   buildReminderMessage,
   confirmUrl,
@@ -138,7 +138,7 @@ export function RemindersView({
                     </Td>
                     <Td className="font-medium text-[var(--text-0)]">{name}</Td>
                     <Td className="tnum text-[12px]" dir="ltr">
-                      {b.customer?.phone ?? b.guestPhone ?? '—'}
+                      {formatPhone(b.customer?.phone ?? b.guestPhone)}
                     </Td>
                     <Td className="text-[12px]">
                       {bookingServiceLabel(b) ?? '—'}

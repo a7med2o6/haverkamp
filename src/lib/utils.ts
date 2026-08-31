@@ -336,3 +336,35 @@ export function formatMonthLabel(d: Date): string {
 export function monthKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
+
+
+/**
+ * أرقام الهاتف بصيغة واحدة للعرض.
+ *
+ * الأرقام تُدخَل بست صيغ: ثمانية أرقام محلية، وبمفتاح دولي بلا فراغات،
+ * وبفراغات، وبصفرين بادئين. فيخرج العمود بلا شكل ثابت ولا محاذاة، ويصعب
+ * مسحه بالعين. نطبّعها للعرض ولا نلمس المخزَّن — التطبيع عند الحفظ يغيّر
+ * ما أدخله الموظف، وما لا نعرف صيغته نعرضه كما هو بدل أن نشوّهه.
+ */
+export function normalizePhoneDigits(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let d = raw.replace(/\D/g, '');
+  if (!d) return null;
+  if (d.startsWith('00')) d = d.slice(2);
+  // ثمانية أرقام = رقم كويتي محلي بلا مفتاح
+  if (d.length === 8) d = `965${d}`;
+  return d.length >= 10 && d.length <= 15 ? d : null;
+}
+
+/** «+965 5544 3322» — والرقم غير المفهوم يُعرض كما خُزّن */
+export function formatPhone(raw: string | null | undefined): string {
+  if (!raw) return '—';
+  const d = normalizePhoneDigits(raw);
+  if (!d) return raw.trim();
+
+  if (d.startsWith('965') && d.length === 11) {
+    const n = d.slice(3);
+    return `+965 ${n.slice(0, 4)} ${n.slice(4)}`;
+  }
+  return `+${d}`;
+}

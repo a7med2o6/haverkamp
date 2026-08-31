@@ -11,6 +11,8 @@
  * ويكتفي التلقائي بتفريغه قبل أن يصل إليه الموظف.
  */
 
+import { normalizePhoneDigits } from '@/lib/utils';
+
 const GRAPH_VERSION = 'v21.0';
 
 /** هل مفاتيح Cloud API مضبوطة — يقرّر ظهور الإرسال التلقائي */
@@ -20,20 +22,10 @@ export function isCloudApiReady(): boolean {
 
 /**
  * يحوّل الرقم إلى صيغة E.164 بلا علامة زائد — ما يقبله واتساب.
- * الأرقام تُدخَل في اللوحة بأشكال شتّى: «5111 1154»، «+965…»، «00965…»،
- * وثمانية أرقام بلا مفتاح دولة (الشائع محلياً) فنفترض لها الكويت.
+ * التطبيع نفسه الذي يستعمله العرض، فلا يفترق ما يُرسَل عمّا يُقرأ.
  */
 export function normalizePhone(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  let d = raw.replace(/\D/g, '');
-  if (!d) return null;
-
-  if (d.startsWith('00')) d = d.slice(2);
-  // ثمانية أرقام = رقم كويتي محلي بلا مفتاح
-  if (d.length === 8) d = `965${d}`;
-
-  // أقصر من ذلك ليس رقماً قابلاً للإرسال
-  return d.length >= 10 && d.length <= 15 ? d : null;
+  return normalizePhoneDigits(raw);
 }
 
 /** رابط يفتح محادثة واتساب برسالة جاهزة */

@@ -11,7 +11,7 @@ import { PAGE_SIZE } from '@/lib/constants';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { CUSTOMER_SOURCE } from '@/lib/labels';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatPhone } from '@/lib/utils';
 import { CustomerFormButton } from './customer-form';
 
 export const metadata: Metadata = { title: 'العملاء' };
@@ -107,8 +107,13 @@ export default async function CustomersPage({
                       </Badge>
                     )}
                   </Td>
-                  <Td className="tnum" dir="ltr">
-                    {c.phone}
+                  {/*
+                    `dir=ltr` يصحّح ترتيب الأرقام، لكنه يجعل بداية السطر
+                    يساراً فينفصل العمود عن ترويسته المحاذاة يميناً.
+                    `text-end` يعيده إلى حافة العمود كبقية الأعمدة.
+                  */}
+                  <Td className="tnum whitespace-nowrap text-end" dir="ltr">
+                    {formatPhone(c.phone)}
                   </Td>
                   <Td>{c.area ?? '—'}</Td>
                   <Td className="tnum">{c._count.vehicles}</Td>

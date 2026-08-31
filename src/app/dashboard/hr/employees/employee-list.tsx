@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useSearchParams } from 'next/navigation';
 import { Search, TriangleAlert, User } from 'lucide-react';
+import { EMPLOYEE_SKILL } from '@/lib/labels';
 import { cn } from '@/lib/utils';
 
 export interface EmployeeListItem {
@@ -14,6 +15,7 @@ export interface EmployeeListItem {
   code: string;
   photo: string | null;
   position: string;
+  skills: string[];
   isActive: boolean;
   /** أقرب وثيقة على وشك الانتهاء — null إن كانت كلها سارية */
   expiry: { tone: 'warn' | 'danger'; label: string } | null;
@@ -39,10 +41,26 @@ export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
         e.fullName.toLowerCase().includes(q) ||
         (e.civilId ?? '').includes(q) ||
         e.code.toLowerCase().includes(q) ||
-        e.position.toLowerCase().includes(q)
+        e.position.toLowerCase().includes(q) ||
+        e.skills.some((k) =>
+          (EMPLOYEE_SKILL[k as keyof typeof EMPLOYEE_SKILL]?.label ?? '')
+            .toLowerCase()
+            .includes(q)
+        )
       );
     });
   }, [employees, query, onlyExpiring]);
+
+  /*
+    ترتيب أبجدي عربي.
+    الترتيب من قاعدة البيانات يتبع ترتيب الترميز، فيضع الهمزات والألف
+    في مواضع متباعدة ويقدّم الأسماء اللاتينية على العربية كلّها.
+    `localeCompare` بلغة عربية يرتّبها كما يتوقّع القارئ.
+  */
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => a.fullName.localeCompare(b.fullName, 'ar')),
+    [filtered]
+  );
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -78,14 +96,14 @@ export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
       )}
 
       <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto pb-2">
-        {filtered.length === 0 ? (
+        {sorted.length === 0 ? (
           <li className="rounded-[var(--radius-md)] border border-[var(--line)] p-6 text-center">
             <p className="text-[13px] text-[var(--text-2)]">
               {onlyExpiring ? 'لا توجد وثائق تحتاج تجديد' : 'لا توجد نتائج مطابقة'}
             </p>
           </li>
         ) : (
-          filtered.map((e) => {
+          sorted.map((e) => {
             const active = params?.id === e.id;
             return (
               <li key={e.id}>
@@ -111,6 +129,18 @@ export function EmployeeList({ employees }: { employees: EmployeeListItem[] }) {
                     <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
                       {e.civilId ?? e.code}
                     </span>
+                    {e.skills.length > 0 && (
+                      <span className="mt-1 flex flex-wrap gap-1">
+                        {e.skills.map((k) => (
+                          <span
+                            key={k}
+                            className="rounded-full bg-[var(--glass-strong)] px-1.5 py-0.5 text-[10px] text-[var(--text-1)]"
+                          >
+                            {EMPLOYEE_SKILL[k as keyof typeof EMPLOYEE_SKILL]?.label ?? k}
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     {e.expiry && (
                       <span
                         className={cn(

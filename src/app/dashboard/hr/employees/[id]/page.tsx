@@ -99,18 +99,32 @@ export default async function EmployeeProfilePage({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/*
+          يلفّ عند الضيق.
+          الترويسة الحاوية `overflow-hidden`، وهذا الصف كان بلا لفّ —
+          وصفحة الموظف تقع في عمود تقتطع منه القائمة الجانبية، فيفيض
+          الصف ويُقتصّ زرّ التعديل خارج الحدّ فلا يظهر أصلاً.
+        */}
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
           <HeroStat label="السن" value={age !== null ? `${age} سنة` : '—'} />
           <HeroStat label="الخدمة" value={service !== null ? `${service} سنة` : '—'} />
           {canWrite && (
             <EmployeeFormButton
               variant="secondary"
+              /*
+                الترويسة خلفيتها مثبّتة داكنة في الوضعين، فألوان الثيم لا
+                تصلح فوقها: `secondary` تلوّن نصّها بـ--text-0 وهو في الوضع
+                الفاتح #0a1424 — لون الترويسة نفسه، فيختفي الزرّ تماماً.
+                بقية عناصر الترويسة تستعمل ألواناً مثبّتة للسبب نفسه.
+              */
+              className="border-white/25 bg-white/10 text-white hover:border-white/40 hover:bg-white/20"
               departments={departments}
               employee={{
                 id: employee.id,
                 fullName: employee.fullName,
                 fullNameEn: employee.fullNameEn,
                 position: employee.position,
+                skills: employee.skills,
                 departmentId: employee.departmentId,
                 phone: employee.phone,
                 email: employee.email,

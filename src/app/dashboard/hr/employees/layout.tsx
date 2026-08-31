@@ -3,7 +3,12 @@ import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { expiryStatus, todayDateOnly } from '@/lib/utils';
-import { RESIDENCY_ALERT_DAYS, RESIDENCY_DOC_TYPES } from '@/lib/constants';
+import {
+  PASSPORT_ALERT_DAYS,
+  PASSPORT_CRITICAL_DAYS,
+  RESIDENCY_ALERT_DAYS,
+  RESIDENCY_DOC_TYPES,
+} from '@/lib/constants';
 import { EmployeeList } from './employee-list';
 import { EmployeeFormButton } from './employee-form';
 
@@ -17,9 +22,10 @@ export default async function EmployeesLayout({
 }) {
   const session = await requirePermission('hr:read');
 
-  const alertDeadline = new Date(
-    todayDateOnly().getTime() + RESIDENCY_ALERT_DAYS * 86400000
-  );
+  const today = todayDateOnly();
+  const alertDeadline = new Date(today.getTime() + RESIDENCY_ALERT_DAYS * 86400000);
+  // الجواز نافذته أوسع: تجديد الإقامة يشترط بقاء سنة فيه
+  const passportDeadline = new Date(today.getTime() + PASSPORT_ALERT_DAYS * 86400000);
 
   const [employees, departments, documents] = await Promise.all([
     db.employee.findMany({
@@ -31,6 +37,7 @@ export default async function EmployeesLayout({
         civilId: true,
         photo: true,
         position: true,
+        skills: true,
         status: true,
       },
     }),
@@ -38,19 +45,45 @@ export default async function EmployeesLayout({
     // نفس نطاق تنبيه لوحة التحكم بالضبط، حتى يتطابق العدد بين البطاقة وهذه القائمة
     db.employeeDocument.findMany({
       where: {
-        type: { in: [...RESIDENCY_DOC_TYPES] },
-        expiryDate: { not: null, lte: alertDeadline },
+        OR: [
+          {
+            type: { in: [...RESIDENCY_DOC_TYPES] },
+            expiryDate: { not: null, lte: alertDeadline },
+          },
+          { type: 'PASSPORT', expiryDate: { not: null, lte: passportDeadline } },
+        ],
       },
-      select: { employeeId: true, expiryDate: true },
+      select: { employeeId: true, expiryDate: true, type: true },
     }),
   ]);
 
-  const soonestByEmployee = new Map<string, Date>();
+  /*
+    نحتفظ بأشدّ الوثائق إلحاحاً لا بأقربها انتهاءً: جواز باقٍ له ثمانية
+    أشهر أخطر من إقامة باقٍ لها أربعين يوماً، لأن الأول يمنع تجديد الثاني.
+    فنقارن بالحالة لا بالتاريخ.
+  */
+  const worstByEmployee = new Map<
+    string,
+    { date: Date; status: ReturnType<typeof expiryStatus>; isPassport: boolean }
+  >();
+  const RANK = { danger: 0, warn: 1, ok: 2, neutral: 3 } as const;
+
   for (const doc of documents) {
     if (!doc.expiryDate) continue;
-    const current = soonestByEmployee.get(doc.employeeId);
-    if (!current || doc.expiryDate < current) {
-      soonestByEmployee.set(doc.employeeId, doc.expiryDate);
+    const isPassport = doc.type === 'PASSPORT';
+    const status = expiryStatus(
+      doc.expiryDate,
+      isPassport
+        ? { danger: PASSPORT_CRITICAL_DAYS, warn: PASSPORT_ALERT_DAYS }
+        : undefined
+    );
+    const current = worstByEmployee.get(doc.employeeId);
+    if (
+      !current ||
+      RANK[status.tone] < RANK[current.status.tone] ||
+      (RANK[status.tone] === RANK[current.status.tone] && doc.expiryDate < current.date)
+    ) {
+      worstByEmployee.set(doc.employeeId, { date: doc.expiryDate, status, isPassport });
     }
   }
 
@@ -67,8 +100,8 @@ export default async function EmployeesLayout({
         <div className="min-h-0 flex-1">
           <EmployeeList
             employees={employees.map((e) => {
-              const soonest = soonestByEmployee.get(e.id) ?? null;
-              const status = expiryStatus(soonest);
+              const worst = worstByEmployee.get(e.id) ?? null;
+              const status = worst?.status ?? expiryStatus(null);
               return {
                 id: e.id,
                 code: e.code,
@@ -76,14 +109,20 @@ export default async function EmployeesLayout({
                 civilId: e.civilId,
                 photo: e.photo,
                 position: e.position,
+                skills: e.skills,
                 isActive: e.status === 'ACTIVE',
                 // الاستعلام مُقيَّد أصلاً بالنطاق، فوجود تاريخ يعني حاجة للتجديد
-                expiry: soonest
-                  ? {
-                      tone: status.tone === 'warn' ? ('warn' as const) : ('danger' as const),
-                      label: status.label,
-                    }
-                  : null,
+                // نميّز الجواز في النص: علاجه غير علاج الإقامة
+                expiry:
+                  worst && status.tone !== 'ok'
+                    ? {
+                        tone:
+                          status.tone === 'warn' ? ('warn' as const) : ('danger' as const),
+                        label: worst.isPassport
+                          ? `الجواز — ${status.label}`
+                          : status.label,
+                      }
+                    : null,
               };
             })}
           />

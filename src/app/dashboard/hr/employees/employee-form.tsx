@@ -8,7 +8,8 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { FileUpload } from '@/components/ui/file-upload';
-import { EMPLOYEE_STATUS, toOptions } from '@/lib/labels';
+import { EMPLOYEE_SKILLS_SORTED, EMPLOYEE_STATUS, toOptions } from '@/lib/labels';
+import { cn } from '@/lib/utils';
 import { Avatar } from './employee-list';
 import { saveEmployee } from '../actions';
 
@@ -17,6 +18,7 @@ export interface EmployeeValues {
   fullName: string;
   fullNameEn?: string | null;
   position: string;
+  skills: string[];
   departmentId?: string | null;
   phone: string;
   email?: string | null;
@@ -42,6 +44,7 @@ const EMPTY: EmployeeValues = {
   fullName: '',
   fullNameEn: '',
   position: '',
+  skills: [],
   departmentId: '',
   phone: '',
   email: '',
@@ -239,6 +242,36 @@ function EmployeeModal({
               required
             />
           </Field>
+          <Field label="ما يتقنه" className="sm:col-span-2" hint="يحدّد ظهوره في قوائم إسناد الشغل — والفني الواحد قد يتقن أكثر من مهارة">
+            <div className="flex flex-wrap gap-1.5">
+              {EMPLOYEE_SKILLS_SORTED.map(([key, meta]) => {
+                const on = values.skills.includes(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      set(
+                        'skills',
+                        on
+                          ? values.skills.filter((x) => x !== key)
+                          : [...values.skills, key]
+                      )
+                    }
+                    className={cn(
+                      'rounded-full border px-3 py-1 text-[12px] font-medium transition-colors',
+                      on
+                        ? 'border-accent bg-accent/15 text-accent'
+                        : 'border-[var(--line)] text-[var(--text-2)] hover:border-accent'
+                    )}
+                  >
+                    {meta.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Field>
+
           <Field label="القسم">
             <Select
               value={values.departmentId ?? ''}

@@ -35,8 +35,15 @@ export const CUSTOMER_NOTE_TYPE = {
   FOLLOW_UP: { label: 'متابعة', tone: 'warn' },
 } satisfies Record<string, Label>;
 
+/*
+  «تم الاستلام» و«تم التسليم» يفترقان بحرف واحد ويقرأهما النظر سواء،
+  فيظهر أمر «تم الاستلام» ومعه «متأخر» فيبدو تناقضاً: انتهى وتُسلّم ثم
+  هو متأخر؟ والمقصود أن السيارة دخلت ولم يبدأ العمل بعد. فسُمّيت الحالة
+  بما يصف العمل لا بما يصف تبادل السيارة، وصارت الحالات تُقرأ متسلسلة:
+  لم يبدأ ← قيد التنفيذ ← فحص جودة ← جاهز للتسليم ← تم التسليم.
+*/
 export const JOB_STATUS = {
-  RECEIVED: { label: 'تم الاستلام', tone: 'neutral' },
+  RECEIVED: { label: 'لم يبدأ', tone: 'neutral' },
   IN_PROGRESS: { label: 'قيد التنفيذ', tone: 'info' },
   QUALITY_CHECK: { label: 'فحص جودة', tone: 'warn' },
   READY: { label: 'جاهز للتسليم', tone: 'accent' },

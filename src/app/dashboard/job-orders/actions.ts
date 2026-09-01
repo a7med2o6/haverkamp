@@ -6,7 +6,13 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
-import { intakeLabel, serviceDef, warrantySubject } from '@/lib/intake';
+import {
+  BODY_PARTS,
+  intakeLabel,
+  serviceDef,
+  warrantyHasParts,
+  warrantySubject,
+} from '@/lib/intake';
 
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
@@ -230,14 +236,21 @@ export const issueWarranty = action({
     /** موضوع الكفالة من قائمتها — أدقّ من الخدمة */
     subject: z.string().min(1, 'اختر موضوع الكفالة'),
     months: z.union([z.string(), z.number()]).transform(Number),
+    /** أجزاء البدي المكفولة — فارغة تعني الموضوع كلّه */
+    parts: z.array(z.string()).default([]),
     terms: optionalString,
   }),
   audit: { entity: 'Warranty', action: 'ISSUE' },
-  handler: async ({ jobOrderId, subject, months, terms }) => {
+  handler: async ({ jobOrderId, subject, months, parts, terms }) => {
     if (!Number.isFinite(months) || months <= 0) throw new AppError('مدة الكفالة غير صالحة');
 
     const def = warrantySubject(subject);
     if (!def) throw new AppError('موضوع كفالة غير معروف');
+
+    // الأجزاء لا معنى لها إلا حيث تُركَّب قطعةً قطعة
+    const covered = warrantyHasParts(subject) ? parts : [];
+    const unknown = covered.filter((k) => !BODY_PARTS.some((p) => p.key === k));
+    if (unknown.length > 0) throw new AppError('جزء غير معروف في قائمة الأجزاء');
 
     /*
       نستنبط الخدمة من سلَق الموضوع لا نأخذها من الطلب: «تبديل الجام»
@@ -268,6 +281,7 @@ export const issueWarranty = action({
         // الشرط يُنسخ لحظة الإصدار: من كُفل بشرط يبقى شرطُه كما وُقّع
         // عليه وإن تغيّر الكتالوج بعده
         serviceEveryMonths: def.serviceEveryMonths ?? null,
+        parts: covered,
         jobOrderId,
         startDate,
         endDate,

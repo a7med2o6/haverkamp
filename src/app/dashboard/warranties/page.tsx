@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
-import { serviceStatus, warrantyLabel } from '@/lib/intake';
+import { serviceStatus, warrantyLabel, warrantyPartLabels } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { SearchBar } from '@/components/dashboard/search-bar';
@@ -235,6 +235,11 @@ export default async function WarrantiesPage({
                     </Td>
                     <Td className="text-[12px]">
                       {warrantyLabel(w)}
+                      {w.parts.length > 0 && (
+                        <span className="block text-[11px] text-[var(--text-2)]">
+                          {warrantyPartLabels(w.parts).join('، ')}
+                        </span>
+                      )}
                     </Td>
                     <Td className="tnum text-[12px]">{formatDate(w.startDate)}</Td>
                     <Td className="tnum text-[12px]">{formatDate(w.endDate)}</Td>

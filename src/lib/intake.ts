@@ -398,6 +398,43 @@ export function warrantySubject(label: string | null | undefined) {
   return label ? WARRANTY_SUBJECTS.find((s) => s.label === label) : undefined;
 }
 
+/**
+ * مواضيع تُكفَل بأجزاء — لا بالسيارة كلّها دفعةً واحدة.
+ *
+ * حماية البدي وحدها: تُركَّب قطعةً قطعة، وقطعةٌ تُستبدل بعد حادث دون
+ * أخواتها. أمّا العازل والصبغ فيُكفلان جملةً.
+ */
+export const PART_WARRANTY_SUBJECTS = ['حماية البدي'];
+
+export function warrantyHasParts(subject: string | null | undefined) {
+  return !!subject && PART_WARRANTY_SUBJECTS.includes(subject);
+}
+
+/** أسماء أجزاء الشهادة — الفارغة تعني الموضوع كلّه */
+export function warrantyPartLabels(parts: string[] | null | undefined): string[] {
+  if (!parts || parts.length === 0) return [];
+  return parts.map((k) => BODY_PARTS.find((p) => p.key === k)?.label ?? k);
+}
+
+/**
+ * كفالة الجزء اليوم.
+ *
+ * الجزء يُستبدل فيأخذ شهادةً جديدة، والقديمة تبقى كما هي. فأحدثُ شهادةٍ
+ * سارية تذكر الجزء — أو تشمل الموضوع كلّه — هي كفالتُه الآن.
+ */
+export function coveringWarranty<
+  T extends { parts: string[]; startDate: Date; isVoid: boolean; subject?: string | null },
+>(warranties: T[], subject: string, partKey: string): T | undefined {
+  return warranties
+    .filter(
+      (w) =>
+        !w.isVoid &&
+        w.subject === subject &&
+        (w.parts.length === 0 || w.parts.includes(partKey))
+    )
+    .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())[0];
+}
+
 /** اسم الكفالة للعرض — القديمة بلا موضوع ترجع إلى خدمتها */
 export function warrantyLabel(w: {
   subject?: string | null;

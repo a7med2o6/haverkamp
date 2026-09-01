@@ -10,12 +10,14 @@ import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { JOB_STATUS, toOptions } from '@/lib/labels';
 import { cn } from '@/lib/utils';
 import {
+  BODY_PARTS,
   GLASS_PARTS,
   SERVICES,
   TINT_GRADES,
   WARRANTY_SUBJECTS,
   optionParts,
   serviceDef,
+  warrantyHasParts,
   warrantySubject,
 } from '@/lib/intake';
 import {
@@ -559,10 +561,17 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState({ subject: '', months: '12', terms: '' });
+  /** أجزاء البدي المكفولة — فارغة تعني البدي كلّه */
+  const [parts, setParts] = useState<string[]>([]);
+  const byParts = warrantyHasParts(values.subject);
+
+  function togglePart(key: string) {
+    setParts((p) => (p.includes(key) ? p.filter((x) => x !== key) : [...p, key]));
+  }
 
   function submit() {
     startTransition(async () => {
-      const res = await issueWarranty({ jobOrderId, ...values });
+      const res = await issueWarranty({ jobOrderId, ...values, parts: byParts ? parts : [] });
       if (res.ok) {
         toast.success(res.message ?? 'تم');
         setOpen(false);
@@ -611,6 +620,8 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
                     subject: e.target.value,
                     months: def ? String(def.months) : v.months,
                   }));
+                  // أجزاءُ موضوعٍ لا تخصّ غيره
+                  setParts([]);
                 }}
               >
                 <option value="">— اختر —</option>
@@ -621,6 +632,53 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
                 ))}
               </Select>
             </Field>
+
+            {/*
+              أجزاء البدي.
+              الافتراض «البدي كلّه» لأنه الغالب عند أول تركيب. وتُحدَّد
+              الأجزاء حين تُستبدل قطعةٌ بعد حادث: الفيلم الجديد يأخذ كفالةً
+              من تاريخه هو، فتذكر شهادتُه ما تغطّيه دون بقيّة البدي.
+            */}
+            {byParts && (
+              <Field
+                label="الأجزاء المكفولة"
+                hint={
+                  parts.length === 0
+                    ? 'بلا تحديد = البدي كلّه'
+                    : `${parts.length} من ${BODY_PARTS.length}`
+                }
+              >
+                <div className="flex flex-wrap gap-1.5">
+                  {BODY_PARTS.map((part) => {
+                    const on = parts.includes(part.key);
+                    return (
+                      <button
+                        key={part.key}
+                        type="button"
+                        onClick={() => togglePart(part.key)}
+                        className={cn(
+                          'rounded-full border px-3 py-1 text-[12px] font-medium transition-colors',
+                          on
+                            ? 'border-accent bg-accent/15 text-accent-soft'
+                            : 'border-[var(--line)] text-[var(--text-2)] hover:border-[var(--line-strong)] hover:text-[var(--text-0)]'
+                        )}
+                      >
+                        {part.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {parts.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setParts([])}
+                    className="mt-2 text-[12px] text-accent hover:underline"
+                  >
+                    إلغاء التحديد — كفالة البدي كلّه
+                  </button>
+                )}
+              </Field>
+            )}
 
             <Field label="مدة الكفالة (شهر)">
               <Select

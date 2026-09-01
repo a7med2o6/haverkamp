@@ -4,7 +4,12 @@ import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { backTo, withFrom } from '@/lib/back-link';
-import { warrantyLabel } from '@/lib/intake';
+import {
+  SERVICE_GRACE_DAYS,
+  serviceStatus,
+  warrantyLabel,
+  warrantyPartLabels,
+} from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { expiryStatus, formatDate } from '@/lib/utils';
 import { PrintButton } from '@/app/dashboard/invoices/[id]/print-button';
 import { VoidWarrantyButton } from '../warranty-client';
+import { DeleteServiceButton } from '@/app/dashboard/customers/[id]/service-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +53,16 @@ export default async function WarrantyDetailPage({
     db.warranty.findUnique({
       where: { id },
       include: {
-        vehicle: { include: { customer: true } },
+        vehicle: {
+          include: {
+            customer: true,
+            // زيارات السيارة كلّها — والتصفية بتاريخ بداية الكفالة بعد القراءة
+            services: {
+              orderBy: { visitedAt: 'desc' },
+              include: { user: { select: { name: true } } },
+            },
+          },
+        },
         service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
         jobOrder: { select: { id: true, number: true, deliveredAt: true } },
       },
@@ -63,6 +78,14 @@ export default async function WarrantyDetailPage({
     (settings.find((s) => s.key === key)?.value as string | undefined) ?? '';
 
   const status = expiryStatus(warranty.endDate);
+  const parts = warrantyPartLabels(warranty.parts);
+
+  /*
+    زيارة سبقت الكفالة لا تُحسب لها — كانت لسيارة لم تُكفل بعد. ونعرض ما
+    يُحسب فقط، فعرض زياراتٍ لا أثر لها يوهم بالتزامٍ لم يقع.
+  */
+  const visits = warranty.vehicle.services.filter((v) => v.visitedAt > warranty.startDate);
+  const service = serviceStatus(warranty, visits[0]?.visitedAt ?? null);
   const canWrite = can(session.user.role, 'crm:write');
   const months = Math.round(
     (warranty.endDate.getTime() - warranty.startDate.getTime()) / (30.44 * 86400000)
@@ -141,6 +164,23 @@ export default async function WarrantyDetailPage({
                 {warrantyLabel(warranty)}
               </Info>
 
+              {/*
+                ما تغطّيه الشهادة.
+                شهادةٌ لا تذكر أجزاءها تغطّي الموضوع كلّه، وشهادةُ جزءٍ
+                استُبدل بعد حادثٍ تذكره وحده — ولولا ذكرُه لادّعت تغطيةَ
+                بدنٍ لم تركّبه.
+              */}
+              <Info label="النطاق">
+                {parts.length === 0 ? (
+                  'كامل'
+                ) : (
+                  <span>
+                    <span className="tnum">{parts.length}</span>{' '}
+                    {parts.length === 2 ? 'جزآن' : 'أجزاء'} — {parts.join('، ')}
+                  </span>
+                )}
+              </Info>
+
               <Info label="مدة الكفالة">
                 <span className="tnum">{months} شهر</span>
               </Info>
@@ -167,6 +207,77 @@ export default async function WarrantyDetailPage({
                 </Info>
               )}
             </div>
+
+            {/*
+              شرط السيرفس الدوري.
+              الكفالة الطويلة مشروطة، والشرط يُطبع على الشهادة لأن العميل
+              يوقّع عليها — فلا يُقال له بعد سنتين «كان عليك سيرفس» ولم يكن
+              مكتوباً أمامه.
+            */}
+            {service.required && (
+              <div className="rounded-[var(--radius-sm)] border border-[var(--line)] p-3 print:break-inside-avoid">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[11px] font-semibold text-[var(--text-2)]">
+                    السيرفس الدوري — كل{' '}
+                    <span className="tnum">{warranty.serviceEveryMonths}</span> أشهر
+                  </p>
+                  <div className="print:hidden">
+                    <Badge tone={service.tone}>{service.label}</Badge>
+                  </div>
+                </div>
+
+                <p className="text-[12px] leading-relaxed text-[var(--text-1)]">
+                  تسقط هذه الكفالة إن انقطع صاحبها عن السيرفس الدوري. ومهلة السماح{' '}
+                  <span className="tnum">{SERVICE_GRACE_DAYS}</span> يوماً بعد كل موعد.
+                </p>
+
+                <div className="mt-2 grid gap-1 text-[12px] text-[var(--text-2)] print:hidden">
+                  <p>
+                    آخر زيارة:{' '}
+                    <span className="tnum text-[var(--text-1)]">
+                      {visits[0] ? formatDate(visits[0].visitedAt) : 'لم يزر بعد'}
+                    </span>
+                  </p>
+                  {service.dueAt && (
+                    <p>
+                      الموعد القادم:{' '}
+                      <span className="tnum text-[var(--text-1)]">{formatDate(service.dueAt)}</span>
+                      {service.deadline && (
+                        <>
+                          {' '}— بمهلة حتى{' '}
+                          <span className="tnum text-[var(--text-1)]">
+                            {formatDate(service.deadline)}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+
+                {visits.length > 0 && (
+                  <ul className="mt-3 space-y-1.5 border-t border-[var(--line)] pt-3 print:hidden">
+                    {visits.map((v) => (
+                      <li key={v.id} className="flex items-start justify-between gap-2 text-[12px]">
+                        <div>
+                          <span className="tnum text-[var(--text-1)]">
+                            {formatDate(v.visitedAt)}
+                          </span>
+                          {v.user?.name && (
+                            <span className="text-[var(--text-2)]"> · {v.user.name}</span>
+                          )}
+                          {v.notes && (
+                            <p className="text-[11px] leading-relaxed text-[var(--text-2)]">
+                              {v.notes}
+                            </p>
+                          )}
+                        </div>
+                        {canWrite && <DeleteServiceButton id={v.id} />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             {warranty.terms && (
               <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] p-3">

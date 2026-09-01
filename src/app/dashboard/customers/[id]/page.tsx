@@ -15,7 +15,7 @@ import {
   JOB_STATUS,
   ORDER_STATUS,
 } from '@/lib/labels';
-import { serviceStatus, warrantyLabel } from '@/lib/intake';
+import { serviceStatus, warrantyLabel, warrantyPartLabels } from '@/lib/intake';
 import { backTo, withFrom } from '@/lib/back-link';
 import {
   expiryStatus,
@@ -600,6 +600,12 @@ export default async function CustomerDetailPage({
                       <p className="text-[12px] text-[var(--text-2)]">
                         {warrantyLabel(w)} — {w.vehicle.make} {w.vehicle.model}
                       </p>
+                      {/* شهادةُ جزءٍ استُبدل تذكره — وإلا التبست بكفالة البدي كلّه */}
+                      {w.parts.length > 0 && (
+                        <p className="text-[11px] text-[var(--text-2)]">
+                          {warrantyPartLabels(w.parts).join('، ')}
+                        </p>
+                      )}
                       <p className="tnum text-[11px] text-[var(--text-2)]">
                         حتى {formatDate(w.endDate)}
                       </p>

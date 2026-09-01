@@ -368,6 +368,11 @@ export interface WarrantySubject {
   slug?: string;
   /** المدة الافتراضية بالأشهر */
   months: number;
+  /**
+   * دورية السيرفس التي تشترطها هذه الكفالة بالأشهر.
+   * فارغ يعني كفالة بلا شرط — تُعطى وتُنسى حتى تنتهي.
+   */
+  serviceEveryMonths?: number;
 }
 
 /**
@@ -379,7 +384,8 @@ export interface WarrantySubject {
  * ومدّتاهما مختلفتان. فقائمة الكفالة قائمةٌ قائمة بذاتها.
  */
 export const WARRANTY_SUBJECTS: WarrantySubject[] = [
-  { label: 'حماية البدي', slug: 'protication', months: 120 },
+  // عشر سنوات مشروطة بسيرفس كل ثلاثة أشهر — أطول كفالة وأثقلها شرطاً
+  { label: 'حماية البدي', slug: 'protication', months: 120, serviceEveryMonths: 3 },
   // درجات العزل كلّها بكفالة واحدة — الدرجة لا تغيّر المدة
   { label: 'العازل الحراري', slug: 'tint', months: TINT_WARRANTY_MONTHS },
   { label: 'حماية الجام', months: 12 },
@@ -398,4 +404,92 @@ export function warrantyLabel(w: {
   service?: { translations: { name: string }[] } | null;
 }): string {
   return w.subject ?? w.service?.translations[0]?.name ?? 'كفالة عامة';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   السيرفس الدوري المشروط
+   ═══════════════════════════════════════════════════════════ */
+
+/**
+ * مهلة السماح بعد موعد السيرفس — شهر.
+ *
+ * العميل يسافر وينشغل، وكفالة عشر سنوات لا تسقط لتأخير أيام. وبعد الشهر
+ * يصير الانقطاع انقطاعاً لا عذراً.
+ */
+export const SERVICE_GRACE_DAYS = 30;
+
+export type ServiceTone = 'ok' | 'warn' | 'danger' | 'neutral';
+
+export interface ServiceStatus {
+  /** الكفالة مشروطة بسيرفس أصلاً */
+  required: boolean;
+  /** موعد السيرفس القادم — من آخر زيارة، أو من بداية الكفالة إن لم يزر */
+  dueAt: Date | null;
+  /** آخر يوم يُقبل فيه بلا تأخير */
+  deadline: Date | null;
+  tone: ServiceTone;
+  label: string;
+}
+
+const NOT_REQUIRED: ServiceStatus = {
+  required: false,
+  dueAt: null,
+  deadline: null,
+  tone: 'neutral',
+  label: 'بلا سيرفس دوري',
+};
+
+function addMonths(d: Date, months: number) {
+  const out = new Date(d);
+  out.setMonth(out.getMonth() + months);
+  return out;
+}
+
+/**
+ * حال الكفالة من شرط السيرفس.
+ *
+ * لا تُسقط الكفالة ولا تُعدّل شيئاً — تصف فقط. الإسقاط قرار صاحب الورشة
+ * لا نتيجةُ حسابٍ: موظف نسي أن يسجّل زيارة لا يُسقط حقّ عميل حضر.
+ *
+ * والزيارات تخصّ السيارة، فزيارة واحدة تُرضي كل كفالات السيارة المشروطة.
+ * وما وقع قبل بداية الكفالة لا يُحسب لها.
+ */
+export function serviceStatus(
+  warranty: {
+    serviceEveryMonths?: number | null;
+    startDate: Date;
+    endDate: Date;
+    isVoid?: boolean;
+  },
+  /** آخر زيارة سيرفس للسيارة — أياً كان سببها */
+  lastVisitAt?: Date | null,
+  now: Date = new Date()
+): ServiceStatus {
+  const every = warranty.serviceEveryMonths;
+  if (!every || every <= 0) return NOT_REQUIRED;
+  if (warranty.isVoid) return { ...NOT_REQUIRED, label: 'الكفالة ملغاة' };
+  if (warranty.endDate <= now) return { ...NOT_REQUIRED, label: 'الكفالة منتهية' };
+
+  // زيارة سبقت الكفالة لا تُحسب لها — كانت لسيارة لم تُكفل بعد
+  const base = lastVisitAt && lastVisitAt > warranty.startDate ? lastVisitAt : warranty.startDate;
+  const dueAt = addMonths(base, every);
+  const deadline = new Date(dueAt.getTime() + SERVICE_GRACE_DAYS * 86400000);
+
+  if (now > deadline) {
+    const days = Math.floor((now.getTime() - deadline.getTime()) / 86400000);
+    return {
+      required: true,
+      dueAt,
+      deadline,
+      tone: 'danger',
+      label: `متأخر عن السيرفس ${days} يوم`,
+    };
+  }
+
+  if (now > dueAt) {
+    return { required: true, dueAt, deadline, tone: 'warn', label: 'حان موعد السيرفس' };
+  }
+
+  const days = Math.ceil((dueAt.getTime() - now.getTime()) / 86400000);
+  return { required: true, dueAt, deadline, tone: 'ok', label: `السيرفس بعد ${days} يوم` };
 }

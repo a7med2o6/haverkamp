@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { backTo, withFrom } from '@/lib/back-link';
 import { PROTECTION_BRAND_SLUGS, warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
@@ -33,11 +34,18 @@ export async function generateMetadata({
 
 export default async function JobOrderDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  /** من أين جاء الزائر — ليعود إليه لا إلى قائمة القسم */
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await requirePermission('workshop:read');
   const { id } = await params;
+  const back = backTo((await searchParams).from, {
+    href: '/dashboard/job-orders',
+    label: 'العودة إلى أوامر الشغل',
+  });
 
   const [job, brands] = await Promise.all([
     db.jobOrder.findUnique({
@@ -83,11 +91,11 @@ export default async function JobOrderDetailPage({
   return (
     <>
       <Link
-        href="/dashboard/job-orders"
+        href={back.href}
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-2)] hover:text-accent"
       >
         <ArrowRight className="size-4" />
-        العودة إلى أوامر الشغل
+        {back.label}
       </Link>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -142,7 +150,7 @@ export default async function JobOrderDetailPage({
           <CardBody className="space-y-3 text-[13px]">
             <Info label="العميل">
               <Link
-                href={`/dashboard/customers/${job.customer.id}`}
+                href={withFrom(`/dashboard/customers/${job.customer.id}`, `/dashboard/job-orders/${job.id}`)}
                 className="font-medium text-accent hover:underline"
               >
                 {job.customer.name}

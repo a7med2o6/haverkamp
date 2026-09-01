@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { backTo, withFrom } from '@/lib/back-link';
 import { warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
@@ -29,11 +30,18 @@ export async function generateMetadata({
 
 export default async function WarrantyDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  /** من أين جاء الزائر — ليعود إليه لا إلى قائمة القسم */
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await requirePermission('crm:read');
   const { id } = await params;
+  const back = backTo((await searchParams).from, {
+    href: '/dashboard/warranties',
+    label: 'العودة إلى الكفالات',
+  });
 
   const [warranty, settings] = await Promise.all([
     db.warranty.findUnique({
@@ -64,11 +72,11 @@ export default async function WarrantyDetailPage({
     <>
       <div className="mb-4 flex items-center justify-between print:hidden">
         <Link
-          href="/dashboard/warranties"
+          href={back.href}
           className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-2)] hover:text-accent"
         >
           <ArrowRight className="size-4" />
-          العودة إلى الكفالات
+          {back.label}
         </Link>
         <div className="flex items-center gap-2">
           {canWrite && (
@@ -150,7 +158,7 @@ export default async function WarrantyDetailPage({
               {warranty.jobOrder && (
                 <Info label="أمر الشغل">
                   <Link
-                    href={`/dashboard/job-orders/${warranty.jobOrder.id}`}
+                    href={withFrom(`/dashboard/job-orders/${warranty.jobOrder.id}`, `/dashboard/warranties/${warranty.id}`)}
                     className="tnum text-accent hover:underline print:text-[var(--text-0)]"
                     dir="ltr"
                   >

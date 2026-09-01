@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { backTo } from '@/lib/back-link';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,11 +29,18 @@ export async function generateMetadata({
 
 export default async function InvoiceDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  /** من أين جاء الزائر — ليعود إليه لا إلى قائمة القسم */
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await requirePermission('pos:read');
   const { id } = await params;
+  const back = backTo((await searchParams).from, {
+    href: '/dashboard/invoices',
+    label: 'العودة إلى الفواتير',
+  });
 
   const [order, settings] = await Promise.all([
     db.order.findUnique({
@@ -65,11 +73,11 @@ export default async function InvoiceDetailPage({
     <>
       <div className="mb-4 flex items-center justify-between print:hidden">
         <Link
-          href="/dashboard/invoices"
+          href={back.href}
           className="inline-flex items-center gap-1.5 text-[13px] text-[var(--text-2)] hover:text-accent"
         >
           <ArrowRight className="size-4" />
-          العودة إلى الفواتير
+          {back.label}
         </Link>
         <div className="flex items-center gap-2">
           {canCollect && (

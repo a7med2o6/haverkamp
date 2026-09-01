@@ -239,6 +239,9 @@ export const issueWarranty = action({
         customerId: job.customerId,
         serviceId,
         subject,
+        // الشرط يُنسخ لحظة الإصدار: من كُفل بشرط يبقى شرطُه كما وُقّع
+        // عليه وإن تغيّر الكتالوج بعده
+        serviceEveryMonths: def.serviceEveryMonths ?? null,
         jobOrderId,
         startDate,
         endDate,

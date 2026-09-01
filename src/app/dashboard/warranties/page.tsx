@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
-import { warrantyLabel } from '@/lib/intake';
+import { serviceStatus, warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { SearchBar } from '@/components/dashboard/search-bar';
@@ -17,12 +17,35 @@ export const dynamic = 'force-dynamic';
 
 const FILTERS = [
   { key: 'valid', label: 'سارية' },
+  { key: 'service', label: 'متأخرة عن السيرفس' },
   { key: 'expiring', label: 'تنتهي قريباً' },
   { key: 'expired', label: 'منتهية' },
   { key: 'void', label: 'ملغاة' },
   { key: 'all', label: 'الكل' },
 ] as const;
 
+const WARRANTY_INCLUDE = {
+  vehicle: {
+    select: {
+      make: true,
+      model: true,
+      plateNo: true,
+      customer: { select: { id: true, name: true, phone: true } },
+      // آخر زيارة تكفي لحساب حال السيرفس
+      services: { orderBy: { visitedAt: 'desc' }, take: 1 },
+    },
+  },
+  service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
+  jobOrder: { select: { id: true, number: true } },
+} satisfies Prisma.WarrantyInclude;
+
+/**
+ * الكفالات التي انقطع أصحابها عن السيرفس.
+ *
+ * لا تُستخرج بشرط في الاستعلام: الموعد يُحسب من آخر زيارة ومن دورية كل
+ * كفالة، وذلك حسابٌ لا يُكتب في `where`. فتُقرأ المشروطة السارية وحدها
+ * — وهي قليلة، كفالات البدي دون غيرها — ثم تُصفّى.
+ */
 function buildWhere(
   filter: string,
   now: Date,
@@ -71,34 +94,56 @@ export default async function WarrantiesPage({
   const soon = new Date(now.getTime() + EXPIRY_ALERT_DAYS * 86400000);
   const where = buildWhere(filter, now, soon, q);
 
-  const [warranties, total, expiringCount] = await Promise.all([
-    db.warranty.findMany({
-      where,
-      orderBy: { endDate: 'asc' },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        vehicle: {
-          select: {
-            make: true,
-            model: true,
-            plateNo: true,
-            customer: { select: { id: true, name: true, phone: true } },
-          },
-        },
-        service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
-        jobOrder: { select: { id: true, number: true } },
-      },
-    }),
-    db.warranty.count({ where }),
+  // المشروطة السارية — منها يُحسب المتأخر، وعليها يقوم الفلتر وعدّاده
+  const conditioned = await db.warranty.findMany({
+    where: {
+      isVoid: false,
+      endDate: { gte: now },
+      serviceEveryMonths: { not: null },
+      ...(filter === 'service' ? buildWhere('all', now, soon, q) : {}),
+    },
+    orderBy: { startDate: 'asc' },
+    include: WARRANTY_INCLUDE,
+  });
+
+  const overdue = conditioned.filter(
+    (w) => serviceStatus(w, w.vehicle.services[0]?.visitedAt ?? null).tone === 'danger'
+  );
+
+  const isServiceFilter = filter === 'service';
+
+  const [paged, counted, expiringCount] = await Promise.all([
+    isServiceFilter
+      ? overdue.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+      : db.warranty.findMany({
+          where,
+          orderBy: { endDate: 'asc' },
+          skip: (page - 1) * PAGE_SIZE,
+          take: PAGE_SIZE,
+          include: WARRANTY_INCLUDE,
+        }),
+    isServiceFilter ? overdue.length : db.warranty.count({ where }),
     db.warranty.count({
       where: { isVoid: false, endDate: { gte: now, lte: soon } },
     }),
   ]);
 
+  const warranties = paged;
+  const total = counted;
+
   return (
     <>
       <PageHeader title="الكفالات" description={`${total} شهادة`} />
+
+      {overdue.length > 0 && !isServiceFilter && (
+        <Link
+          href="/dashboard/warranties?filter=service"
+          className="mb-4 flex items-center gap-2 rounded-[var(--radius-sm)] border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-[13px] text-danger hover:border-danger/50"
+        >
+          <span className="tnum font-bold">{overdue.length}</span>
+          كفالة انقطع صاحبها عن السيرفس الدوري — اضغط للعرض
+        </Link>
+      )}
 
       {expiringCount > 0 && filter !== 'expiring' && (
         <Link
@@ -144,6 +189,7 @@ export default async function WarrantiesPage({
               <Th>من</Th>
               <Th>حتى</Th>
               <Th>الحالة</Th>
+              <Th>السيرفس</Th>
               <Th>أمر الشغل</Th>
             </tr>
           </thead>
@@ -152,11 +198,12 @@ export default async function WarrantiesPage({
               <EmptyState
                 title="لا توجد كفالات"
                 description="تُصدر الكفالات من صفحة أمر الشغل"
-                colSpan={8}
+                colSpan={9}
               />
             ) : (
               warranties.map((w) => {
                 const status = expiryStatus(w.endDate);
+                const svc = serviceStatus(w, w.vehicle.services[0]?.visitedAt ?? null);
                 return (
                   <Tr key={w.id}>
                     <Td className="tnum" dir="ltr">
@@ -198,6 +245,20 @@ export default async function WarrantiesPage({
                         <Badge tone={status.tone === 'neutral' ? 'neutral' : status.tone}>
                           {status.label}
                         </Badge>
+                      )}
+                    </Td>
+                    <Td>
+                      {svc.required ? (
+                        <>
+                          <Badge tone={svc.tone}>{svc.label}</Badge>
+                          <span className="tnum block text-[11px] text-[var(--text-2)]">
+                            {w.vehicle.services[0]
+                              ? `آخر زيارة ${formatDate(w.vehicle.services[0].visitedAt)}`
+                              : 'لم يزر بعد'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[12px] text-[var(--text-2)]">—</span>
                       )}
                     </Td>
                     <Td className="tnum text-[12px]" dir="ltr">

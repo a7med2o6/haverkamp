@@ -47,6 +47,7 @@ model User {
   approvedLeaves   LeaveRequest[]    @relation("LeaveApprover")
   reviewsGiven     PerformanceReview[] @relation("ReviewAuthor")
   customerNotes    CustomerNote[]    @relation("CustomerNoteAuthor")
+  vehicleServices  VehicleService[]
 
   @@index([role, isActive])
   @@map("users")
@@ -366,6 +367,7 @@ model Vehicle {
   jobOrders  JobOrder[]
   warranties Warranty[]
   ownerships VehicleOwnership[]
+  services   VehicleService[]
 
   @@index([customerId])
   @@map("vehicles")
@@ -391,6 +393,31 @@ model VehicleOwnership {
   @@index([vehicleId])
   @@index([customerId])
   @@map("vehicle_ownerships")
+}
+
+/**
+ * زيارة سيرفس دوري للسيارة.
+ *
+ * كفالة حماية البدي عشر سنوات مشروطة بسيرفس كل ثلاثة أشهر، فمن انقطع
+ * سقط حقّه. والزيارة للسيارة لا للكفالة: العميل يجيء بالسيارة مرّة
+ * واحدة فتُحسب لكل كفالاتها المشروطة، لا مرّة لكل كفالة.
+ *
+ * ولا تُشتقّ الزيارة من أوامر الشغل: السيرفس الدوري كشفٌ ومسحٌ لا يُفتح
+ * له أمر ولا فاتورة، ودخول السيارة لشغل آخر ليس سيرفساً.
+ */
+model VehicleService {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  visitedAt DateTime @default(now())
+  notes     String?
+  /// من سجّلها — السجل يُسأل عنه صاحبه
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([vehicleId, visitedAt])
+  @@map("vehicle_services")
 }
 
 enum BookingStatus {
@@ -463,6 +490,10 @@ model Warranty {
   /// غير «حماية جام»، و«صبغ دائم» غير «صبغ قابل للإزالة»، وكلٌّ منهما
   /// كفالة مختلفة المدة والشروط تحت خدمة واحدة
   subject       String?
+  /// دورية السيرفس المشروط بالأشهر — فارغ يعني كفالة بلا شرط.
+  /// يُنسخ من موضوع الكفالة عند الإصدار فلا يتغيّر بتغيّر الكتالوج:
+  /// من كُفل بشرط كل ثلاثة أشهر يبقى شرطُه كما وُقّع عليه.
+  serviceEveryMonths Int?
   startDate     DateTime
   endDate       DateTime
   terms         String?

@@ -15,9 +15,22 @@ import {
   JOB_STATUS,
   ORDER_STATUS,
 } from '@/lib/labels';
-import { expiryStatus, formatDate, formatDateTime, formatKWD, toNumber } from '@/lib/utils';
+import { serviceStatus, warrantyLabel } from '@/lib/intake';
+import { backTo, withFrom } from '@/lib/back-link';
+import {
+  expiryStatus,
+  formatDate,
+  formatDateTime,
+  formatKWD,
+  formatPhone,
+  toNumber,
+} from '@/lib/utils';
+
+/** ترتيب الإلحاح — لاختيار أسوأ حال بين كفالات السيارة */
+const TONE_RANK = { neutral: 0, ok: 1, warn: 2, danger: 3 } as const;
 import { CustomerFormButton } from '../customer-form';
 import { VehicleFormButton, DeleteVehicleButton } from './vehicle-form';
+import { RecordServiceButton } from './service-form';
 import { AddNoteButton, DeleteNoteButton, FollowUpToggle } from './notes-client';
 
 export const dynamic = 'force-dynamic';
@@ -37,16 +50,33 @@ export async function generateMetadata({
 
 export default async function CustomerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  /** من أين جاء الزائر — ليعود إليه لا إلى قائمة العملاء */
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await requirePermission('crm:read');
   const { id } = await params;
+  const back = backTo((await searchParams).from, {
+    href: '/dashboard/customers',
+    label: 'العودة إلى العملاء',
+  });
 
   const customer = await db.customer.findUnique({
     where: { id },
     include: {
-      vehicles: { orderBy: { createdAt: 'desc' } },
+      vehicles: {
+        orderBy: { createdAt: 'desc' },
+        include: {
+          // آخر زيارة تكفي لحساب الموعد القادم — والتاريخ كامل في الكفالة
+          services: { orderBy: { visitedAt: 'desc' }, take: 1 },
+          warranties: {
+            where: { isVoid: false, serviceEveryMonths: { not: null } },
+            orderBy: { endDate: 'desc' },
+          },
+        },
+      },
       /*
         سيارات ملكها ولم يعد يملكها.
         بيع السيارة ينقلها من ملفه، فيختفي أثرها وإن بقي تاريخ شغلها
@@ -135,7 +165,6 @@ export default async function CustomerDetailPage({
   const invoiced = toNumber(money._sum.total ?? 0);
   const totalSpent = toNumber(money._sum.paidAmount ?? 0);
   const outstanding = Math.round((invoiced - totalSpent) * 1000) / 1000;
-  const avgInvoice = money._count > 0 ? Math.round((invoiced / money._count) * 1000) / 1000 : 0;
 
   const waNumber = customer.phone.replace(/[^\d]/g, '');
 
@@ -144,18 +173,27 @@ export default async function CustomerDetailPage({
 
   const now = new Date();
 
+  // كل رابط يخرج من هنا يحمل مصدره، فيعود الزائر إلى الملف لا إلى قائمة القسم
+  const here = `/dashboard/customers/${customer.id}`;
+
+  // آخر زيارة سيرفس لكل سيارة — الكفالة تعرف سيارتها لا زياراتها
+  const lastServiceByVehicle = new Map(
+    customer.vehicles.map((v) => [v.id, v.services[0]?.visitedAt ?? null])
+  );
+
   return (
     <>
       <Link
-        href="/dashboard/customers"
+        href={back.href}
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--text-2)] hover:text-accent"
       >
         <ArrowRight className="size-4" />
-        العودة إلى العملاء
+        {back.label}
       </Link>
 
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
+      {/* ── الترويسة ── */}
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-[var(--text-0)] sm:text-2xl">{customer.name}</h1>
             <Badge tone={CUSTOMER_SOURCE[customer.source].tone}>
@@ -163,386 +201,389 @@ export default async function CustomerDetailPage({
             </Badge>
             {customer.isBlocked && <Badge tone="danger">محظور</Badge>}
           </div>
-          <p className="tnum mt-1 text-[13px] text-[var(--text-2)]" dir="ltr">
-            {customer.code}
-          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--text-2)]">
+            <span className="tnum" dir="ltr">
+              {customer.code}
+            </span>
+            <a href={`tel:${customer.phone}`} className="tnum hover:text-accent" dir="ltr">
+              {formatPhone(customer.phone)}
+            </a>
+          </div>
         </div>
 
-        {canWrite && (
-          <CustomerFormButton
-            variant="secondary"
-            customer={{
-              id: customer.id,
-              name: customer.name,
-              phone: customer.phone,
-              altPhone: customer.altPhone,
-              email: customer.email,
-              civilId: customer.civilId,
-              address: customer.address,
-              area: customer.area,
-              notes: customer.notes,
-              source: customer.source,
-            }}
-          />
-        )}
+        {/*
+          الواتساب في الترويسة لا في بطن البطاقة: هو أكثر ما يُفعل في هذه
+          الصفحة، فلا يُطلب منه تمريرٌ ليُرى.
+        */}
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href={`https://wa.me/${waNumber}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-sm)] bg-ok/15 px-3.5 text-[13px] font-semibold text-ok hover:bg-ok/25"
+          >
+            <MessageCircle className="size-4" />
+            واتساب
+          </a>
+          {canWrite && (
+            <CustomerFormButton
+              variant="secondary"
+              customer={{
+                id: customer.id,
+                name: customer.name,
+                phone: customer.phone,
+                altPhone: customer.altPhone,
+                email: customer.email,
+                civilId: customer.civilId,
+                address: customer.address,
+                area: customer.area,
+                notes: customer.notes,
+                source: customer.source,
+              }}
+            />
+          )}
+        </div>
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/*
+        شريط الأرقام — كل رقم مرّة واحدة.
+        كان المدفوع والمستحق يظهران هنا وفي بطاقة التواصل معاً، والرابع
+        منهما يتبدّل بين «مدفوع» و«مستحق» فيغيب أحدهما بلا سبب. صارا
+        رقماً واحداً: المستحق، ومدفوعُه تحته.
+      */}
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="عدد الزيارات" value={String(visits)} />
         <Metric
           label="آخر زيارة"
           value={lastVisit ? formatDate(lastVisit.receivedAt) : '—'}
           hint={lastVisit ? sinceLabel(lastVisit.receivedAt) : 'لم يزر بعد'}
         />
-        <Metric label="متوسط الفاتورة" value={formatKWD(avgInvoice)} />
         <Metric
-          label={outstanding > 0 ? 'مستحق عليه' : 'إجمالي المدفوع'}
-          value={formatKWD(outstanding > 0 ? outstanding : totalSpent)}
+          label="إجمالي الفواتير"
+          value={formatKWD(invoiced)}
+          hint={`${money._count} فاتورة`}
+        />
+        <Metric
+          label="مستحق عليه"
+          value={formatKWD(outstanding)}
+          hint={`مدفوع ${formatKWD(totalSpent)}`}
           tone={outstanding > 0 ? 'danger' : 'ok'}
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* ── بيانات التواصل ── */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>بيانات التواصل</CardTitle>
-          </CardHeader>
-          <CardBody className="space-y-3.5 text-sm">
-            <InfoRow icon={<Phone className="size-4" />} label="الهاتف">
-              <a href={`tel:${customer.phone}`} className="tnum hover:text-accent" dir="ltr">
-                {customer.phone}
-              </a>
-            </InfoRow>
-
-            {customer.altPhone && (
-              <InfoRow icon={<Phone className="size-4" />} label="رقم بديل">
-                <span className="tnum" dir="ltr">
-                  {customer.altPhone}
-                </span>
-              </InfoRow>
-            )}
-
-            {customer.email && (
-              <InfoRow icon={<Mail className="size-4" />} label="البريد">
-                <a href={`mailto:${customer.email}`} className="hover:text-accent" dir="ltr">
-                  {customer.email}
-                </a>
-              </InfoRow>
-            )}
-
-            {(customer.area || customer.address) && (
-              <InfoRow icon={<MapPin className="size-4" />} label="العنوان">
-                {[customer.area, customer.address].filter(Boolean).join(' — ')}
-              </InfoRow>
-            )}
-
-            {customer.civilId && (
-              <InfoRow label="الرقم المدني">
-                <span className="tnum" dir="ltr">
-                  {customer.civilId}
-                </span>
-              </InfoRow>
-            )}
-
-            <InfoRow label="إجمالي المدفوع">
-              <span className="tnum font-semibold text-ok">{formatKWD(totalSpent)}</span>
-            </InfoRow>
-
-            {outstanding > 0 && (
-              <InfoRow label="مستحق عليه">
-                <span className="tnum font-semibold text-danger">{formatKWD(outstanding)}</span>
-              </InfoRow>
-            )}
-
-            {customer.notes && (
-              <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] p-3">
-                <p className="mb-1 text-[11px] font-semibold text-[var(--text-2)]">ملاحظات</p>
-                <p className="text-[13px] leading-relaxed text-[var(--text-1)]">{customer.notes}</p>
-              </div>
-            )}
-
-            <a
-              href={`https://wa.me/${waNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-ok/15 text-[13px] font-semibold text-ok hover:bg-ok/25"
-            >
-              <MessageCircle className="size-4" />
-              مراسلة على واتساب
-            </a>
-          </CardBody>
-        </Card>
-
-        {/* ── السيارات ── */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>السيارات ({customer.vehicles.length})</CardTitle>
-            {canWrite && <VehicleFormButton customerId={customer.id} />}
-          </CardHeader>
-          <TableWrap className="rounded-none border-0">
-            <Table>
-              <thead>
-                <tr>
-                  <Th>السيارة</Th>
-                  <Th>السنة</Th>
-                  <Th>اللون</Th>
-                  <Th>رقم اللوحة</Th>
-                  {canWrite && <Th />}
-                </tr>
-              </thead>
-              <tbody>
-                {customer.vehicles.length === 0 ? (
-                  <EmptyState
-                    title="لا توجد سيارات مسجّلة"
-                    description="أضف سيارة العميل لربطها بأوامر الشغل والكفالات"
-                    colSpan={5}
-                  />
-                ) : (
-                  customer.vehicles.map((v) => (
-                    <Tr key={v.id}>
-                      <Td className="font-medium text-[var(--text-0)]">
-                        {v.make} {v.model}
-                      </Td>
-                      <Td className="tnum">{v.year ?? '—'}</Td>
-                      <Td>{v.color ?? '—'}</Td>
-                      <Td className="tnum" dir="ltr">
-                        {v.plateNo ?? '—'}
-                      </Td>
-                      {canWrite && (
-                        <Td>
-                          <div className="flex items-center gap-0.5">
-                            <VehicleFormButton
-                              customerId={customer.id}
-                              vehicle={{
-                                id: v.id,
-                                customerId: customer.id,
-                                make: v.make,
-                                model: v.model,
-                                year: v.year,
-                                color: v.color,
-                                plateNo: v.plateNo,
-                                notes: v.notes,
-                              }}
-                            />
-                            {canDelete && (
-                              <DeleteVehicleButton id={v.id} customerId={customer.id} />
-                            )}
-                          </div>
-                        </Td>
-                      )}
-                    </Tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </TableWrap>
-        </Card>
-
-        {/* ── سيارات سابقة ── */}
-        {previousOwned.length > 0 && (
+      {/*
+        عمودان يسيلان مستقلَّين لا شبكةٌ من بطاقات.
+        كانت البطاقات في شبكة ثلاثية وأطوالها مختلفة، فتترك فجوةً تحت
+        القصيرة إلى أن تنتهي الطويلة بجوارها. والعمود يرصّ ما فيه مهما
+        اختلفت أطواله.
+      */}
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
+          {/* ── السيارات ── */}
           <Card>
             <CardHeader>
-              <CardTitle>سيارات سابقة ({previousOwned.length})</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-2">
-              {previousOwned.map((o) => (
-                <div
-                  key={o.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] px-3 py-2"
-                >
-                  <div>
-                    <p className="text-[13px] text-[var(--text-1)]">
-                      {o.vehicle.make} {o.vehicle.model}
-                      {o.vehicle.plateNo && (
-                        <span className="tnum ms-2 text-[12px] text-[var(--text-2)]" dir="ltr">
-                          {o.vehicle.plateNo}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-[11px] text-[var(--text-2)]">
-                      حتى {formatDate(o.to)} · لدى {o.vehicle.customer.name} الآن
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </CardBody>
-          </Card>
-        )}
-
-        {/* ── سجل أوامر الشغل ── */}
-        {can(session.user.role, 'workshop:read') && (
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>سجل أوامر الشغل</CardTitle>
-              <ShowAll
-                href={`/dashboard/job-orders?filter=all&customer=${customer.id}`}
-                shown={customer.jobOrders.length}
-                total={totals.jobOrders}
-              />
+              <CardTitle>السيارات ({customer.vehicles.length})</CardTitle>
+              {canWrite && <VehicleFormButton customerId={customer.id} />}
             </CardHeader>
             <TableWrap className="rounded-none border-0">
               <Table>
                 <thead>
                   <tr>
-                    <Th>الرقم</Th>
                     <Th>السيارة</Th>
-                    <Th>الاستلام</Th>
-                    <Th>الحالة</Th>
+                    <Th>رقم اللوحة</Th>
+                    <Th>السيرفس الدوري</Th>
+                    {canWrite && <Th />}
                   </tr>
                 </thead>
                 <tbody>
-                  {customer.jobOrders.length === 0 ? (
-                    <EmptyState title="لا توجد أوامر شغل" colSpan={4} />
+                  {customer.vehicles.length === 0 ? (
+                    <EmptyState
+                      title="لا توجد سيارات مسجّلة"
+                      description="أضف سيارة العميل لربطها بأوامر الشغل والكفالات"
+                      colSpan={4}
+                    />
                   ) : (
-                    customer.jobOrders.map((j) => (
-                      <Tr key={j.id}>
-                        <Td className="tnum" dir="ltr">
-                          <Link
-                            href={`/dashboard/job-orders/${j.id}`}
-                            className="text-accent hover:underline"
-                          >
-                            {j.number}
-                          </Link>
-                        </Td>
-                        <Td>{j.vehicle ? `${j.vehicle.make} ${j.vehicle.model}` : '—'}</Td>
-                        <Td className="tnum text-[12px]">{formatDate(j.receivedAt)}</Td>
-                        <Td>
-                          <Badge tone={JOB_STATUS[j.status].tone}>{JOB_STATUS[j.status].label}</Badge>
-                        </Td>
-                      </Tr>
-                    ))
+                    customer.vehicles.map((v) => {
+                      /*
+                        أشدّ كفالات السيارة إلحاحاً. السيارة قد تحمل أكثر
+                        من كفالة مشروطة وزيارةٌ واحدة تُرضيها كلّها، فمن
+                        رأى أسوأها راضياً فكلّها راضية.
+                      */
+                      const last = v.services[0]?.visitedAt ?? null;
+                      const worst = v.warranties
+                        .map((w) => serviceStatus(w, last))
+                        .filter((r) => r.required)
+                        .sort((a, b) => TONE_RANK[b.tone] - TONE_RANK[a.tone])[0];
+
+                      return (
+                        <Tr key={v.id}>
+                          {/*
+                            السنة واللون سطرٌ تحت الاسم لا عمودان: عمودٌ
+                            لكلمة واحدة يأكل عرضاً يحتاجه ما يُقرأ فعلاً.
+                          */}
+                          <Td>
+                            <span className="font-medium text-[var(--text-0)]">
+                              {v.make} {v.model}
+                            </span>
+                            <span className="block text-[11px] text-[var(--text-2)]">
+                              {[v.year, v.color].filter(Boolean).join(' · ') || '—'}
+                            </span>
+                          </Td>
+                          <Td className="tnum" dir="ltr">
+                            {v.plateNo ?? '—'}
+                          </Td>
+                          <Td>
+                            {worst ? (
+                              <div className="flex flex-col items-start gap-1">
+                                <Badge tone={worst.tone}>{worst.label}</Badge>
+                                <span className="tnum text-[11px] text-[var(--text-2)]">
+                                  {last ? `آخر زيارة ${formatDate(last)}` : 'لم يزر بعد'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[12px] text-[var(--text-2)]">
+                                بلا كفالة مشروطة
+                              </span>
+                            )}
+                          </Td>
+                          {canWrite && (
+                            <Td>
+                              <div className="flex items-center justify-end gap-0.5">
+                                {v.warranties.length > 0 && (
+                                  <RecordServiceButton
+                                    vehicleId={v.id}
+                                    label={`${v.make} ${v.model}${v.plateNo ? ` — ${v.plateNo}` : ''}`}
+                                  />
+                                )}
+                                <VehicleFormButton
+                                  customerId={customer.id}
+                                  vehicle={{
+                                    id: v.id,
+                                    customerId: customer.id,
+                                    make: v.make,
+                                    model: v.model,
+                                    year: v.year,
+                                    color: v.color,
+                                    plateNo: v.plateNo,
+                                    notes: v.notes,
+                                  }}
+                                />
+                                {canDelete && (
+                                  <DeleteVehicleButton id={v.id} customerId={customer.id} />
+                                )}
+                              </div>
+                            </Td>
+                          )}
+                        </Tr>
+                      );
+                    })
                   )}
                 </tbody>
               </Table>
             </TableWrap>
           </Card>
-        )}
 
-        {/* ── الفواتير ── */}
-        {can(session.user.role, 'pos:read') && (
-          <Card>
-            <CardHeader>
-              <CardTitle>آخر الفواتير</CardTitle>
-              <ShowAll
-                href={`/dashboard/invoices?customer=${customer.id}`}
-                shown={customer.orders.length}
-                total={totals.orders}
-              />
-            </CardHeader>
-            <TableWrap className="rounded-none border-0">
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>الرقم</Th>
-                    <Th>المبلغ</Th>
-                    <Th>الحالة</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customer.orders.length === 0 ? (
-                    <EmptyState title="لا توجد فواتير" colSpan={3} />
-                  ) : (
-                    customer.orders.map((o) => (
-                      <Tr key={o.id}>
-                        <Td className="tnum" dir="ltr">
-                          <Link
-                            href={`/dashboard/invoices/${o.id}`}
-                            className="text-accent hover:underline"
-                          >
-                            {o.number}
-                          </Link>
+          {/* ── سجل أوامر الشغل ── */}
+          {can(session.user.role, 'workshop:read') && (
+            <Card>
+              <CardHeader>
+                <CardTitle>سجل أوامر الشغل</CardTitle>
+                <ShowAll
+                  href={`/dashboard/job-orders?filter=all&customer=${customer.id}`}
+                  shown={customer.jobOrders.length}
+                  total={totals.jobOrders}
+                />
+              </CardHeader>
+              <TableWrap className="rounded-none border-0">
+                <Table>
+                  <thead>
+                    <tr>
+                      <Th>الرقم</Th>
+                      <Th>السيارة</Th>
+                      <Th>الاستلام</Th>
+                      <Th>الحالة</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customer.jobOrders.length === 0 ? (
+                      <EmptyState title="لا توجد أوامر شغل" colSpan={4} />
+                    ) : (
+                      customer.jobOrders.map((j) => (
+                        <Tr key={j.id}>
+                          <Td className="tnum" dir="ltr">
+                            <Link
+                              href={withFrom(`/dashboard/job-orders/${j.id}`, here)}
+                              className="text-accent hover:underline"
+                            >
+                              {j.number}
+                            </Link>
+                          </Td>
+                          <Td>{j.vehicle ? `${j.vehicle.make} ${j.vehicle.model}` : '—'}</Td>
+                          <Td className="tnum text-[12px]">{formatDate(j.receivedAt)}</Td>
+                          <Td>
+                            <Badge tone={JOB_STATUS[j.status].tone}>
+                              {JOB_STATUS[j.status].label}
+                            </Badge>
+                          </Td>
+                        </Tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </TableWrap>
+            </Card>
+          )}
+
+          {/* ── الحجوزات ── */}
+          {customer.bookings.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>الحجوزات</CardTitle>
+                <ShowAll
+                  href={`/dashboard/bookings?view=list&customer=${customer.id}`}
+                  shown={customer.bookings.length}
+                  total={totals.bookings}
+                />
+              </CardHeader>
+              <TableWrap className="rounded-none border-0">
+                <Table>
+                  <thead>
+                    <tr>
+                      <Th>الموعد</Th>
+                      <Th>الخدمة</Th>
+                      <Th>الحالة</Th>
+                      <Th>أمر الشغل</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customer.bookings.map((b) => (
+                      <Tr key={b.id}>
+                        <Td className="tnum text-[12px]">
+                          {formatDateTime(b.scheduledAt)}
+                          <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
+                            {b.code}
+                          </span>
                         </Td>
-                        <Td className="tnum">{formatKWD(toNumber(o.total))}</Td>
+                        <Td className="text-[12px]">{b.service?.translations[0]?.name ?? '—'}</Td>
                         <Td>
-                          <Badge tone={ORDER_STATUS[o.status].tone}>
-                            {ORDER_STATUS[o.status].label}
+                          <Badge tone={BOOKING_STATUS[b.status].tone}>
+                            {BOOKING_STATUS[b.status].label}
                           </Badge>
                         </Td>
+                        <Td className="tnum text-[12px]" dir="ltr">
+                          {b.jobOrder ? (
+                            <Link
+                              href={withFrom(`/dashboard/job-orders/${b.jobOrder.id}`, here)}
+                              className="text-accent hover:underline"
+                            >
+                              {b.jobOrder.number}
+                            </Link>
+                          ) : (
+                            '—'
+                          )}
+                        </Td>
                       </Tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
-            </TableWrap>
-          </Card>
-        )}
+                    ))}
+                  </tbody>
+                </Table>
+              </TableWrap>
+            </Card>
+          )}
 
-        {/* ── الحجوزات ── */}
-        {customer.bookings.length > 0 && (
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>الحجوزات</CardTitle>
-              <ShowAll
-                href={`/dashboard/bookings?view=list&customer=${customer.id}`}
-                shown={customer.bookings.length}
-                total={totals.bookings}
-              />
-            </CardHeader>
-            <TableWrap className="rounded-none border-0">
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>الكود</Th>
-                    <Th>الموعد</Th>
-                    <Th>الخدمة</Th>
-                    <Th>الحالة</Th>
-                    <Th>أمر الشغل</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {customer.bookings.map((b) => (
-                    <Tr key={b.id}>
-                      <Td className="tnum text-[12px]" dir="ltr">
-                        {b.code}
-                      </Td>
-                      <Td className="tnum text-[12px]">{formatDateTime(b.scheduledAt)}</Td>
-                      <Td className="text-[12px]">
-                        {b.service?.translations[0]?.name ?? '—'}
-                      </Td>
-                      <Td>
-                        <Badge tone={BOOKING_STATUS[b.status].tone}>
-                          {BOOKING_STATUS[b.status].label}
-                        </Badge>
-                      </Td>
-                      <Td className="tnum text-[12px]" dir="ltr">
-                        {b.jobOrder ? (
-                          <Link
-                            href={`/dashboard/job-orders/${b.jobOrder.id}`}
-                            className="text-accent hover:underline"
-                          >
-                            {b.jobOrder.number}
-                          </Link>
-                        ) : (
-                          '—'
-                        )}
-                      </Td>
-                    </Tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableWrap>
-          </Card>
-        )}
-
-        {/* ── الكفالات ── */}
-        {warranties.length > 0 && (
+          {/* ── سجل التواصل ── */}
           <Card>
             <CardHeader>
-              <CardTitle>الكفالات ({warranties.length})</CardTitle>
+              <CardTitle>سجل التواصل ({customer.interactions.length})</CardTitle>
+              {canWrite && <AddNoteButton customerId={customer.id} />}
             </CardHeader>
             <CardBody>
-              <ul className="space-y-2.5">
+              {customer.interactions.length === 0 ? (
+                <p className="text-[13px] text-[var(--text-2)]">
+                  لا قيود بعد — سجّل ما يدور مع العميل ليبقى أثره لمن يخدمه بعدك.
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {customer.interactions.map((note) => {
+                    const overdue = note.followUpAt && !note.doneAt && note.followUpAt < now;
+                    return (
+                      <li
+                        key={note.id}
+                        className={
+                          overdue
+                            ? 'rounded-[var(--radius-sm)] border border-danger/30 bg-danger/5 p-3'
+                            : 'rounded-[var(--radius-sm)] border border-[var(--line)] p-3'
+                        }
+                      >
+                        <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                          <Badge tone={CUSTOMER_NOTE_TYPE[note.type].tone}>
+                            {CUSTOMER_NOTE_TYPE[note.type].label}
+                          </Badge>
+                          <span className="tnum text-[11px] text-[var(--text-2)]">
+                            {formatDateTime(note.createdAt)}
+                          </span>
+                          {note.author && (
+                            <span className="text-[11px] text-[var(--text-2)]">
+                              — {note.author.name}
+                            </span>
+                          )}
+                          {canWrite && (
+                            <span className="ms-auto">
+                              <DeleteNoteButton id={note.id} />
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--text-1)]">
+                          {note.body}
+                        </p>
+
+                        {note.followUpAt && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-2">
+                            <span
+                              className={
+                                note.doneAt
+                                  ? 'tnum text-[11px] text-ok'
+                                  : overdue
+                                    ? 'tnum text-[11px] font-semibold text-danger'
+                                    : 'tnum text-[11px] text-warn'
+                              }
+                            >
+                              {note.doneAt
+                                ? `تمّت المتابعة ${formatDate(note.doneAt)}`
+                                : `متابعة ${formatDate(note.followUpAt)}${overdue ? ' — فات موعدها' : ''}`}
+                            </span>
+                            {canWrite && <FollowUpToggle id={note.id} done={!!note.doneAt} />}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* ═══ العمود الجانبي ═══ */}
+        <div className="space-y-4">
+          {/* ── الكفالات ── */}
+          {warranties.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>الكفالات ({warranties.length})</CardTitle>
+              </CardHeader>
+              <CardBody className="space-y-2.5">
                 {warranties.map((w) => {
                   const status = expiryStatus(w.endDate);
+                  const svc = serviceStatus(w, lastServiceByVehicle.get(w.vehicleId) ?? null);
                   return (
-                    <li
+                    <div
                       key={w.id}
                       className="rounded-[var(--radius-sm)] border border-[var(--line)] p-3"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={`/dashboard/warranties/${w.id}`}
+                          href={withFrom(`/dashboard/warranties/${w.id}`, here)}
                           className="tnum text-[13px] font-semibold text-accent hover:underline"
                           dir="ltr"
                         >
@@ -557,92 +598,154 @@ export default async function CustomerDetailPage({
                         )}
                       </div>
                       <p className="text-[12px] text-[var(--text-2)]">
-                        {w.service?.translations[0]?.name ?? 'كفالة عامة'} —{' '}
-                        {w.vehicle.make} {w.vehicle.model}
+                        {warrantyLabel(w)} — {w.vehicle.make} {w.vehicle.model}
                       </p>
                       <p className="tnum text-[11px] text-[var(--text-2)]">
                         حتى {formatDate(w.endDate)}
                       </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardBody>
-          </Card>
-        )}
-        {/* ── سجل التواصل ── */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>سجل التواصل ({customer.interactions.length})</CardTitle>
-            {canWrite && <AddNoteButton customerId={customer.id} />}
-          </CardHeader>
-          <CardBody>
-            {customer.interactions.length === 0 ? (
-              <p className="text-[13px] text-[var(--text-2)]">
-                لا قيود بعد — سجّل ما يدور مع العميل ليبقى أثره لمن يخدمه بعدك.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {customer.interactions.map((note) => {
-                  const overdue =
-                    note.followUpAt && !note.doneAt && note.followUpAt < now;
-                  return (
-                    <li
-                      key={note.id}
-                      className={
-                        overdue
-                          ? 'rounded-[var(--radius-sm)] border border-danger/30 bg-danger/5 p-3'
-                          : 'rounded-[var(--radius-sm)] border border-[var(--line)] p-3'
-                      }
-                    >
-                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <Badge tone={CUSTOMER_NOTE_TYPE[note.type].tone}>
-                          {CUSTOMER_NOTE_TYPE[note.type].label}
-                        </Badge>
-                        <span className="tnum text-[11px] text-[var(--text-2)]">
-                          {formatDateTime(note.createdAt)}
-                        </span>
-                        {note.author && (
-                          <span className="text-[11px] text-[var(--text-2)]">
-                            — {note.author.name}
-                          </span>
-                        )}
-                        {canWrite && (
-                          <span className="ms-auto">
-                            <DeleteNoteButton id={note.id} />
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--text-1)]">
-                        {note.body}
-                      </p>
-
-                      {note.followUpAt && (
-                        <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-[var(--line)] pt-2">
-                          <span
-                            className={
-                              note.doneAt
-                                ? 'tnum text-[11px] text-ok'
-                                : overdue
-                                  ? 'tnum text-[11px] font-semibold text-danger'
-                                  : 'tnum text-[11px] text-warn'
-                            }
-                          >
-                            {note.doneAt
-                              ? `تمّت المتابعة ${formatDate(note.doneAt)}`
-                              : `متابعة ${formatDate(note.followUpAt)}${overdue ? ' — فات موعدها' : ''}`}
-                          </span>
-                          {canWrite && <FollowUpToggle id={note.id} done={!!note.doneAt} />}
+                      {/* الشرط يُرى مع الكفالة — سقوطها به لا بانتهاء مدّتها */}
+                      {svc.required && (
+                        <div className="mt-2 border-t border-[var(--line)] pt-2">
+                          <Badge tone={svc.tone}>{svc.label}</Badge>
                         </div>
                       )}
-                    </li>
+                    </div>
                   );
                 })}
-              </ul>
-            )}
-          </CardBody>
-        </Card>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* ── الفواتير ── */}
+          {can(session.user.role, 'pos:read') && (
+            <Card>
+              <CardHeader>
+                <CardTitle>آخر الفواتير</CardTitle>
+                <ShowAll
+                  href={`/dashboard/invoices?customer=${customer.id}`}
+                  shown={customer.orders.length}
+                  total={totals.orders}
+                />
+              </CardHeader>
+              <CardBody className="space-y-2">
+                {customer.orders.length === 0 ? (
+                  <p className="text-[13px] text-[var(--text-2)]">لا توجد فواتير</p>
+                ) : (
+                  customer.orders.map((o) => (
+                    <div
+                      key={o.id}
+                      className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <Link
+                          href={withFrom(`/dashboard/invoices/${o.id}`, here)}
+                          className="tnum text-[13px] font-medium text-accent hover:underline"
+                          dir="ltr"
+                        >
+                          {o.number}
+                        </Link>
+                        <span className="tnum block text-[12px] text-[var(--text-1)]">
+                          {formatKWD(toNumber(o.total))}
+                        </span>
+                      </div>
+                      <Badge tone={ORDER_STATUS[o.status].tone}>
+                        {ORDER_STATUS[o.status].label}
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </CardBody>
+            </Card>
+          )}
+
+          {/* ── بيانات التواصل ── */}
+          <Card>
+            <CardHeader>
+              <CardTitle>بيانات التواصل</CardTitle>
+            </CardHeader>
+            <CardBody className="space-y-3.5 text-sm">
+              {customer.altPhone && (
+                <InfoRow icon={<Phone className="size-4" />} label="رقم بديل">
+                  <span className="tnum" dir="ltr">
+                    {formatPhone(customer.altPhone)}
+                  </span>
+                </InfoRow>
+              )}
+
+              {customer.email && (
+                <InfoRow icon={<Mail className="size-4" />} label="البريد">
+                  <a href={`mailto:${customer.email}`} className="hover:text-accent" dir="ltr">
+                    {customer.email}
+                  </a>
+                </InfoRow>
+              )}
+
+              {(customer.area || customer.address) && (
+                <InfoRow icon={<MapPin className="size-4" />} label="العنوان">
+                  {[customer.area, customer.address].filter(Boolean).join(' — ')}
+                </InfoRow>
+              )}
+
+              {customer.civilId && (
+                <InfoRow label="الرقم المدني">
+                  <span className="tnum" dir="ltr">
+                    {customer.civilId}
+                  </span>
+                </InfoRow>
+              )}
+
+              {customer.notes && (
+                <div className="rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] p-3">
+                  <p className="mb-1 text-[11px] font-semibold text-[var(--text-2)]">ملاحظات</p>
+                  <p className="text-[13px] leading-relaxed text-[var(--text-1)]">
+                    {customer.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* بطاقةٌ لا شيء فيها أسوأ من بطاقةٍ لا تظهر */}
+              {!customer.altPhone &&
+                !customer.email &&
+                !customer.area &&
+                !customer.address &&
+                !customer.civilId &&
+                !customer.notes && (
+                  <p className="text-[13px] text-[var(--text-2)]">
+                    لا بيانات إضافية — الهاتف في الترويسة أعلى الصفحة.
+                  </p>
+                )}
+            </CardBody>
+          </Card>
+
+          {/* ── سيارات سابقة ── */}
+          {previousOwned.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>سيارات سابقة ({previousOwned.length})</CardTitle>
+              </CardHeader>
+              <CardBody className="space-y-2">
+                {previousOwned.map((o) => (
+                  <div
+                    key={o.id}
+                    className="rounded-[var(--radius-sm)] border border-[var(--line)] px-3 py-2"
+                  >
+                    <p className="text-[13px] text-[var(--text-1)]">
+                      {o.vehicle.make} {o.vehicle.model}
+                      {o.vehicle.plateNo && (
+                        <span className="tnum ms-2 text-[12px] text-[var(--text-2)]" dir="ltr">
+                          {o.vehicle.plateNo}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-[var(--text-2)]">
+                      حتى {formatDate(o.to)} · لدى {o.vehicle.customer.name} الآن
+                    </p>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          )}
+        </div>
       </div>
     </>
   );

@@ -275,3 +275,69 @@ export const deleteCustomerNote = action({
     return { id: note.customerId, message: 'تم حذف القيد' };
   },
 });
+
+/* ═══════════════════════════════════════════════════════════
+   السيرفس الدوري
+   ═══════════════════════════════════════════════════════════ */
+
+/**
+ * تسجيل زيارة سيرفس دوري للسيارة.
+ *
+ * الزيارة للسيارة لا للكفالة: العميل يجيء بها مرّة فتُحسب لكل كفالاتها
+ * المشروطة. ولا تُسقِط شيئاً ولا تُحيي شيئاً — تسجّل حضوراً فقط، وأثرها
+ * أن موعد السيرفس القادم يُحسب منها.
+ */
+export const recordVehicleService = action({
+  permission: 'crm:write',
+  schema: z.object({
+    vehicleId: z.string().min(1),
+    /** فارغ يعني الآن — الغالب أن تُسجَّل والسيارة واقفة */
+    visitedAt: optionalString,
+    notes: optionalString,
+  }),
+  audit: { entity: 'VehicleService', action: 'CREATE' },
+  handler: async ({ vehicleId, visitedAt, notes }, { userId }) => {
+    const vehicle = await db.vehicle.findUnique({
+      where: { id: vehicleId },
+      select: { customerId: true },
+    });
+    if (!vehicle) throw new AppError('السيارة غير موجودة');
+
+    let when = new Date();
+    if (visitedAt) {
+      const parsed = new Date(visitedAt);
+      if (Number.isNaN(parsed.getTime())) throw new AppError('تاريخ الزيارة غير صالح');
+      // زيارة في المستقبل تُقدّم موعد السيرفس القادم بلا وجه حق
+      if (parsed.getTime() > Date.now()) throw new AppError('لا تُسجَّل زيارة لم تقع بعد');
+      when = parsed;
+    }
+
+    const visit = await db.vehicleService.create({
+      data: { vehicleId, visitedAt: when, notes, userId },
+    });
+
+    revalidatePath(`/dashboard/customers/${vehicle.customerId}`);
+    revalidatePath('/dashboard/warranties');
+    return { id: visit.id, message: 'تم تسجيل زيارة السيرفس' };
+  },
+});
+
+/** حذف زيارة سُجّلت بالخطأ — تُؤخّر موعد السيرفس القادم إلى ما قبلها */
+export const deleteVehicleService = action({
+  permission: 'crm:write',
+  schema: z.object({ id: z.string() }),
+  audit: { entity: 'VehicleService', action: 'DELETE' },
+  handler: async ({ id }) => {
+    const visit = await db.vehicleService.findUnique({
+      where: { id },
+      select: { vehicle: { select: { customerId: true } } },
+    });
+    if (!visit) throw new AppError('الزيارة غير موجودة');
+
+    await db.vehicleService.delete({ where: { id } });
+
+    revalidatePath(`/dashboard/customers/${visit.vehicle.customerId}`);
+    revalidatePath('/dashboard/warranties');
+    return { id, message: 'تم حذف الزيارة' };
+  },
+});

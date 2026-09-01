@@ -36,7 +36,26 @@ export const saveCustomer = action({
     const data = { ...rest, email: email || null };
 
     if (id) {
-      const updated = await db.customer.update({ where: { id }, data });
+      /*
+        الرقم القديم يُؤرشف لا يُمحى.
+        كان يُكتب فوقه، فمن غيّر رقمه ضاع رقمه السابق — ثم يبحث الموظف
+        بالقديم فلا يجده فينشئ ملفاً ثانياً لنفس الشخص.
+      */
+      const before = await db.customer.findUnique({
+        where: { id },
+        select: { phone: true },
+      });
+      if (!before) throw new AppError('العميل غير موجود');
+
+      const updated = await db.$transaction(async (tx) => {
+        if (before.phone !== data.phone) {
+          await tx.customerPhone.create({
+            data: { customerId: id, phone: before.phone },
+          });
+        }
+        return tx.customer.update({ where: { id }, data });
+      });
+
       revalidatePath('/dashboard/customers');
       revalidatePath(`/dashboard/customers/${id}`);
       return { id: updated.id, message: 'تم تحديث بيانات العميل' };
@@ -100,7 +119,6 @@ const vehicleSchema = z.object({
     .optional(),
   color: optionalString,
   plateNo: optionalString,
-  vin: optionalString,
   notes: optionalString,
 });
 
@@ -112,13 +130,54 @@ export const saveVehicle = action({
     const { id, ...data } = input;
 
     if (id) {
-      const updated = await db.vehicle.update({ where: { id }, data });
+      const before = await db.vehicle.findUnique({
+        where: { id },
+        select: { customerId: true },
+      });
+      if (!before) throw new AppError('السيارة غير موجودة');
+
+      const updated = await db.$transaction(async (tx) => {
+        // تغيّر المالك = نقل ملكية: نُغلق الفترة السابقة ونفتح جديدة
+        if (before.customerId !== data.customerId) {
+          const now = new Date();
+          await tx.vehicleOwnership.updateMany({
+            where: { vehicleId: id, to: null },
+            data: { to: now },
+          });
+          await tx.vehicleOwnership.create({
+            data: { vehicleId: id, customerId: data.customerId, from: now },
+          });
+        }
+        return tx.vehicle.update({ where: { id }, data });
+      });
+
       revalidatePath(`/dashboard/customers/${data.customerId}`);
+      revalidatePath(`/dashboard/customers/${before.customerId}`);
       revalidatePath('/dashboard/vehicles');
       return { id: updated.id, message: 'تم تحديث بيانات السيارة' };
     }
 
-    const created = await db.vehicle.create({ data });
+    // اللوحة هوية السيارة — الموجودة تُنقل ملكيتها ولا تُسجَّل مرّتين
+    if (data.plateNo) {
+      const owned = await db.vehicle.findUnique({
+        where: { plateNo: data.plateNo },
+        select: { id: true, customer: { select: { name: true } } },
+      });
+      if (owned) {
+        throw new AppError(
+          `اللوحة ${data.plateNo} مسجّلة لـ${owned.customer.name} — انقل ملكيتها بدل تسجيلها من جديد`
+        );
+      }
+    }
+
+    const created = await db.$transaction(async (tx) => {
+      const v = await tx.vehicle.create({ data });
+      await tx.vehicleOwnership.create({
+        data: { vehicleId: v.id, customerId: data.customerId },
+      });
+      return v;
+    });
+
     revalidatePath(`/dashboard/customers/${data.customerId}`);
     revalidatePath('/dashboard/vehicles');
     return { id: created.id, message: 'تمت إضافة السيارة' };

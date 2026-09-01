@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
-import { PROTECTION_BRAND_SLUGS } from '@/lib/intake';
+import { PROTECTION_BRAND_SLUGS, warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,7 +39,7 @@ export default async function JobOrderDetailPage({
   const session = await requirePermission('workshop:read');
   const { id } = await params;
 
-  const [job, services, brands] = await Promise.all([
+  const [job, brands] = await Promise.all([
     db.jobOrder.findUnique({
       where: { id },
       include: {
@@ -53,13 +53,6 @@ export default async function JobOrderDetailPage({
         warranties: { include: { service: { include: { translations: { where: { locale: 'ar' } } } } } },
         order: { select: { id: true, number: true } },
         booking: { select: { code: true } },
-      },
-    }),
-    db.service.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: 'asc' },
-      include: {
-        translations: { where: { locale: 'ar' }, select: { name: true } },
       },
     }),
     // ماركات أفلام الحماية — تحمل الباقات وأسعارها
@@ -83,12 +76,6 @@ export default async function JobOrderDetailPage({
   const canWarranty = can(session.user.role, 'crm:write');
 
   const totalValue = job.items.reduce((s, i) => s + toNumber(i.total), 0);
-
-  const serviceOptions = services.map((s) => ({
-    id: s.id,
-    name: s.translations[0]?.name ?? s.slug,
-    price: null,
-  }));
 
   const isActive = job.status !== 'DELIVERED' && job.status !== 'CANCELLED';
   const due = dueStatus(job.promisedAt, isActive);
@@ -141,7 +128,7 @@ export default async function JobOrderDetailPage({
             <CreateInvoiceButton jobOrderId={job.id} />
           )}
           {canWarranty && job.vehicleId && (
-            <IssueWarrantyButton jobOrderId={job.id} services={serviceOptions} />
+            <IssueWarrantyButton jobOrderId={job.id} />
           )}
         </div>
       </div>
@@ -266,7 +253,7 @@ export default async function JobOrderDetailPage({
                       {w.certificateNo}
                     </p>
                     <p className="text-[12px] text-[var(--text-2)]">
-                      {w.service?.translations[0]?.name ?? 'كفالة عامة'}
+                      {warrantyLabel(w)}
                     </p>
                     <p className="tnum text-[11px] text-[var(--text-2)]">
                       حتى {formatDate(w.endDate)}

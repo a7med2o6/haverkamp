@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -129,7 +130,7 @@ export default async function WarrantyDetailPage({
               </Info>
 
               <Info label="الخدمة المكفولة">
-                {warranty.service?.translations[0]?.name ?? 'كفالة عامة'}
+                {warrantyLabel(warranty)}
               </Info>
 
               <Info label="مدة الكفالة">
@@ -145,14 +146,6 @@ export default async function WarrantyDetailPage({
                   {formatDate(warranty.endDate)}
                 </span>
               </Info>
-
-              {warranty.vehicle.vin && (
-                <Info label="رقم الهيكل">
-                  <span className="tnum" dir="ltr">
-                    {warranty.vehicle.vin}
-                  </span>
-                </Info>
-              )}
 
               {warranty.jobOrder && (
                 <Info label="أمر الشغل">

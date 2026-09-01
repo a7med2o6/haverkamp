@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
-import { bookingServiceLabel, serviceDef } from '@/lib/intake';
+import { serviceDef } from '@/lib/intake';
 
 const bookingSchema = z.object({
   id: z.string().optional(),
@@ -139,17 +139,29 @@ export const rescheduleBooking = action({
 });
 
 /**
- * يحوّل حجزاً إلى أمر شغل — ينشئ ملف عميل من بيانات الزائر إن لزم.
+ * يجهّز الحجز لبيان التشغيل.
+ *
+ * لا يُنشئ أمر الشغل: كان التحويل ينشئه في الخلفية ببندٍ واحد بلا رقم
+ * بيان ورقي ولا باقة ولا درجة عزل — فيخرج من هذا الباب أمرٌ ناقص ومن
+ * باب «بيان تشغيل جديد» أمرٌ كامل، لنفس العمل. صار البابان باباً واحداً:
+ * هذا يهيّئ العميل ثم يفتح بيان التشغيل معبّأً من الحجز.
+ *
+ * وما يبقى هنا هو ما لا يصلح في الصفحة: إنشاء ملف عميل من بيانات الزائر،
+ * فهو كتابة لا تجري عند فتح صفحة.
  */
-export const convertBookingToJob = action({
+export const prepareBookingIntake = action({
   permission: 'workshop:write',
   schema: z.object({ id: z.string() }),
-  audit: { entity: 'JobOrder', action: 'FROM_BOOKING' },
+  audit: { entity: 'Booking', action: 'PREPARE_INTAKE' },
   handler: async ({ id }) => {
     const booking = await db.booking.findUnique({
       where: { id },
-      include: {
-        service: { include: { translations: { where: { locale: 'ar' } } } },
+      select: {
+        id: true,
+        customerId: true,
+        guestName: true,
+        guestPhone: true,
+        source: true,
         jobOrder: { select: { id: true } },
       },
     });
@@ -159,7 +171,7 @@ export const convertBookingToJob = action({
 
     let customerId = booking.customerId;
 
-    // إنشاء عميل من بيانات الزائر إن لم يكن مسجّلاً
+    // إنشاء ملف عميل من بيانات الزائر إن لم يكن مسجّلاً
     if (!customerId) {
       if (!booking.guestPhone) {
         throw new AppError('لا يمكن التحويل — الحجز بدون عميل مسجّل ولا رقم هاتف');
@@ -179,34 +191,12 @@ export const convertBookingToJob = action({
             },
           })
         ).id;
+
+      await db.booking.update({ where: { id }, data: { customerId } });
+      revalidatePath('/dashboard/bookings');
     }
 
-    const job = await db.jobOrder.create({
-      data: {
-        number: await nextNumber('job'),
-        bookingId: booking.id,
-        customerId,
-        vehicleId: booking.vehicleId,
-        notes: booking.notes,
-        items: booking.serviceId
-          ? {
-              create: {
-                serviceId: booking.serviceId,
-                label: bookingServiceLabel(booking) ?? 'خدمة',
-                qty: 1,
-                unitPrice: 0,
-                total: 0,
-              },
-            }
-          : undefined,
-      },
-    });
-
-    await db.booking.update({ where: { id }, data: { status: 'IN_PROGRESS', customerId } });
-
-    revalidatePath('/dashboard/bookings');
-    revalidatePath('/dashboard/job-orders');
-    return { id: job.id, message: `تم إنشاء أمر الشغل ${job.number}` };
+    return { id: booking.id };
   },
 });
 

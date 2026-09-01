@@ -5,8 +5,8 @@ import type { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { AppError, action, optionalString } from '@/lib/action-utils';
-import { intakeLabel, serviceDef } from '@/lib/intake';
+import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
+import { intakeLabel, serviceDef, warrantySubject } from '@/lib/intake';
 
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
@@ -201,13 +201,27 @@ export const issueWarranty = action({
   permission: 'crm:write',
   schema: z.object({
     jobOrderId: z.string(),
-    serviceId: optionalString,
+    /** موضوع الكفالة من قائمتها — أدقّ من الخدمة */
+    subject: z.string().min(1, 'اختر موضوع الكفالة'),
     months: z.union([z.string(), z.number()]).transform(Number),
     terms: optionalString,
   }),
   audit: { entity: 'Warranty', action: 'ISSUE' },
-  handler: async ({ jobOrderId, serviceId, months, terms }) => {
+  handler: async ({ jobOrderId, subject, months, terms }) => {
     if (!Number.isFinite(months) || months <= 0) throw new AppError('مدة الكفالة غير صالحة');
+
+    const def = warrantySubject(subject);
+    if (!def) throw new AppError('موضوع كفالة غير معروف');
+
+    /*
+      نستنبط الخدمة من سلَق الموضوع لا نأخذها من الطلب: «تبديل الجام»
+      و«حماية الجام» موضوعان مختلفان تحت خدمة واحدة، فالموضوع هو ما يحفظ
+      المعنى والخدمةُ رابطٌ للتقارير حيث يوجد لها مقابل.
+    */
+    const serviceId = def.slug
+      ? ((await db.service.findUnique({ where: { slug: def.slug }, select: { id: true } }))?.id ??
+        null)
+      : null;
 
     const job = await db.jobOrder.findUnique({ where: { id: jobOrderId } });
     if (!job) throw new AppError('أمر الشغل غير موجود');
@@ -221,7 +235,10 @@ export const issueWarranty = action({
       data: {
         certificateNo: await nextNumber('warranty'),
         vehicleId: job.vehicleId,
-        serviceId: serviceId || null,
+        // الكفالة لمن دفعها لا للسيارة: بيعها لا ينقل الحقّ للمشتري
+        customerId: job.customerId,
+        serviceId,
+        subject,
         jobOrderId,
         startDate,
         endDate,
@@ -411,17 +428,36 @@ export const addJobLine = action({
 export const createIntake = action({
   permission: 'workshop:write',
   schema: z.object({
-    customerId: z.string().min(1, 'العميل مطلوب'),
+    /** عميل مسجّل — أو `newCustomer` لعميل يُنشأ مع البيان */
+    customerId: optionalString,
+    newCustomer: z
+      .object({
+        name: z.string().trim().min(2, 'اسم العميل مطلوب'),
+        phone: phoneSchema,
+      })
+      .nullish(),
+    /** سيارة مسجّلة — قد تكون لمالك آخر فتُنقل ملكيتها */
     vehicleId: optionalString,
+    newVehicle: z
+      .object({
+        make: z.string().trim().min(1, 'نوع السيارة مطلوب'),
+        model: z.string().trim().min(1, 'موديل السيارة مطلوب'),
+        plateNo: optionalString,
+      })
+      .nullish(),
     odometer: optionalString,
     promisedAt: optionalString,
     paperRef: optionalString,
     intakeNotes: optionalString,
+    /** الحجز الذي جاء منه البيان — يُربَط به ويُغلَق */
+    bookingId: optionalString,
     lines: z.array(intakeLineSchema).min(1, 'اختر خدمة واحدة على الأقل'),
   }),
   audit: { entity: 'JobOrder', action: 'INTAKE' },
   handler: async (input) => {
-    if (input.vehicleId) await assertVehicleBelongs(input.vehicleId, input.customerId);
+    if (!input.customerId && !input.newCustomer) {
+      throw new AppError('اختر عميلاً مسجّلاً أو أدخل بيانات عميل جديد');
+    }
 
     for (const line of input.lines) {
       if (!Number.isFinite(line.price) || line.price < 0) {
@@ -442,19 +478,84 @@ export const createIntake = action({
 
     const job = await db.$transaction(async (tx) => {
       /*
-        الرقم يُحجز داخل المعاملة لا قبلها: كان يُؤخذ أولاً فتبتلعه كل
-        محاولة تفشل بعده، فتظهر فجوات في تسلسل أوامر الشغل (0002 ثم 0005)
-        — وتسلسل فيه فجوات لا يصلح مرجعاً أمام عميل ولا مراجع حسابات.
+        العميل والسيارة والأمر في حفظة واحدة.
+
+        كان الاستقبال يفتح ثلاث شاشات ويحفظ ثلاث مرات والعميل واقف: ملف
+        عميل، ثم سيارة في ملفه، ثم بيان تشغيل يبحث فيهما. والورقة تأخذ
+        ذلك كلّه في مسح واحد، فكذلك تفعل الشاشة.
       */
+      let customerId = input.customerId ?? null;
+      if (!customerId && input.newCustomer) {
+        // الرقم يمنع التكرار: من له ملف بهذا الرقم يُستعمل ملفه
+        const existing = await tx.customer.findFirst({
+          where: {
+            OR: [
+              { phone: input.newCustomer.phone },
+              { pastPhones: { some: { phone: input.newCustomer.phone } } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        customerId =
+          existing?.id ??
+          (
+            await tx.customer.create({
+              data: {
+                code: await nextNumber('customer'),
+                name: input.newCustomer.name,
+                phone: input.newCustomer.phone,
+                source: 'WALK_IN',
+              },
+            })
+          ).id;
+      }
+      if (!customerId) throw new AppError('تعذّر تحديد العميل');
+
+      let vehicleId = input.vehicleId ?? null;
+
+      if (vehicleId) {
+        // سيارة مسجّلة لمالك آخر: يبيعها ويشتريها غيره، فتُنقل لا تُستنسخ
+        const owned = await tx.vehicle.findUnique({
+          where: { id: vehicleId },
+          select: { customerId: true },
+        });
+        if (!owned) throw new AppError('السيارة غير موجودة');
+
+        if (owned.customerId !== customerId) {
+          const now = new Date();
+          await tx.vehicleOwnership.updateMany({
+            where: { vehicleId, to: null },
+            data: { to: now },
+          });
+          await tx.vehicleOwnership.create({
+            data: { vehicleId, customerId, from: now },
+          });
+          await tx.vehicle.update({ where: { id: vehicleId }, data: { customerId } });
+        }
+      } else if (input.newVehicle) {
+        const v = await tx.vehicle.create({
+          data: {
+            customerId,
+            make: input.newVehicle.make,
+            model: input.newVehicle.model,
+            plateNo: input.newVehicle.plateNo,
+          },
+        });
+        await tx.vehicleOwnership.create({ data: { vehicleId: v.id, customerId } });
+        vehicleId = v.id;
+      }
+
       const created = await tx.jobOrder.create({
         data: {
           number: await nextNumber('job'),
-          customerId: input.customerId,
-          vehicleId: input.vehicleId || null,
+          customerId,
+          vehicleId,
           odometer: parseOdometer(input.odometer),
           promisedAt: parseWhen(input.promisedAt, 'موعد التسليم'),
           paperRef: input.paperRef,
           intakeNotes: input.intakeNotes,
+          bookingId: input.bookingId,
         },
       });
 
@@ -462,10 +563,56 @@ export const createIntake = action({
         await createJobLine(tx, created.id, line);
       }
 
+      // الحجز صار شغلاً — يخرج من قوائم الانتظار والتذكير
+      if (input.bookingId) {
+        await tx.booking.update({
+          where: { id: input.bookingId },
+          data: { status: 'IN_PROGRESS' },
+        });
+      }
+
       return created;
     });
 
     revalidatePath('/dashboard/job-orders');
+    revalidatePath('/dashboard/bookings');
+    revalidatePath('/dashboard/customers');
     return { id: job.id, message: `تم إنشاء بيان التشغيل ${job.number}` };
+  },
+});
+
+/**
+ * يبحث عن سيارة برقم لوحتها.
+ *
+ * اللوحة هوية السيارة، فالبحث بها يكشف حالتين: سيارة العميل نفسه فتُختار،
+ * وسيارة عميل آخر فيُنبَّه الموظف إلى أن حفظ البيان ينقل ملكيتها — وهو
+ * ما يقع فعلاً حين تُباع السيارة وتعود بمالك جديد.
+ */
+export const lookupPlate = action({
+  permission: 'workshop:read',
+  schema: z.object({ plateNo: z.string().trim().min(1) }),
+  handler: async ({ plateNo }) => {
+    const vehicle = await db.vehicle.findUnique({
+      where: { plateNo },
+      select: {
+        id: true,
+        make: true,
+        model: true,
+        customerId: true,
+        customer: { select: { name: true } },
+      },
+    });
+
+    if (!vehicle) return { data: { found: false } };
+
+    return {
+      data: {
+        found: true,
+        id: vehicle.id,
+        label: `${vehicle.make} ${vehicle.model}`,
+        ownerId: vehicle.customerId,
+        ownerName: vehicle.customer.name,
+      },
+    };
   },
 });

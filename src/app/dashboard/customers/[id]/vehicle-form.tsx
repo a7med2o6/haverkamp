@@ -17,7 +17,6 @@ export interface VehicleValues {
   year?: number | null;
   color?: string | null;
   plateNo?: string | null;
-  vin?: string | null;
   notes?: string | null;
 }
 
@@ -51,7 +50,6 @@ export function VehicleFormButton({
               year: null,
               color: '',
               plateNo: '',
-              vin: '',
               notes: '',
             }
           }
@@ -143,14 +141,6 @@ function VehicleModal({ initial, onClose }: { initial: VehicleValues; onClose: (
           <Input
             value={values.plateNo ?? ''}
             onChange={(e) => set('plateNo', e.target.value)}
-            dir="ltr"
-            className="text-start tnum"
-          />
-        </Field>
-        <Field label="رقم الشاسيه (VIN)" error={errors.vin?.[0]}>
-          <Input
-            value={values.vin ?? ''}
-            onChange={(e) => set('vin', e.target.value)}
             dir="ltr"
             className="text-start tnum"
           />

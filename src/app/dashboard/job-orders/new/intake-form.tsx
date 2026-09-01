@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ClipboardCheck, Loader2 } from 'lucide-react';
+import { ClipboardCheck, Loader2, TriangleAlert } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
@@ -15,8 +15,9 @@ import {
   SERVICES,
   TINT_GRADES,
   optionParts,
+  serviceDef,
 } from '@/lib/intake';
-import { createIntake } from '../actions';
+import { createIntake, lookupPlate } from '../actions';
 
 export interface Brand {
   id: string;
@@ -49,31 +50,96 @@ const BLANK: LineState = { on: false, options: [], brand: '', brandName: '', pri
  * ما تضيفه الورقة لا تعرفه: درجة العزل لكل قطعة زجاج، والقطع المشمولة
  * بالحماية، وموعد التسليم مكتوباً بدل أن يُقال شفهياً.
  */
+export interface BookingSeed {
+  id: string;
+  code: string;
+  customerId: string | null;
+  vehicleId: string | null;
+  serviceKey: string | null;
+  serviceSpec: string | null;
+  /** اسم الخدمة كما في جدول الموقع — للحجوزات السابقة للكتالوج */
+  serviceName: string | null;
+  notes: string | null;
+}
+
 export function IntakeForm({
   customers,
   brands,
+  booking,
 }: {
-  customers: Array<{ id: string; name: string; phone: string; vehicles: Array<{ id: string; label: string }> }>;
+  customers: Array<{ id: string; name: string; phone: string }>;
   brands: Brand[];
+  /** حجز يُملأ منه البيان — القادم من «تحويل إلى أمر شغل» */
+  booking?: BookingSeed | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
+  /** عميل جديد يُكتب هنا بدل شاشة مستقلة */
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
+  /** سيارة جديدة — أو مسجّلة وُجدت باللوحة */
+  const [car, setCar] = useState({ plateNo: '', make: '', model: '' });
+  const [found, setFound] = useState<{
+    id: string;
+    label: string;
+    ownerId: string;
+    ownerName: string;
+  } | null>(null);
+  const [looking, setLooking] = useState(false);
+
   const [head, setHead] = useState({
-    customerId: '',
-    vehicleId: '',
+    customerId: booking?.customerId ?? '',
+    vehicleId: booking?.vehicleId ?? '',
     odometer: '',
     promisedAt: '',
     paperRef: '',
-    intakeNotes: '',
+    intakeNotes: booking?.notes ?? '',
   });
 
-  const [lines, setLines] = useState<Record<string, LineState>>(
-    Object.fromEntries(SERVICES.map((s) => [s.key, { ...BLANK }]))
-  );
+  /*
+    خدمة الحجز تُعلَّم سلفاً، ومواصفتها تُوضع في موضعها الصحيح: إن طابقت
+    اسم خيار فهي خيار، وإن طابقت ماركة فهي ماركة — فالحجز يسجّل اختياراً
+    واحداً لا يعرف نوعه، والبيان يعرف.
+  */
+  const [lines, setLines] = useState<Record<string, LineState>>(() => {
+    const init = Object.fromEntries(SERVICES.map((s) => [s.key, { ...BLANK }]));
+    const def = serviceDef(booking?.serviceKey);
+    if (!def) return init;
 
-  const vehicles = customers.find((c) => c.id === head.customerId)?.vehicles ?? [];
+    const spec = booking?.serviceSpec ?? '';
+    const opt = def.options?.find((o) => o.label === spec);
+    init[def.key] = {
+      ...BLANK,
+      on: true,
+      options: opt ? [opt.key] : [],
+      brandName: def.brandOptions?.includes(spec) ? spec : '',
+    };
+    return init;
+  });
+
+  /*
+    ما طلبه العميل ولم يجد له النموذجُ موضعاً.
+
+    الحجز قد يحمل خدمة سابقة للكتالوج أو مواصفةً لا تطابق خياراً ولا
+    ماركة. إسقاطها بصمت يعني أن الموظف يفتح البيان ولا يعلم أن العميل
+    قال شيئاً — فتُعرض تنبيهاً ليقرّر هو.
+  */
+  const unmatched = (() => {
+    const def = serviceDef(booking?.serviceKey);
+    const spec = booking?.serviceSpec ?? '';
+
+    if (!booking) return null;
+    if (!def) return booking.serviceName ?? null;
+    if (!spec) return null;
+
+    const known =
+      def.options?.some((o) => o.label === spec) || def.brandOptions?.includes(spec);
+    return known ? null : `${def.label} — ${spec}`;
+  })();
+
+  /** اللوحة لعميل آخر — الحفظ ينقل الملكية */
+  const transfer = !!found && !!head.customerId && found.ownerId !== head.customerId;
 
   const total = useMemo(
     () =>
@@ -133,7 +199,15 @@ export function IntakeForm({
     });
 
     startTransition(async () => {
-      const res = await createIntake({ ...head, lines: payload });
+      const res = await createIntake({
+        ...head,
+        // سيارة وُجدت باللوحة تُستعمل — وإن كانت لمالك آخر نُقلت ملكيتها
+        vehicleId: found?.id ?? head.vehicleId ?? null,
+        newCustomer: head.customerId ? null : newCustomer,
+        newVehicle: found || head.vehicleId ? null : car.make ? car : null,
+        bookingId: booking?.id ?? null,
+        lines: payload,
+      });
       if (res.ok) {
         toast.success(res.message ?? 'تم');
         router.push(`/dashboard/job-orders/${res.id}`);
@@ -150,10 +224,39 @@ export function IntakeForm({
         <div>
           <h1 className="text-xl font-bold text-[var(--text-0)] sm:text-2xl">بيان تشغيل</h1>
           <p className="mt-1 text-[13px] text-[var(--text-2)]">
-            استلام سيارة — التوقيع يبقى على الورقة، وسجّل رقمها هنا للربط
+            {booking
+              ? `من الحجز ${booking.code} — أكمل ما لا يعرفه الحجز`
+              : 'استلام سيارة — التوقيع يبقى على الورقة، وسجّل رقمها هنا للربط'}
           </p>
         </div>
       </div>
+
+      {/*
+        نقل الملكية لا يقع بصمت.
+        اللوحة مسجّلة لعميل آخر يعني أن السيارة بيعت، وحفظ البيان ينقلها
+        — وهو الصواب، لكنه تغيير في ملف شخصين فلا يمرّ بلا علم الموظف.
+      */}
+      {transfer && (
+        <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-warn/40 bg-warn/10 px-3.5 py-2.5 text-[12px] text-[var(--text-1)]">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn" />
+          <p>
+            اللوحة <span className="tnum font-semibold" dir="ltr">{car.plateNo}</span> مسجّلة
+            لـ<span className="font-semibold text-[var(--text-0)]">{found?.ownerName}</span> —
+            حفظ البيان ينقل ملكيتها للعميل المختار. وكفالات المالك السابق تبقى له.
+          </p>
+        </div>
+      )}
+
+      {unmatched && (
+        <div className="flex items-start gap-2.5 rounded-[var(--radius-sm)] border border-warn/40 bg-warn/10 px-3.5 py-2.5 text-[12px] text-[var(--text-1)]">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn" />
+          <p>
+            الحجز يذكر{' '}
+            <span className="font-semibold text-[var(--text-0)]">{unmatched}</span> — لا
+            يقابله خيار في هذا النموذج، فاختر ما يناسبه بنفسك.
+          </p>
+        </div>
+      )}
 
       {/* ── بيانات السيارة ── */}
       <Card>
@@ -181,20 +284,83 @@ export function IntakeForm({
             />
           </Field>
 
-          <Field label="السيارة">
-            <Select
-              value={head.vehicleId}
-              disabled={!head.customerId}
-              onChange={(e) => setHead({ ...head, vehicleId: e.target.value })}
-            >
-              <option value="">— اختر السيارة —</option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.label}
-                </option>
-              ))}
-            </Select>
+          {/* عميل جديد يُكتب هنا — لا شاشة ثالثة والعميل واقف */}
+          {!head.customerId && (
+            <>
+              <Field label="اسم العميل الجديد" error={errors.newCustomer?.[0]}>
+                <Input
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer((c) => ({ ...c, name: e.target.value }))}
+                  placeholder="مشعل ذعار المطيري"
+                />
+              </Field>
+              <Field label="هاتف العميل الجديد" hint="الرقم يمنع تكرار الملفات">
+                <Input
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer((c) => ({ ...c, phone: e.target.value }))}
+                  dir="ltr"
+                  className="text-start"
+                  placeholder="55555440"
+                />
+              </Field>
+            </>
+          )}
+
+          {/*
+            اللوحة أولاً: هي هوية السيارة، فالبحث بها يكشف المسجّلة —
+            سواء كانت لهذا العميل أو لغيره ممّن باعها له.
+          */}
+          <Field
+            label="رقم اللوحة"
+            hint={looking ? 'جارٍ البحث…' : 'اكتب اللوحة ثم انتقل — يبحث عنها النظام'}
+          >
+            <Input
+              value={car.plateNo}
+              dir="ltr"
+              className="text-start"
+              placeholder="80-78908"
+              onChange={(e) => {
+                setCar((c) => ({ ...c, plateNo: e.target.value }));
+                setFound(null);
+              }}
+              onBlur={() => {
+                const plate = car.plateNo.trim();
+                if (!plate) return setFound(null);
+                setLooking(true);
+                startTransition(async () => {
+                  const res = await lookupPlate({ plateNo: plate });
+                  setLooking(false);
+                  const d = res.ok ? (res.data as Record<string, unknown>) : null;
+                  setFound(d?.found ? (d as never) : null);
+                });
+              }}
+            />
           </Field>
+
+          {found ? (
+            <Field label="السيارة">
+              <div className="flex h-10 items-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-0)]">
+                {found.label}
+              </div>
+            </Field>
+          ) : (
+            <>
+              <Field label="نوع السيارة">
+                <Input
+                  value={car.make}
+                  onChange={(e) => setCar((c) => ({ ...c, make: e.target.value }))}
+                  placeholder="لكزس"
+                />
+              </Field>
+              <Field label="الموديل">
+                <Input
+                  value={car.model}
+                  onChange={(e) => setCar((c) => ({ ...c, model: e.target.value }))}
+                  placeholder="lx600"
+                />
+              </Field>
+            </>
+          )}
 
           <Field label="العداد (كم)">
             <Input

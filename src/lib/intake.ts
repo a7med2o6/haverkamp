@@ -357,3 +357,45 @@ export function bookingServiceLabel(booking: {
   if (def) return booking.serviceSpec ? `${def.label} — ${booking.serviceSpec}` : def.label;
   return booking.service?.translations[0]?.name ?? null;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   مواضيع الكفالة
+   ═══════════════════════════════════════════════════════════ */
+
+export interface WarrantySubject {
+  label: string;
+  /** سلَق الخدمة المقابلة — للربط حيث يوجد مقابل */
+  slug?: string;
+  /** المدة الافتراضية بالأشهر */
+  months: number;
+}
+
+/**
+ * ما تُصدَر له كفالة.
+ *
+ * ليست قائمة الخدمات: أكثر الخدمات لا كفالة لها (غسيل، بوليش، تعقيم)،
+ * وبعضها يُكفَل بتفصيل أدقّ من الخدمة نفسها — «تبديل الجام» غير «حماية
+ * الجام» وإن كانا تحت خدمة الزجاج، و«صبغ دائم» غير «صبغ قابل للإزالة»
+ * ومدّتاهما مختلفتان. فقائمة الكفالة قائمةٌ قائمة بذاتها.
+ */
+export const WARRANTY_SUBJECTS: WarrantySubject[] = [
+  { label: 'حماية البدي', slug: 'protication', months: 120 },
+  // درجات العزل كلّها بكفالة واحدة — الدرجة لا تغيّر المدة
+  { label: 'العازل الحراري', slug: 'tint', months: TINT_WARRANTY_MONTHS },
+  { label: 'حماية الجام', months: 12 },
+  { label: 'تبديل الجام', slug: 'glass', months: 12 },
+  { label: 'صبغ دائم', slug: 'paint', months: 24 },
+  { label: 'صبغ قابل للإزالة', slug: 'paint', months: 12 },
+];
+
+export function warrantySubject(label: string | null | undefined) {
+  return label ? WARRANTY_SUBJECTS.find((s) => s.label === label) : undefined;
+}
+
+/** اسم الكفالة للعرض — القديمة بلا موضوع ترجع إلى خدمتها */
+export function warrantyLabel(w: {
+  subject?: string | null;
+  service?: { translations: { name: string }[] } | null;
+}): string {
+  return w.subject ?? w.service?.translations[0]?.name ?? 'كفالة عامة';
+}

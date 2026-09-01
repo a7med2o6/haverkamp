@@ -11,7 +11,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { SERVICES, bookingChoices, serviceDef } from '@/lib/intake';
 import { BOOKING_STATUS, toOptions } from '@/lib/labels';
 import { formatPhone, toLocalInput } from '@/lib/utils';
-import { convertBookingToJob, saveBooking, setBookingStatus } from './actions';
+import { prepareBookingIntake, saveBooking, setBookingStatus } from './actions';
 
 export interface BookingValues {
   id?: string;
@@ -263,13 +263,10 @@ export function ConvertToJobButton({ id }: { id: string }) {
       title="تحويل إلى أمر شغل"
       onClick={() =>
         startTransition(async () => {
-          const res = await convertBookingToJob({ id });
-          if (res.ok) {
-            toast.success(res.message ?? 'تم');
-            router.push(`/dashboard/job-orders/${res.id}`);
-          } else {
-            toast.error(res.error);
-          }
+          // التحويل يفتح بيان التشغيل معبّأً — لا يُنشئ أمراً ناقصاً بصمت
+          const res = await prepareBookingIntake({ id });
+          if (res.ok) router.push(`/dashboard/job-orders/new?booking=${res.id}`);
+          else toast.error(res.error);
         })
       }
     >

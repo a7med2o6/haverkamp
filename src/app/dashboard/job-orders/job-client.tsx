@@ -13,8 +13,10 @@ import {
   GLASS_PARTS,
   SERVICES,
   TINT_GRADES,
-  serviceDef,
+  WARRANTY_SUBJECTS,
   optionParts,
+  serviceDef,
+  warrantySubject,
 } from '@/lib/intake';
 import {
   createInvoiceFromJob,
@@ -552,17 +554,11 @@ export function CreateInvoiceButton({ jobOrderId }: { jobOrderId: string }) {
   );
 }
 
-export function IssueWarrantyButton({
-  jobOrderId,
-  services,
-}: {
-  jobOrderId: string;
-  services: Array<{ id: string; name: string }>;
-}) {
+export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [values, setValues] = useState({ serviceId: '', months: '12', terms: '' });
+  const [values, setValues] = useState({ subject: '', months: '12', terms: '' });
 
   function submit() {
     startTransition(async () => {
@@ -592,7 +588,7 @@ export function IssueWarrantyButton({
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
                 إلغاء
               </Button>
-              <Button onClick={submit} disabled={pending}>
+              <Button onClick={submit} disabled={pending || !values.subject}>
                 {pending && <Loader2 className="animate-spin" />}
                 إصدار
               </Button>
@@ -600,15 +596,27 @@ export function IssueWarrantyButton({
           }
         >
           <div className="space-y-4">
-            <Field label="الخدمة">
+            {/*
+              مواضيع الكفالة لا الخدمات: أكثر الخدمات لا كفالة لها، وبعضها
+              يُكفَل بتفصيل أدقّ منها. واختيار الموضوع يجلب مدّته المعتادة
+              فلا تُكتب من الذاكرة في كل مرة.
+            */}
+            <Field label="موضوع الكفالة">
               <Select
-                value={values.serviceId}
-                onChange={(e) => setValues((v) => ({ ...v, serviceId: e.target.value }))}
+                value={values.subject}
+                onChange={(e) => {
+                  const def = warrantySubject(e.target.value);
+                  setValues((v) => ({
+                    ...v,
+                    subject: e.target.value,
+                    months: def ? String(def.months) : v.months,
+                  }));
+                }}
               >
-                <option value="">— غير محدّدة —</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
+                <option value="">— اختر —</option>
+                {WARRANTY_SUBJECTS.map((w) => (
+                  <option key={w.label} value={w.label}>
+                    {w.label}
                   </option>
                 ))}
               </Select>

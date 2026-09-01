@@ -47,6 +47,27 @@ export default async function CustomerDetailPage({
     where: { id },
     include: {
       vehicles: { orderBy: { createdAt: 'desc' } },
+      /*
+        سيارات ملكها ولم يعد يملكها.
+        بيع السيارة ينقلها من ملفه، فيختفي أثرها وإن بقي تاريخ شغلها
+        عنده — فيُسأل «فين عربية فلان؟» ولا يُجاب. تُعرض هنا مع تاريخ
+        تخلّيه عنها.
+      */
+      ownerships: {
+        where: { to: { not: null } },
+        orderBy: { to: 'desc' },
+        include: {
+          vehicle: {
+            select: {
+              id: true,
+              make: true,
+              model: true,
+              plateNo: true,
+              customer: { select: { name: true } },
+            },
+          },
+        },
+      },
       jobOrders: {
         orderBy: { receivedAt: 'desc' },
         take: 10,
@@ -102,6 +123,11 @@ export default async function CustomerDetailPage({
       select: { _count: { select: { jobOrders: true, orders: true, bookings: true } } },
     }),
   ]);
+
+  // سيارة قد تُباع وتُشترى مرّتين، فنعرض آخر فترة ملكية لكلٍّ منها
+  const previousOwned = customer.ownerships.filter(
+    (o, i, all) => all.findIndex((x) => x.vehicleId === o.vehicleId) === i
+  );
 
   const canWrite = can(session.user.role, 'crm:write');
   const canDelete = can(session.user.role, 'crm:delete');
@@ -277,11 +303,6 @@ export default async function CustomerDetailPage({
                     <Tr key={v.id}>
                       <Td className="font-medium text-[var(--text-0)]">
                         {v.make} {v.model}
-                        {v.vin && (
-                          <span className="tnum block text-[11px] text-[var(--text-2)]" dir="ltr">
-                            VIN: {v.vin}
-                          </span>
-                        )}
                       </Td>
                       <Td className="tnum">{v.year ?? '—'}</Td>
                       <Td>{v.color ?? '—'}</Td>
@@ -301,7 +322,6 @@ export default async function CustomerDetailPage({
                                 year: v.year,
                                 color: v.color,
                                 plateNo: v.plateNo,
-                                vin: v.vin,
                                 notes: v.notes,
                               }}
                             />
@@ -318,6 +338,37 @@ export default async function CustomerDetailPage({
             </Table>
           </TableWrap>
         </Card>
+
+        {/* ── سيارات سابقة ── */}
+        {previousOwned.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>سيارات سابقة ({previousOwned.length})</CardTitle>
+            </CardHeader>
+            <CardBody className="space-y-2">
+              {previousOwned.map((o) => (
+                <div
+                  key={o.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] px-3 py-2"
+                >
+                  <div>
+                    <p className="text-[13px] text-[var(--text-1)]">
+                      {o.vehicle.make} {o.vehicle.model}
+                      {o.vehicle.plateNo && (
+                        <span className="tnum ms-2 text-[12px] text-[var(--text-2)]" dir="ltr">
+                          {o.vehicle.plateNo}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-[var(--text-2)]">
+                      حتى {formatDate(o.to)} · لدى {o.vehicle.customer.name} الآن
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </CardBody>
+          </Card>
+        )}
 
         {/* ── سجل أوامر الشغل ── */}
         {can(session.user.role, 'workshop:read') && (

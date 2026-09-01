@@ -306,6 +306,9 @@ model Customer {
   updatedAt DateTime       @updatedAt
 
   vehicles  Vehicle[]
+  pastPhones CustomerPhone[]
+  warranties Warranty[]
+  ownerships VehicleOwnership[]
   bookings  Booking[]
   jobOrders JobOrder[]
   orders    Order[]
@@ -316,26 +319,78 @@ model Customer {
   @@map("customers")
 }
 
-model Vehicle {
+/**
+ * السيارة كيان مستقل لا ملحق بعميل.
+ *
+ * كانت تابعة له: حذفه يحذفها، ونقل ملكيتها يمحوها من ملف مالكها السابق
+ * ومعها تاريخ شغلها عنده. والسيارة تُباع وتعود بعد سنة باسم آخر، فلا
+ * يصحّ أن تكون ملكاً لصفٍّ في جدول العملاء.
+ *
+ * هويتها رقم اللوحة: ثابت لا يتغيّر — فلا حاجة لرقم الشاسيه — وفريد،
+ * فلا تُسجَّل السيارة مرّتين حين تعود بمالك جديد.
+ */
+/**
+ * رقم سابق للعميل.
+ *
+ * الرقم حقل واحد يُكتب فوقه، فمن غيّر رقمه ضاع رقمه القديم — ثم يبحث
+ * الموظف بالقديم فلا يجده فينشئ له ملفاً ثانياً. تُؤرشف الأرقام هنا
+ * ليجده البحث بأيٍّ منها.
+ */
+model CustomerPhone {
   id         String   @id @default(cuid())
   customerId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  phone      String
+  replacedAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([customerId])
+  @@map("customer_phones")
+}
+
+model Vehicle {
+  id         String   @id @default(cuid())
+  /// المالك الحالي — يتغيّر بنقل الملكية، والتاريخ محفوظ في VehicleOwnership
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
   make       String // الماركة
   model      String
   year       Int?
   color      String?
-  plateNo    String?
-  vin        String?
+  /// هوية السيارة — فريد حيث وُجد
+  plateNo    String?  @unique
   notes      String?
   createdAt  DateTime @default(now())
 
   bookings   Booking[]
   jobOrders  JobOrder[]
   warranties Warranty[]
+  ownerships VehicleOwnership[]
 
   @@index([customerId])
-  @@index([plateNo])
   @@map("vehicles")
+}
+
+/**
+ * من ملك السيارة ومتى.
+ *
+ * أمر الشغل يسجّل عميله وسيارته معاً، فتاريخ الشغل يبقى منسوباً لمالكه
+ * وقتَه مهما تغيّرت الملكية بعده. وهذا الجدول يجيب عن السؤال المقابل:
+ * ما السيارات التي ملكها هذا العميل يوماً؟
+ */
+model VehicleOwnership {
+  id         String    @id @default(cuid())
+  vehicleId  String
+  vehicle    Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  from       DateTime  @default(now())
+  /// فارغ يعني المالك الحالي
+  to         DateTime?
+
+  @@index([vehicleId])
+  @@index([customerId])
+  @@map("vehicle_ownerships")
 }
 
 enum BookingStatus {
@@ -397,8 +452,17 @@ model Warranty {
   vehicle       Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   serviceId     String?
   service       Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  /// صاحب الكفالة — من دفع ثمنها.
+  /// الكفالة لا تنتقل مع السيارة: بيعها لا ينقل حقّ مالكها الأول إلى
+  /// المشتري، فتبقى منسوبة إليه وإن تغيّر مالك السيارة.
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   jobOrderId    String?
   jobOrder      JobOrder? @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
+  /// موضوع الكفالة كما يُختار عند الإصدار — أدقّ من الخدمة: «تبديل جام»
+  /// غير «حماية جام»، و«صبغ دائم» غير «صبغ قابل للإزالة»، وكلٌّ منهما
+  /// كفالة مختلفة المدة والشروط تحت خدمة واحدة
+  subject       String?
   startDate     DateTime
   endDate       DateTime
   terms         String?

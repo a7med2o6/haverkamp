@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { SearchBar } from '@/components/dashboard/search-bar';
@@ -186,7 +187,7 @@ export default async function WarrantiesPage({
                       )}
                     </Td>
                     <Td className="text-[12px]">
-                      {w.service?.translations[0]?.name ?? 'كفالة عامة'}
+                      {warrantyLabel(w)}
                     </Td>
                     <Td className="tnum text-[12px]">{formatDate(w.startDate)}</Td>
                     <Td className="tnum text-[12px]">{formatDate(w.endDate)}</Td>

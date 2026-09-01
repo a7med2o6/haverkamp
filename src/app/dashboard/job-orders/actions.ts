@@ -108,7 +108,7 @@ export const setJobStatus = action({
   handler: async ({ id, status }) => {
     const job = await db.jobOrder.findUnique({
       where: { id },
-      select: { completedAt: true, deliveredAt: true },
+      select: { completedAt: true, deliveredAt: true, bookingId: true },
     });
     if (!job) throw new AppError('أمر الشغل غير موجود');
 
@@ -122,18 +122,44 @@ export const setJobStatus = action({
     */
     const done = status === 'READY' || status === 'DELIVERED';
 
-    await db.jobOrder.update({
-      where: { id },
-      data: {
-        status,
-        completedAt: done ? (job.completedAt ?? new Date()) : null,
-        deliveredAt:
-          status === 'DELIVERED' ? (job.deliveredAt ?? new Date()) : null,
-      },
+    /*
+      الحجز يتبع أمرَه.
+
+      كان يُعلَّم «قيد التنفيذ» لحظة تحويله ثم لا يعود إليه أحد، فتُسلَّم
+      السيارة ويبقى حجزُها يقول إن الشغل جارٍ — فيظهر في ملف العميل «تم
+      التسليم» و«قيد التنفيذ» في سطرين متجاورين عن الشيء نفسه.
+
+      والحجز طلبُ موعد: متى صار أمر شغل انتهى دوره، وصارت حقيقةُ العمل
+      عند الأمر لا عنده. فيتبعه: يُنهى بتسليمه، ويُلغى بإلغائه، ويعود
+      «قيد التنفيذ» إن رجع الأمر إلى الورشة — فالتراجع يُصلح ما أفسده
+      التقدّمُ الخاطئ.
+    */
+    const bookingStatus =
+      status === 'DELIVERED' ? 'COMPLETED' : status === 'CANCELLED' ? 'CANCELLED' : 'IN_PROGRESS';
+
+    await db.$transaction(async (tx) => {
+      await tx.jobOrder.update({
+        where: { id },
+        data: {
+          status,
+          completedAt: done ? (job.completedAt ?? new Date()) : null,
+          deliveredAt:
+            status === 'DELIVERED' ? (job.deliveredAt ?? new Date()) : null,
+        },
+      });
+
+      if (job.bookingId) {
+        await tx.booking.update({
+          where: { id: job.bookingId },
+          data: { status: bookingStatus },
+        });
+      }
     });
 
     revalidatePath('/dashboard/job-orders');
     revalidatePath(`/dashboard/job-orders/${id}`);
+    revalidatePath('/dashboard/bookings');
+    revalidatePath('/dashboard/customers');
     return { id, message: 'تم تحديث حالة أمر الشغل' };
   },
 });

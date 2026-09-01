@@ -159,6 +159,7 @@ export default async function JobOrderDetailPage({
                   {job.vehicle.make} {job.vehicle.model}
                   {job.vehicle.year ? ` — ${job.vehicle.year}` : ''}
                 </Info>
+                {job.vehicle.color && <Info label="اللون">{job.vehicle.color}</Info>}
                 {job.vehicle.plateNo && (
                   <Info label="رقم اللوحة">
                     <span className="tnum" dir="ltr">

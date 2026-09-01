@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ClipboardCheck, Loader2, TriangleAlert } from 'lucide-react';
@@ -17,7 +17,7 @@ import {
   optionParts,
   serviceDef,
 } from '@/lib/intake';
-import { createIntake, lookupPlate } from '../actions';
+import { createIntake, customerVehicles, lookupPlate } from '../actions';
 
 export interface Brand {
   id: string;
@@ -40,6 +40,15 @@ interface LineState {
 }
 
 const BLANK: LineState = { on: false, options: [], brand: '', brandName: '', price: '', grades: {} };
+
+/** سيارة مسجّلة كما تُعرض في قائمة سيارات العميل */
+export interface OwnedVehicle {
+  id: string;
+  label: string;
+  plateNo: string | null;
+}
+
+const BLANK_CAR = { plateNo: '', make: '', model: '', year: '', color: '' };
 
 /**
  * «بيان تشغيل» — النسخة الرقمية من دفتر الاستلام.
@@ -66,8 +75,11 @@ export function IntakeForm({
   customers,
   brands,
   booking,
+  bookingVehicles = [],
 }: {
   customers: Array<{ id: string; name: string; phone: string }>;
+  /** سيارات عميل الحجز — تصل جاهزة فلا تُجلب عند فتح الشاشة */
+  bookingVehicles?: OwnedVehicle[];
   brands: Brand[];
   /** حجز يُملأ منه البيان — القادم من «تحويل إلى أمر شغل» */
   booking?: BookingSeed | null;
@@ -79,7 +91,7 @@ export function IntakeForm({
   /** عميل جديد يُكتب هنا بدل شاشة مستقلة */
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
   /** سيارة جديدة — أو مسجّلة وُجدت باللوحة */
-  const [car, setCar] = useState({ plateNo: '', make: '', model: '' });
+  const [car, setCar] = useState(BLANK_CAR);
   const [found, setFound] = useState<{
     id: string;
     label: string;
@@ -87,6 +99,22 @@ export function IntakeForm({
     ownerName: string;
   } | null>(null);
   const [looking, setLooking] = useState(false);
+  /** سيارات العميل المسجّل — يختار منها بدل أن يتذكّر اللوحة */
+  const [owned, setOwned] = useState<OwnedVehicle[]>(bookingVehicles);
+
+  /*
+    تُجلب عند اختيار العميل لا مع الصفحة: مئات العملاء بسياراتهم حِملٌ
+    يُنقل كلّه ليُستعمل منه واحد. وسيارات عميل الحجز تأتي جاهزة من الخادم
+    لأن عميله معروف قبل التصيير.
+  */
+  const loadVehicles = useCallback((customerId: string) => {
+    if (!customerId) return setOwned([]);
+    startTransition(async () => {
+      const res = await customerVehicles({ customerId });
+      const d = res.ok ? (res.data as { vehicles?: OwnedVehicle[] }) : null;
+      setOwned(d?.vehicles ?? []);
+    });
+  }, []);
 
   const [head, setHead] = useState({
     customerId: booking?.customerId ?? '',
@@ -151,6 +179,31 @@ export function IntakeForm({
   );
 
   const chosen = Object.values(lines).filter((l) => l.on).length;
+
+  /*
+    ما ينقص الحفظ — نصّاً لا زرّاً ميّتاً.
+    الزرّ كان مشروطاً بعميل مسجّل وحده، فمن يكتب عميلاً جديداً يملأ
+    البيان كلّه ثم يجد الزرّ لا يستجيب ولا يقول لماذا.
+  */
+  const missing = !head.customerId
+    ? !newCustomer.name.trim()
+      ? 'اكتب اسم العميل'
+      : !newCustomer.phone.trim()
+        ? 'اكتب هاتف العميل'
+        : null
+    : null;
+
+  // سيارة نصفها مكتوب تُهمَل عند الحفظ بصمت — فلا تمرّ
+  const carMissing =
+    head.vehicleId || found
+      ? null
+      : !car.make.trim()
+        ? 'اكتب نوع السيارة'
+        : !car.model.trim()
+          ? 'اكتب موديل السيارة'
+          : null;
+
+  const blocker = missing ?? carMissing ?? (chosen === 0 ? 'اختر خدمة واحدة على الأقل' : null);
 
   function patch(key: string, next: Partial<LineState>) {
     setLines((prev) => ({ ...prev, [key]: { ...prev[key], ...next } }));
@@ -273,7 +326,13 @@ export function IntakeForm({
           <Field label="العميل" className="sm:col-span-2" error={errors.customerId?.[0]}>
             <Combobox
               value={head.customerId}
-              onChange={(v) => setHead({ ...head, customerId: v, vehicleId: '' })}
+              onChange={(v) => {
+                // سيارة العميل السابق لا تُحمل إلى الجديد
+                setHead({ ...head, customerId: v, vehicleId: '' });
+                setFound(null);
+                setCar(BLANK_CAR);
+                loadVehicles(v);
+              }}
               placeholder="اكتب اسم العميل أو رقمه…"
               emptyLabel="لا يوجد عميل بهذا الاسم أو الرقم"
               options={customers.map((c) => ({
@@ -307,58 +366,111 @@ export function IntakeForm({
           )}
 
           {/*
-            اللوحة أولاً: هي هوية السيارة، فالبحث بها يكشف المسجّلة —
-            سواء كانت لهذا العميل أو لغيره ممّن باعها له.
+            العميل يملك أكثر من سيارة والموظف لا يحفظ لوحاتها، فتُعرض
+            سياراته ليختار بنظرة. واللوحة تبقى لما ليس في القائمة:
+            سيارة جديدة، أو اشتراها من غيره فتُنقل ملكيتها.
           */}
-          <Field
-            label="رقم اللوحة"
-            hint={looking ? 'جارٍ البحث…' : 'اكتب اللوحة ثم انتقل — يبحث عنها النظام'}
-          >
-            <Input
-              value={car.plateNo}
-              dir="ltr"
-              className="text-start"
-              placeholder="80-78908"
-              onChange={(e) => {
-                setCar((c) => ({ ...c, plateNo: e.target.value }));
-                setFound(null);
-              }}
-              onBlur={() => {
-                const plate = car.plateNo.trim();
-                if (!plate) return setFound(null);
-                setLooking(true);
-                startTransition(async () => {
-                  const res = await lookupPlate({ plateNo: plate });
-                  setLooking(false);
-                  const d = res.ok ? (res.data as Record<string, unknown>) : null;
-                  setFound(d?.found ? (d as never) : null);
-                });
-              }}
-            />
-          </Field>
-
-          {found ? (
-            <Field label="السيارة">
-              <div className="flex h-10 items-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-0)]">
-                {found.label}
-              </div>
+          {owned.length > 0 && (
+            <Field label="سيارة العميل" className="sm:col-span-2">
+              <Select
+                value={head.vehicleId}
+                onChange={(e) => {
+                  setHead({ ...head, vehicleId: e.target.value });
+                  setFound(null);
+                  setCar(BLANK_CAR);
+                }}
+              >
+                <option value="">— سيارة أخرى (أدخل اللوحة) —</option>
+                {owned.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.label}
+                    {v.plateNo ? ` — ${v.plateNo}` : ''}
+                  </option>
+                ))}
+              </Select>
             </Field>
-          ) : (
+          )}
+
+          {!head.vehicleId && (
             <>
-              <Field label="نوع السيارة">
-                <Input
-                  value={car.make}
-                  onChange={(e) => setCar((c) => ({ ...c, make: e.target.value }))}
-                  placeholder="لكزس"
-                />
+            {/*
+              اللوحة أولاً: هي هوية السيارة، فالبحث بها يكشف المسجّلة —
+              سواء كانت لهذا العميل أو لغيره ممّن باعها له.
+            */}
+            <Field
+              label="رقم اللوحة"
+              hint={looking ? 'جارٍ البحث…' : 'اكتب اللوحة ثم انتقل — يبحث عنها النظام'}
+            >
+              <Input
+                value={car.plateNo}
+                dir="ltr"
+                className="text-start"
+                placeholder="80-78908"
+                onChange={(e) => {
+                  setCar((c) => ({ ...c, plateNo: e.target.value }));
+                  setFound(null);
+                }}
+                onBlur={() => {
+                  const plate = car.plateNo.trim();
+                  if (!plate) return setFound(null);
+                  setLooking(true);
+                  startTransition(async () => {
+                    const res = await lookupPlate({ plateNo: plate });
+                    setLooking(false);
+                    const d = res.ok ? (res.data as Record<string, unknown>) : null;
+                    setFound(d?.found ? (d as never) : null);
+                  });
+                }}
+              />
+            </Field>
+
+            {found ? (
+              <Field label="السيارة">
+                <div className="flex h-10 items-center rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3 text-sm text-[var(--text-0)]">
+                  {found.label}
+                </div>
               </Field>
-              <Field label="الموديل">
-                <Input
-                  value={car.model}
-                  onChange={(e) => setCar((c) => ({ ...c, model: e.target.value }))}
-                  placeholder="lx600"
-                />
-              </Field>
+            ) : (
+              <>
+                <Field label="نوع السيارة">
+                  <Input
+                    value={car.make}
+                    onChange={(e) => setCar((c) => ({ ...c, make: e.target.value }))}
+                    placeholder="لكزس"
+                  />
+                </Field>
+                <Field label="الموديل">
+                  <Input
+                    value={car.model}
+                    onChange={(e) => setCar((c) => ({ ...c, model: e.target.value }))}
+                    placeholder="lx600"
+                  />
+                </Field>
+                <Field label="سنة الصنع">
+                  <Input
+                    type="number"
+                    value={car.year}
+                    onChange={(e) => setCar((c) => ({ ...c, year: e.target.value }))}
+                    placeholder="2024"
+                    dir="ltr"
+                    className="tnum text-start"
+                    min={1950}
+                    max={new Date().getFullYear() + 2}
+                  />
+                </Field>
+                {/*
+                  اللون يميّز السيارتين المتشابهتين في الساحة ويُكتب على
+                  الكفالة — فمكانه لحظة الاستلام لا تعديلاً لاحقاً
+                */}
+                <Field label="اللون">
+                  <Input
+                    value={car.color}
+                    onChange={(e) => setCar((c) => ({ ...c, color: e.target.value }))}
+                    placeholder="أسود"
+                  />
+                </Field>
+            </>
+          )}
             </>
           )}
 
@@ -617,10 +729,15 @@ export function IntakeForm({
             </p>
             <p className="tnum text-lg font-bold text-[var(--text-0)]">{formatKWD(total)}</p>
           </div>
-          <Button type="submit" size="lg" disabled={pending || !head.customerId || chosen === 0}>
-            {pending ? <Loader2 className="animate-spin" /> : <ClipboardCheck />}
-            حفظ بيان التشغيل
-          </Button>
+          <div className="flex items-center gap-3">
+            {blocker && (
+              <p className="text-[12px] text-[var(--text-2)]">{blocker}</p>
+            )}
+            <Button type="submit" size="lg" disabled={pending || !!blocker}>
+              {pending ? <Loader2 className="animate-spin" /> : <ClipboardCheck />}
+              حفظ بيان التشغيل
+            </Button>
+          </div>
         </div>
       </div>
     </form>

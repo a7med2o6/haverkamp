@@ -442,6 +442,15 @@ export const createIntake = action({
       .object({
         make: z.string().trim().min(1, 'نوع السيارة مطلوب'),
         model: z.string().trim().min(1, 'موديل السيارة مطلوب'),
+        year: z
+          .union([z.string(), z.number()])
+          .transform((v) => (v === '' || v === null ? null : Number(v)))
+          .refine(
+            (v) => v === null || (v >= 1950 && v <= new Date().getFullYear() + 2),
+            'سنة الصنع غير صالحة'
+          )
+          .nullish(),
+        color: optionalString,
         plateNo: optionalString,
       })
       .nullish(),
@@ -539,6 +548,8 @@ export const createIntake = action({
             customerId,
             make: input.newVehicle.make,
             model: input.newVehicle.model,
+            year: input.newVehicle.year,
+            color: input.newVehicle.color,
             plateNo: input.newVehicle.plateNo,
           },
         });
@@ -612,6 +623,34 @@ export const lookupPlate = action({
         label: `${vehicle.make} ${vehicle.model}`,
         ownerId: vehicle.customerId,
         ownerName: vehicle.customer.name,
+      },
+    };
+  },
+});
+
+/**
+ * سيارات عميل مسجّل.
+ *
+ * العميل الواحد يملك أكثر من سيارة — والموظف لا يحفظ لوحاتها. تُقرأ عند
+ * اختياره لا مع الصفحة، فقائمة سيارات كل العملاء حِملٌ يُنقل بلا داعٍ.
+ */
+export const customerVehicles = action({
+  permission: 'workshop:read',
+  schema: z.object({ customerId: z.string().min(1) }),
+  handler: async ({ customerId }) => {
+    const vehicles = await db.vehicle.findMany({
+      where: { customerId },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, make: true, model: true, year: true, plateNo: true },
+    });
+
+    return {
+      data: {
+        vehicles: vehicles.map((v) => ({
+          id: v.id,
+          label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,
+          plateNo: v.plateNo,
+        })),
       },
     };
   },

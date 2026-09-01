@@ -67,6 +67,15 @@ export default async function NewIntakePage({
   // حجز حُوّل سلفاً لا يُحوَّل ثانيةً
   if (booking?.jobOrder) redirect(`/dashboard/job-orders/${booking.jobOrder.id}`);
 
+  // عميل الحجز معروف قبل التصيير، فسياراته تصل مع الصفحة لا بنداء بعدها
+  const bookingVehicles = booking?.customerId
+    ? await db.vehicle.findMany({
+        where: { customerId: booking.customerId },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, make: true, model: true, year: true, plateNo: true },
+      })
+    : [];
+
   return (
     <>
       <Link
@@ -92,6 +101,11 @@ export default async function NewIntakePage({
               }
             : null
         }
+        bookingVehicles={bookingVehicles.map((v) => ({
+          id: v.id,
+          label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,
+          plateNo: v.plateNo,
+        }))}
         customers={customers}
         brands={brands.map((b) => ({
           id: b.id,

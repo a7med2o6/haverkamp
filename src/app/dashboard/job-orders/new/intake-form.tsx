@@ -12,7 +12,7 @@ import { cn, formatKWD, formatPhone } from '@/lib/utils';
 import {
   GLASS_GROUPS,
   GLASS_PARTS,
-  INTAKE_SERVICES,
+  SERVICES,
   TINT_GRADES,
   optionParts,
 } from '@/lib/intake';
@@ -29,13 +29,16 @@ interface LineState {
   on: boolean;
   /** الخيارات المختارة — واحد للمفردة، وأكثر للمتعدّدة كالنانو */
   options: string[];
+  /** معرّف خدمة ماركة حماية البدي */
   brand: string;
+  /** ماركة تُذكر بالاسم: فيلم العزل أو حماية الجام */
+  brandName: string;
   price: string;
   /** درجة العزل لكل قطعة زجاج */
   grades: Record<string, string>;
 }
 
-const BLANK: LineState = { on: false, options: [], brand: '', price: '', grades: {} };
+const BLANK: LineState = { on: false, options: [], brand: '', brandName: '', price: '', grades: {} };
 
 /**
  * «بيان تشغيل» — النسخة الرقمية من دفتر الاستلام.
@@ -67,7 +70,7 @@ export function IntakeForm({
   });
 
   const [lines, setLines] = useState<Record<string, LineState>>(
-    Object.fromEntries(INTAKE_SERVICES.map((s) => [s.key, { ...BLANK }]))
+    Object.fromEntries(SERVICES.map((s) => [s.key, { ...BLANK }]))
   );
 
   const vehicles = customers.find((c) => c.id === head.customerId)?.vehicles ?? [];
@@ -103,7 +106,7 @@ export function IntakeForm({
     e.preventDefault();
     setErrors({});
 
-    const payload = INTAKE_SERVICES.filter((s) => lines[s.key].on).map((s) => {
+    const payload = SERVICES.filter((s) => lines[s.key].on).map((s) => {
       const l = lines[s.key];
       const parts = s.glassParts
         ? GLASS_PARTS.filter((p) => l.grades[p.key]).map((p) => ({
@@ -123,6 +126,7 @@ export function IntakeForm({
         key: s.key,
         options: l.options,
         brand: l.brand || null,
+        brandName: l.brandName || null,
         price: l.price || 0,
         parts,
       };
@@ -229,7 +233,7 @@ export function IntakeForm({
           <CardTitle>الخدمة المطلوبة</CardTitle>
         </CardHeader>
         <CardBody className="space-y-2">
-          {INTAKE_SERVICES.map((s) => {
+          {SERVICES.map((s) => {
             const l = lines[s.key];
             const brand = brands.find((b) => b.id === l.brand);
 
@@ -310,6 +314,23 @@ export function IntakeForm({
                           {brands.map((b) => (
                             <option key={b.id} value={b.id}>
                               {b.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </Field>
+                    )}
+
+                    {/* ماركة تُذكر بالاسم — أفلام العزل وحماية الجام */}
+                    {s.brandOptions && (
+                      <Field label={s.brandLabel ?? 'الماركة'}>
+                        <Select
+                          value={l.brandName}
+                          onChange={(e) => patch(s.key, { brandName: e.target.value })}
+                        >
+                          <option value="">— اختر —</option>
+                          {s.brandOptions.map((b) => (
+                            <option key={b} value={b}>
+                              {b}
                             </option>
                           ))}
                         </Select>

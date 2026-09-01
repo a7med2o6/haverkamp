@@ -8,7 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Combobox } from '@/components/ui/combobox';
-import { BOOKING_SERVICES, bookingService } from '@/lib/intake';
+import { SERVICES, bookingChoices, serviceDef } from '@/lib/intake';
 import { BOOKING_STATUS, toOptions } from '@/lib/labels';
 import { formatPhone, toLocalInput } from '@/lib/utils';
 import { convertBookingToJob, saveBooking, setBookingStatus } from './actions';
@@ -157,7 +157,7 @@ export function BookingFormButton({
                 }}
               >
                 <option value="">— غير محدّدة —</option>
-                {BOOKING_SERVICES.map((s) => (
+                {SERVICES.map((s) => (
                   <option key={s.key} value={s.key}>
                     {s.label}
                   </option>
@@ -166,16 +166,16 @@ export function BookingFormButton({
             </Field>
 
             {(() => {
-              const svc = bookingService(values.serviceKey);
-              if (!svc?.options) return <div className="hidden sm:block" />;
+              const choice = bookingChoices(serviceDef(values.serviceKey));
+              if (!choice) return <div className="hidden sm:block" />;
               return (
-                <Field label={svc.optionLabel ?? 'الاختيار'}>
+                <Field label={choice.label}>
                   <Select
                     value={values.serviceSpec ?? ''}
                     onChange={(e) => set('serviceSpec', e.target.value)}
                   >
                     <option value="">— غير محدّد —</option>
-                    {svc.options.map((o) => (
+                    {choice.values.map((o) => (
                       <option key={o} value={o}>
                         {o}
                       </option>

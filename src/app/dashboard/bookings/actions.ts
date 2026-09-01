@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
-import { bookingService, bookingServiceLabel } from '@/lib/intake';
+import { bookingServiceLabel, serviceDef } from '@/lib/intake';
 
 const bookingSchema = z.object({
   id: z.string().optional(),
@@ -44,7 +44,7 @@ export const saveBooking = action({
       الحجز مربوطاً بجدول الخدمات حيث يوجد مقابل — «حماية الرنقات» لا
       مقابل لها فتبقى بلا رابط، ومفتاحها هو ما يحفظ معناها.
     */
-    const catalogue = bookingService(data.serviceKey);
+    const catalogue = serviceDef(data.serviceKey);
     if (data.serviceKey && !catalogue) throw new AppError('خدمة غير معروفة');
 
     const serviceId = catalogue?.slug

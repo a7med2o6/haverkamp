@@ -24,6 +24,8 @@ export interface IntakeOption {
 export interface IntakeService {
   key: string;
   label: string;
+  /** سلَق الخدمة في جدول الموقع — للربط حيث يوجد مقابل */
+  slug?: string;
   /** الخيارات الفرعية */
   options?: IntakeOption[];
   /**
@@ -32,8 +34,19 @@ export interface IntakeService {
    * اختيار لا زرّا راديو، فحصرهما في واحد كان مخالفة للورقة نفسها.
    */
   multi?: boolean;
-  /** يلزمه اختيار ماركة الفيلم */
+  /**
+   * يلزمه اختيار ماركة من جدول الخدمات — لها باقات وأسعار وكفالة.
+   * خاصّ بحماية البدي: ماركاتها كيانات مسعّرة لا مجرّد أسماء.
+   */
   needsBrand?: boolean;
+  /**
+   * ماركات تُختار بالاسم ولا مقابل لها في جدول الخدمات.
+   * أفلام العزل وحماية الجام ماركات تُذكر في السجلّ والكفالة ولا تحمل
+   * باقات مسعّرة، فتُخزَّن اسماً في مواصفة البند لا معرّفاً.
+   */
+  brandOptions?: readonly string[];
+  /** عنوان قائمة الماركة — «الماركة» أو «النوع» */
+  brandLabel?: string;
   /** يُفصَّل إلى قطع زجاج بدرجة لكل قطعة */
   glassParts?: boolean;
   /** قطعه تُشتقّ من مستوى التغطية المختار لا يعلّمها الموظف */
@@ -169,15 +182,20 @@ const FULL_BODY_PARTS = BODY_PARTS.filter(
 ).map((p) => ({ key: p.key, spec: 'كامل' }));
 
 /*
-  الترتيب هنا ترتيب الطلب لا ترتيب الورقة.
-  الورقة رتّبت الخدمات كما طُبعت مرة واحدة، والاستقبال يسأل عنها بترتيب
-  آخر: الحماية أولاً لأنها القرار الأكبر والأغلى، ثم العازل، ثم ما يُضاف
-  إليهما. فما يُسأل عنه أولاً يظهر أولاً.
+  كتالوج الخدمات — مصدر واحد.
+
+  كان كتالوجان: واحد للحجز وواحد لبيان التشغيل، فتفرّقا حتى صار «بوليش»
+  في أحدهما و«تلميع خارجي» و«تلميع داخلي» في الآخر، وماركات العزل في
+  أحدهما دون الآخر — فيُحجز بخدمة لا وجود لها عند الاستلام.
+
+  الترتيب ترتيب الطلب لا ترتيب الورقة: الحماية أولاً لأنها القرار الأكبر
+  والأغلى، ثم العازل، ثم ما يُضاف إليهما.
 */
-export const INTAKE_SERVICES: IntakeService[] = [
+export const SERVICES: IntakeService[] = [
   {
     key: 'body',
     label: 'حماية البدي',
+    slug: 'protication',
     needsBrand: true,
     bodyParts: true,
     options: [
@@ -186,10 +204,33 @@ export const INTAKE_SERVICES: IntakeService[] = [
       { key: 'full_body', label: 'بدي كامل', packageName: 'فل بدي', parts: FULL_BODY_PARTS },
     ],
   },
-  { key: 'tint', label: 'العازل الحراري', glassParts: true },
-  { key: 'front_glass', label: 'حماية الجام الأمامي' },
+  {
+    key: 'tint',
+    label: 'العازل الحراري',
+    slug: 'tint',
+    glassParts: true,
+    brandLabel: 'الماركة',
+    brandOptions: ['صن تك', 'هافركامب', 'رويال شيلد'],
+  },
+  {
+    key: 'front_glass',
+    label: 'حماية الجام الأمامي',
+    brandLabel: 'الماركة',
+    // «إزالة فقط» ليست ماركة بل عمل آخر، لكنها اختيار في الموضع نفسه
+    brandOptions: ['رويال شيلد', 'ASWF', 'ClearPlex', 'إزالة فقط'],
+  },
+  {
+    key: 'glass_repair',
+    label: 'إصلاح الجام',
+    slug: 'glass',
+    options: [
+      { key: 'crack_injection', label: 'حقن شروخ' },
+      { key: 'replacement', label: 'استبدال' },
+    ],
+  },
   { key: 'mats', label: 'تلبيس الدواسات' },
   { key: 'rims', label: 'حماية الرنقات' },
+  { key: 'paint', label: 'صبغ رنقات', slug: 'paint' },
   {
     key: 'nano',
     label: 'نانو للمقاعد والرنقات',
@@ -200,23 +241,32 @@ export const INTAKE_SERVICES: IntakeService[] = [
     ],
   },
   {
-    key: 'rims_paint',
-    label: 'صبغ رنقات',
+    // «تلميع خارجي» و«تلميع داخلي» كانا خدمتين، وهما خدمة بموضعين
+    key: 'polish',
+    label: 'بوليش',
+    slug: 'polish',
+    multi: true,
     options: [
-      { key: 'gloss', label: 'دائم لمّاع' },
-      { key: 'matte', label: 'دائم مطفي' },
-      { key: 'removable', label: 'قابل للإزالة' },
+      { key: 'exterior', label: 'خارجي' },
+      { key: 'interior', label: 'داخلي' },
+    ],
+  },
+  {
+    key: 'wash',
+    label: 'غسيل',
+    slug: 'wash',
+    multi: true,
+    options: [
+      { key: 'exterior', label: 'خارجي' },
+      { key: 'interior', label: 'داخلي' },
     ],
   },
   { key: 'blackout', label: 'بلاك أوت' },
-  { key: 'polish_exterior', label: 'تلميع خارجي' },
-  { key: 'polish_interior', label: 'تلميع داخلي' },
   { key: 'ozone', label: 'تعقيم وتعطير بتقنية الأوزون' },
 ];
 
-
-export function intakeService(key: string): IntakeService | undefined {
-  return INTAKE_SERVICES.find((s) => s.key === key);
+export function serviceDef(key: string | null | undefined): IntakeService | undefined {
+  return key ? SERVICES.find((s) => s.key === key) : undefined;
 }
 
 /** اسم البند كما يُكتب في أمر الشغل: «حماية البدي — بدي كامل» */
@@ -269,73 +319,28 @@ export function crewFor(partKey: string): number {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   كتالوج الحجز
+   منظور الحجز على الكتالوج
    ═══════════════════════════════════════════════════════════ */
 
-export interface BookingService {
-  key: string;
-  label: string;
-  /** سلَق الخدمة في جدول الموقع — للربط حيث يوجد مقابل */
-  slug?: string;
-  /** الاختيار الفرعي: ماركة الفيلم أو نوع العمل */
-  options?: string[];
-  /** عنوان قائمة الاختيار — «الماركة» أو «النوع» */
-  optionLabel?: string;
-}
-
 /**
- * الخدمات كما تُطلب في الحجز.
+ * الاختيار الواحد الذي يُسجَّل مع الحجز.
  *
- * ليست قائمة جدول الخدمات: ذاك كتالوج الموقع، فيه «حماية هافركامب
- * الألمانية» و«حماية كلايف الكورية» صفوفاً مستقلة، فيسأل الاستقبال عن
- * الماركة قبل أن يعرف نوع الخدمة أصلاً. هنا الخدمة أولاً ثم ماركتها.
- *
- * وماركات كل خدمة تخصّها: أفلام العزل (صن تك، رويال شيلد) غير أفلام
- * حماية البدي غير أفلام حماية الجام — ولا يصحّ خلطها في قائمة واحدة.
+ * الحجز طلبٌ لا أمر شغل: يكفيه ما يميّز الخدمة — الباقة إن كانت لها
+ * باقات، وإلا الماركة. أمّا التفصيل (درجة كل زجاجة، قطع الحماية) فمكانه
+ * الاستلام حيث تُعاين السيارة.
  */
-export const BOOKING_SERVICES: BookingService[] = [
-  {
-    key: 'body',
-    label: 'حماية البدي',
-    slug: 'protication',
-    optionLabel: 'الباقة',
-    options: ['فل بدي', 'كبوت كامل', 'ستاندر'],
-  },
-  {
-    key: 'tint',
-    label: 'العازل الحراري',
-    slug: 'tint',
-    optionLabel: 'الماركة',
-    options: ['صن تك', 'هافركامب', 'رويال شيلد'],
-  },
-  {
-    key: 'glass_protection',
-    label: 'حماية الجام',
-    optionLabel: 'الماركة',
-    // «إزالة فقط» ليست ماركة بل عمل آخر — لكنها اختيار في الموضع نفسه
-    options: ['رويال شيلد', 'ASWF', 'ClearPlex', 'إزالة فقط'],
-  },
-  { key: 'polish', label: 'بوليش', slug: 'polish' },
-  {
-    key: 'wash',
-    label: 'غسيل',
-    slug: 'wash',
-    optionLabel: 'النوع',
-    options: ['داخلي', 'خارجي'],
-  },
-  { key: 'rims', label: 'حماية الرنقات' },
-  { key: 'paint', label: 'صبغ', slug: 'paint' },
-  {
-    key: 'glass_repair',
-    label: 'إصلاح الجام',
-    slug: 'glass',
-    optionLabel: 'النوع',
-    options: ['حقن شروخ', 'استبدال'],
-  },
-];
-
-export function bookingService(key: string | null | undefined) {
-  return key ? BOOKING_SERVICES.find((s) => s.key === key) : undefined;
+export function bookingChoices(def: IntakeService | undefined): {
+  label: string;
+  values: string[];
+} | null {
+  if (!def) return null;
+  if (def.options) {
+    return { label: def.multi ? 'النوع' : 'الباقة', values: def.options.map((o) => o.label) };
+  }
+  if (def.brandOptions) {
+    return { label: def.brandLabel ?? 'الماركة', values: [...def.brandOptions] };
+  }
+  return null;
 }
 
 /**
@@ -348,7 +353,7 @@ export function bookingServiceLabel(booking: {
   serviceSpec?: string | null;
   service?: { translations: { name: string }[] } | null;
 }): string | null {
-  const svc = bookingService(booking.serviceKey);
-  if (svc) return booking.serviceSpec ? `${svc.label} — ${booking.serviceSpec}` : svc.label;
+  const def = serviceDef(booking.serviceKey);
+  if (def) return booking.serviceSpec ? `${def.label} — ${booking.serviceSpec}` : def.label;
   return booking.service?.translations[0]?.name ?? null;
 }

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { PROTECTION_BRAND_SLUGS } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +39,7 @@ export default async function JobOrderDetailPage({
   const session = await requirePermission('workshop:read');
   const { id } = await params;
 
-  const [job, services] = await Promise.all([
+  const [job, services, brands] = await Promise.all([
     db.jobOrder.findUnique({
       where: { id },
       include: {
@@ -59,6 +60,18 @@ export default async function JobOrderDetailPage({
       orderBy: { sortOrder: 'asc' },
       include: {
         translations: { where: { locale: 'ar' }, select: { name: true } },
+      },
+    }),
+    // ماركات أفلام الحماية — تحمل الباقات وأسعارها
+    db.service.findMany({
+      where: { slug: { in: [...PROTECTION_BRAND_SLUGS] }, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        translations: { where: { locale: 'ar' }, select: { name: true } },
+        packages: {
+          where: { isActive: true },
+          include: { translations: { where: { locale: 'ar' }, select: { name: true } } },
+        },
       },
     }),
   ]);
@@ -198,7 +211,17 @@ export default async function JobOrderDetailPage({
           <CardHeader>
             <CardTitle>بنود الشغل — {formatKWD(totalValue)}</CardTitle>
             {canWrite && (
-              <JobItemForm jobOrderId={job.id} />
+              <JobItemForm
+                jobOrderId={job.id}
+                brands={brands.map((b) => ({
+                  id: b.id,
+                  name: b.translations[0]?.name ?? b.slug,
+                  packages: b.packages.map((p) => ({
+                    name: p.translations[0]?.name ?? '',
+                    price: toNumber(p.price),
+                  })),
+                }))}
+              />
             )}
           </CardHeader>
           <JobItems

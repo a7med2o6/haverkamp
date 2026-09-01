@@ -9,12 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { JOB_STATUS, toOptions } from '@/lib/labels';
 import { cn } from '@/lib/utils';
-import { INTAKE_SERVICES, intakeService } from '@/lib/intake';
+import {
+  GLASS_PARTS,
+  SERVICES,
+  TINT_GRADES,
+  serviceDef,
+  optionParts,
+} from '@/lib/intake';
 import {
   createInvoiceFromJob,
   deleteJobItem,
   issueWarranty,
-  saveJobItem,
+  addJobLine,
   setItemAssignees,
   setJobStatus,
   updateJobOrder,
@@ -54,40 +60,72 @@ export function JobStatusSelect({ id, status }: { id: string; status: string }) 
 
 const EMPTY_ITEM = {
   serviceKey: '',
-  label: '',
-  qty: '1',
-  unitPrice: '',
+  options: [] as string[],
+  brand: '',
+  brandName: '',
+  price: '',
+  grades: {} as Record<string, string>,
 };
 
 /**
- * إضافة بند مفرد بعد الاستلام — لتصحيح بيان التشغيل أو إضافة خدمة نُسيت.
+ * إضافة خدمة إلى أمر شغل قائم — لتصحيح بيان التشغيل أو خدمة نُسيت.
  *
- * الخدمات من كتالوج بيان التشغيل لا من جدول خدمات الموقع: الأخير يعرض
- * «حماية هافركامب» و«حماية كلايف» خدماتٍ مستقلّة — وهي ماركات لخدمة
- * واحدة — فيُضاف بند لا يطابق ما كُتب في بيان التشغيل.
- *
- * وأصناف المخزون ليست بنود شغل: «لفة فيلم ١٫٥٢م» مادّة تُستهلك في تنفيذ
- * الخدمة لا خدمة يطلبها العميل، ومكانها الفاتورة.
+ * الخيارات هنا هي خيارات بيان التشغيل نفسها: الباقة والماركة ودرجات
+ * العزل. لولا ذلك لأنتجت الشاشتان بندين مختلفي الشكل لنفس الخدمة —
+ * أحدهما «حماية البدي — بدي كامل» بقطعه، والآخر «حماية البدي» عارياً.
  */
-export function JobItemForm({ jobOrderId }: { jobOrderId: string }) {
+export function JobItemForm({
+  jobOrderId,
+  brands,
+}: {
+  jobOrderId: string;
+  brands: Array<{ id: string; name: string; packages: Array<{ name: string; price: number }> }>;
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(EMPTY_ITEM);
 
-  function pick(key: string) {
-    const svc = intakeService(key);
-    setValues((v) => ({ ...v, serviceKey: key, label: svc?.label ?? '' }));
+  const service = serviceDef(values.serviceKey);
+  const brand = brands.find((b) => b.id === values.brand);
+
+  function reset() {
+    setValues(EMPTY_ITEM);
   }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const parts = service?.glassParts
+      ? GLASS_PARTS.filter((p) => values.grades[p.key]).map((p) => ({
+          label: p.label,
+          spec: values.grades[p.key],
+          employeeIds: [],
+        }))
+      : service?.bodyParts
+        ? optionParts(service, values.options).map((p) => ({
+            label: p.label,
+            spec: p.spec,
+            employeeIds: [],
+          }))
+        : [];
+
     startTransition(async () => {
-      const res = await saveJobItem({ jobOrderId, ...values });
+      const res = await addJobLine({
+        jobOrderId,
+        line: {
+          key: values.serviceKey,
+          options: values.options,
+          brand: values.brand || null,
+          brandName: values.brandName || null,
+          price: values.price || 0,
+          parts,
+        },
+      });
 
       if (res.ok) {
         toast.success(res.message ?? 'تم');
-        setValues(EMPTY_ITEM);
+        reset();
         setOpen(false);
         router.refresh();
       } else {
@@ -106,25 +144,35 @@ export function JobItemForm({ jobOrderId }: { jobOrderId: string }) {
         <Modal
           open
           onClose={() => setOpen(false)}
-          title="إضافة بند لأمر الشغل"
+          title="إضافة خدمة لأمر الشغل"
           size="md"
           footer={
             <>
               <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
                 إلغاء
               </Button>
-              <Button type="submit" form="job-item-form" disabled={pending}>
+              <Button
+                type="submit"
+                form="job-item-form"
+                disabled={pending || !values.serviceKey}
+              >
                 {pending && <Loader2 className="animate-spin" />}
                 إضافة
               </Button>
             </>
           }
         >
-          <form id="job-item-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-            <Field label="الخدمة" className="sm:col-span-2">
-              <Select value={values.serviceKey} onChange={(e) => pick(e.target.value)}>
-                <option value="">— بند مخصّص —</option>
-                {INTAKE_SERVICES.map((s) => (
+          <form id="job-item-form" onSubmit={onSubmit} className="space-y-4">
+            <Field label="الخدمة">
+              <Select
+                value={values.serviceKey}
+                onChange={(e) =>
+                  // تغيير الخدمة يُسقط خياراتها: كلٌّ منها يخصّ خدمته
+                  setValues({ ...EMPTY_ITEM, serviceKey: e.target.value })
+                }
+              >
+                <option value="">— اختر الخدمة —</option>
+                {SERVICES.map((s) => (
                   <option key={s.key} value={s.key}>
                     {s.label}
                   </option>
@@ -132,39 +180,131 @@ export function JobItemForm({ jobOrderId }: { jobOrderId: string }) {
               </Select>
             </Field>
 
-            <Field label="وصف البند" className="sm:col-span-2">
-              <Input
-                value={values.label}
-                onChange={(e) => setValues((v) => ({ ...v, label: e.target.value }))}
-                required
-              />
-            </Field>
+            {service?.options && (
+              <Field label={service.multi ? 'الاختيارات' : 'الباقة'}>
+                <div className="flex flex-wrap gap-1.5">
+                  {service.options.map((o) => {
+                    const on = values.options.includes(o.key);
+                    return (
+                      <button
+                        key={o.key}
+                        type="button"
+                        onClick={() => {
+                          const next = service.multi
+                            ? on
+                              ? values.options.filter((x) => x !== o.key)
+                              : [...values.options, o.key]
+                            : [o.key];
+                          const pkg = brand?.packages.find((p) => p.name === o.packageName);
+                          setValues((v) => ({
+                            ...v,
+                            options: next,
+                            price: pkg?.price ? String(pkg.price) : v.price,
+                          }));
+                        }}
+                        className={cn(
+                          'rounded-full border px-3 py-1 text-[12px] font-medium transition-colors',
+                          on
+                            ? 'border-accent bg-accent/15 text-accent'
+                            : 'border-[var(--line)] text-[var(--text-1)] hover:border-accent'
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            )}
 
-            <Field label="الكمية">
+            {service?.needsBrand && (
+              <Field label="الماركة">
+                <Select
+                  value={values.brand}
+                  onChange={(e) => {
+                    const b = brands.find((x) => x.id === e.target.value);
+                    const opt = service.options?.find((o) => o.key === values.options[0]);
+                    const pkg = b?.packages.find((p) => p.name === opt?.packageName);
+                    setValues((v) => ({
+                      ...v,
+                      brand: e.target.value,
+                      price: pkg?.price ? String(pkg.price) : v.price,
+                    }));
+                  }}
+                >
+                  <option value="">— اختر الماركة —</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
+
+            {/* ماركة تُذكر بالاسم — أفلام العزل وحماية الجام */}
+            {service?.brandOptions && (
+              <Field label={service.brandLabel ?? 'الماركة'}>
+                <Select
+                  value={values.brandName}
+                  onChange={(e) => setValues((v) => ({ ...v, brandName: e.target.value }))}
+                >
+                  <option value="">— اختر —</option>
+                  {service.brandOptions.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            )}
+
+            {service?.glassParts && (
+              <Field label="درجة العزل لكل قطعة">
+                <div className="space-y-1.5">
+                  {GLASS_PARTS.map((p) => (
+                    <div
+                      key={p.key}
+                      className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--line)] px-2.5 py-1.5"
+                    >
+                      <span className="text-[12px] text-[var(--text-1)]">{p.label}</span>
+                      <Select
+                        value={values.grades[p.key] ?? ''}
+                        className="h-8 w-28 text-[12px]"
+                        onChange={(e) =>
+                          setValues((v) => ({
+                            ...v,
+                            grades: { ...v.grades, [p.key]: e.target.value },
+                          }))
+                        }
+                      >
+                        <option value="">بدون</option>
+                        {TINT_GRADES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {service?.bodyParts && optionParts(service, values.options).length > 0 && (
+              <p className="text-[11px] text-[var(--text-2)]">
+                {optionParts(service, values.options).length} قطعة تُنشأ مع البند
+              </p>
+            )}
+
+            <Field label="السعر (د.ك)" hint="اتركه صفراً إن كان ضمن الباقة">
               <Input
                 type="number"
-                step="0.01"
-                min={0.01}
-                value={values.qty}
-                onChange={(e) => setValues((v) => ({ ...v, qty: e.target.value }))}
-                dir="ltr"
-                className="tnum text-start"
-                required
-              />
-            </Field>
-
-            <Field
-              label="سعر الوحدة (د.ك)"
-            >
-              <Input
-                type="number"
+                min="0"
                 step="0.001"
-                min={0}
-                value={values.unitPrice}
-                onChange={(e) => setValues((v) => ({ ...v, unitPrice: e.target.value }))}
-                dir="ltr"
-                className="tnum text-start"
-                required
+                className="max-w-40"
+                value={values.price}
+                onChange={(e) => setValues((v) => ({ ...v, price: e.target.value }))}
               />
             </Field>
           </form>
@@ -294,13 +434,6 @@ export function EditJobOrderButton({
   );
 }
 
-/**
- * حذف بند من أمر الشغل.
- *
- * لم يعد معه تعليم «منجز»: الخدمة ذات القطع تنتهي بانتهاء قطعها لا
- * بعلامة مستقلّة قد تكذّبها، فبقيت الخانة على بعض البنود دون بعض —
- * وعلامةٌ نصفُ موجودة أسوأ من غيابها.
- */
 /**
  * حذف بند من أمر الشغل.
  *

@@ -63,6 +63,7 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/cms/gallery', label: 'معرض الصور', icon: 'Images', module: 'cms' },
       { href: '/dashboard/cms/testimonials', label: 'آراء العملاء', icon: 'MessageSquareQuote', module: 'cms' },
       { href: '/dashboard/cms/pages', label: 'الصفحات', icon: 'FileText', module: 'cms' },
+      { href: '/dashboard/competitions/winner-draw', label: 'مسابقة السحب', icon: 'Trophy', module: 'cms' },
       // آخر القائمة عمداً: المحتوى يُحرَّر من صفحاته، وهذه للحالات النادرة
       { href: '/dashboard/cms/translations', label: 'كل النصوص', icon: 'Languages', module: 'cms' },
     ],

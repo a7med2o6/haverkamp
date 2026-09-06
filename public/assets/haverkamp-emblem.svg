@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
+  <!-- Outer Square Frame with Hole -->
+  <path fill-rule="evenodd" d="M335 168 H1713 V1546 H335 Z M612 445 V1269 H1436 V445 Z" />
+  <!-- Inner Solid Square -->
+  <rect x="726" y="559" width="596" height="596" />
+  <!-- Bottom Stem -->
+  <rect x="833" y="1546" width="383" height="334" />
+</svg>

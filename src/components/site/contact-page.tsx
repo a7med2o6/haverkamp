@@ -4,6 +4,7 @@ import { getContactPage, getDictionary, type Locale } from '@/lib/site-data';
 import { Rich } from './rich';
 import { SiteNav } from './nav';
 import { OpeningHours } from './opening-hours';
+import { SiteFooter } from './footer';
 
 function Arrow() {
   return (
@@ -200,7 +201,13 @@ export async function ContactPageView({ locale }: { locale: Locale }) {
           <div className="map-address">{map.address}</div>
         </div>
 
-        <div className="footer-note">{t('footer.copy')}</div>
+        <SiteFooter
+          t={t}
+          locale={locale}
+          phone={tiles.phone.value}
+          whatsapp={tiles.whatsapp.value}
+          instagram={tiles.instagram.value}
+        />
       </main>
     </>
   );

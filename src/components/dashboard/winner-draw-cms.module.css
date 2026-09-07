@@ -1,0 +1,764 @@
+/* Winner Draw CMS Module Styles - Compact Arabic RTL Dashboard Workspace */
+
+.workspace {
+  --mark-violet: var(--color-violet);
+  --mark-warn: var(--color-warn);
+  --mark-ok: var(--color-ok);
+  --mark-danger: var(--color-danger);
+  direction: rtl;
+  text-align: right;
+  font-family: var(--font-sans);
+  color: var(--text-0);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.workspace :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.workspace input { min-width: 0; }
+
+@media (pointer: coarse) {
+  .workspace :is(button, input, select) { min-height: 44px; }
+}
+
+/* Header Section */
+.headerCard {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.875rem;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+.headerIconBox {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--mark-warn) 15%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-warn) 30%, transparent);
+  color: var(--mark-warn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.headerHeading {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--text-0);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.headerSubheading {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  margin-top: 0.125rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.publicLinkBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.875rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 30%, transparent);
+  color: var(--color-accent);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.publicLinkBtn:hover {
+  background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+}
+
+.readOnlyTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--mark-warn) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-warn) 30%, transparent);
+  color: var(--mark-warn);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statusToast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  max-width: 100%;
+}
+
+.statusSuccess {
+  background: color-mix(in oklab, var(--mark-ok) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-ok) 30%, transparent);
+  color: var(--mark-ok);
+}
+
+.statusError {
+  background: color-mix(in oklab, var(--mark-danger) 12%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-danger) 30%, transparent);
+  color: var(--mark-danger);
+}
+
+/* Mode Switcher Banner */
+.modeCard {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.modeLabelGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.modeTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.modeBadgePrize {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--mark-violet) 18%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-violet) 35%, transparent);
+  color: var(--mark-violet);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.modeBadgeCustomer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--mark-accent) 18%, transparent);
+  border: 1px solid color-mix(in oklab, var(--mark-accent) 35%, transparent);
+  color: var(--mark-accent);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+.modeBtnGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.modeBtnActivePrize {
+  background: color-mix(in oklab, var(--mark-violet) 85%, #000);
+  color: #ffffff;
+  border-color: var(--mark-violet);
+}
+
+.modeBtnActiveCustomer {
+  background: color-mix(in oklab, var(--color-accent) 85%, #000);
+  color: #ffffff;
+  border-color: var(--color-accent);
+}
+
+.modeBtnInactive {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border-color: var(--line);
+}
+
+.modeBtnInactive:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text-0);
+}
+
+.modeBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tabs Bar */
+.tabsNav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.84375rem;
+  font-weight: 700;
+  color: var(--text-2);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: var(--text-0);
+}
+
+.tabBtnActivePrize {
+  color: var(--mark-violet);
+  border-bottom-color: var(--mark-violet);
+}
+
+.tabBtnActiveCustomer {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.tabBtnActiveSettings {
+  color: var(--mark-warn);
+  border-bottom-color: var(--mark-warn);
+}
+
+/* Main Grid Layout - Responsive Order & Min Width */
+.mainGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .mainGrid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+.contentArea {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.previewSidebar {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Mobile Preview appears FIRST above editor so user doesn't scroll past table */
+@media (max-width: 1023px) {
+  .previewSidebar {
+    order: -1;
+  }
+}
+
+.stickyPreviewCard {
+  position: relative;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .stickyPreviewCard {
+    position: sticky;
+    top: 1.25rem;
+  }
+}
+
+.previewHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.previewTitle {
+  font-size: 0.84375rem;
+  font-weight: 800;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.previewMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.previewCanvasWrapper {
+  width: 100%;
+  max-width: 280px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-0);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-strong);
+  padding: 0.375rem;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.previewCanvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.previewNote {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Card Containers */
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--text-0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.badgeCount {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--surface-3);
+  color: var(--color-accent);
+}
+
+/* Input Fields & Form Controls */
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.input {
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  font-size: 0.84375rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  font-size: 0.84375rem;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimary {
+  background: var(--color-accent);
+  color: var(--accent-ink);
+}
+
+.btnPrimary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btnViolet {
+  background: var(--mark-violet);
+  color: #ffffff;
+}
+
+.btnViolet:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btnSecondary {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text-0);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: var(--surface-3);
+}
+
+.btnDanger {
+  background: color-mix(in oklab, var(--mark-danger) 15%, transparent);
+  border-color: color-mix(in oklab, var(--mark-danger) 30%, transparent);
+  color: var(--mark-danger);
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--mark-danger) 25%, transparent);
+}
+
+/* Prize Table Responsive Containment */
+.tableContainer {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  box-sizing: border-box;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+  min-width: 520px;
+}
+
+.th {
+  padding: 0.5rem 0.625rem;
+  font-weight: 800;
+  color: var(--text-2);
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.td {
+  padding: 0.4375rem 0.625rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.tr:last-child .td {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background: var(--glass-strong);
+}
+
+.prizeNameInput {
+  width: 100%;
+  min-width: 120px;
+  padding: 0.3125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.prizeNameInput:focus {
+  outline: none;
+  border-color: var(--mark-violet);
+}
+
+.prizeNameInputInvalid {
+  border-color: var(--mark-danger);
+  background: color-mix(in oklab, var(--mark-danger) 10%, var(--surface-1));
+}
+
+.weightControls {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 160px;
+  flex-wrap: wrap;
+}
+
+.weightNumberInput {
+  width: 50px;
+  padding: 0.25rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-align: center;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.weightNumberInput:focus {
+  outline: none;
+  border-color: var(--mark-violet);
+}
+
+.rangeInput {
+  flex: 1;
+  min-width: 60px;
+  accent-color: var(--mark-violet);
+  cursor: pointer;
+}
+
+.rangeInput:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.probBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-family: inherit;
+  background: color-mix(in oklab, var(--mark-violet) 15%, transparent);
+  color: var(--mark-violet);
+  border: 1px solid color-mix(in oklab, var(--mark-violet) 30%, transparent);
+  white-space: nowrap;
+}
+
+.probBadgeEqual {
+  background: color-mix(in oklab, var(--mark-warn) 15%, transparent);
+  color: var(--mark-warn);
+  border: 1px solid color-mix(in oklab, var(--mark-warn) 30%, transparent);
+}
+
+/* Font Size Control Card */
+.fontSizeCard {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.fontSizeControlsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.fontSizeSliderGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 160px;
+}
+
+.fontSizeNumberInput {
+  width: 54px;
+  padding: 0.25rem 0.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  font-size: 0.84375rem;
+  font-weight: 800;
+  text-align: center;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.fontSizeNumberInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.fontSizeValueDisplay {
+  font-size: 0.84375rem;
+  font-weight: 800;
+  color: var(--color-accent);
+  font-family: inherit;
+  min-width: 44px;
+}
+
+/* Explanation / Help Box */
+.helpBox {
+  background: color-mix(in oklab, var(--color-accent) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 20%, transparent);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--text-1);
+  line-height: 1.5;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.helpIcon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}

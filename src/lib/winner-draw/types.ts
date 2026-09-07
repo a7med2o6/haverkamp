@@ -24,6 +24,7 @@ export interface WinnerDrawState {
   celebrationStyle: CelebrationStyle;
   celebrationDuration: CelebrationDuration;
   victorySound: VictorySound;
+  wheelFontSize: number;
 }
 
 export const PRESETS = {
@@ -78,6 +79,7 @@ export const DEFAULT_WINNER_DRAW_STATE: WinnerDrawState = {
   celebrationStyle: 'fireworks',
   celebrationDuration: '10000',
   victorySound: 'fanfare',
+  wheelFontSize: 18,
 };
 
 export const STORAGE_KEYS = {
@@ -93,6 +95,7 @@ function cloneDefaultState(): WinnerDrawState {
     customers: [...DEFAULT_WINNER_DRAW_STATE.customers],
     prizes: [...DEFAULT_WINNER_DRAW_STATE.prizes],
     prizeWeights: [...DEFAULT_WINNER_DRAW_STATE.prizeWeights],
+    wheelFontSize: DEFAULT_WINNER_DRAW_STATE.wheelFontSize,
   };
 }
 
@@ -110,16 +113,29 @@ export function normalizeWinnerDrawState(raw: unknown): WinnerDrawState {
     ? obj.customers.map((item) => String(item).trim()).filter(Boolean)
     : [...DEFAULT_WINNER_DRAW_STATE.customers];
 
-  const prizes = Array.isArray(obj.prizes)
-    ? obj.prizes.map((item) => String(item).trim()).filter(Boolean)
-    : [...DEFAULT_WINNER_DRAW_STATE.prizes];
-
-  // Defensive weight normalization matching prizes length
+  // Pairwise prize & weight normalization by original index before filtering blank names
+  const rawPrizes = Array.isArray(obj.prizes) ? obj.prizes : null;
   const rawWeights = Array.isArray(obj.prizeWeights) ? obj.prizeWeights : [];
-  const prizeWeights = prizes.map((_, i) => {
-    const w = Number(rawWeights[i]);
-    return !Number.isFinite(w) || w < 0 ? 10 : w;
-  });
+
+  let prizes: string[];
+  let prizeWeights: number[];
+
+  if (rawPrizes) {
+    const validPairs: { prize: string; weight: number }[] = [];
+    for (let i = 0; i < rawPrizes.length; i++) {
+      const name = String(rawPrizes[i] ?? '').trim();
+      if (name.length > 0) {
+        const w = Number(rawWeights[i]);
+        const validW = Number.isFinite(w) && w >= 0 ? w : 10;
+        validPairs.push({ prize: name, weight: validW });
+      }
+    }
+    prizes = validPairs.map((p) => p.prize);
+    prizeWeights = validPairs.map((p) => p.weight);
+  } else {
+    prizes = [...DEFAULT_WINNER_DRAW_STATE.prizes];
+    prizeWeights = [...DEFAULT_WINNER_DRAW_STATE.prizeWeights];
+  }
 
   const duration = typeof obj.duration === 'number' && Number.isFinite(obj.duration) && obj.duration >= 3 && obj.duration <= 30
     ? Math.round(obj.duration)
@@ -128,6 +144,11 @@ export function normalizeWinnerDrawState(raw: unknown): WinnerDrawState {
   const rotations = typeof obj.rotations === 'number' && Number.isFinite(obj.rotations) && obj.rotations >= 3 && obj.rotations <= 20
     ? Math.round(obj.rotations)
     : DEFAULT_WINNER_DRAW_STATE.rotations;
+
+  const rawFont = typeof obj.wheelFontSize === 'number' ? obj.wheelFontSize : NaN;
+  const wheelFontSize = Number.isFinite(rawFont)
+    ? Math.max(10, Math.min(32, Math.round(rawFont)))
+    : DEFAULT_WINNER_DRAW_STATE.wheelFontSize;
 
   const styleMode: WheelStyleMode =
     obj.styleMode === 'duotone' || obj.styleMode === 'pastel' || obj.styleMode === 'vibrant'
@@ -174,6 +195,7 @@ export function normalizeWinnerDrawState(raw: unknown): WinnerDrawState {
     celebrationStyle,
     celebrationDuration,
     victorySound,
+    wheelFontSize,
   };
 }
 
@@ -236,7 +258,7 @@ function getRandomUnit(): number {
 
 /**
  * Defensive weighted random selection.
- * Safely computes weighted random index bounded within [0, prizes.length - 1].
+ * Half-open positive weight interval selection ensures zero-weight items NEVER win when positive weights exist.
  */
 export function getWeightedRandomIndex(prizes: string[], weights: number[]): number {
   if (!prizes || prizes.length === 0) return 0;
@@ -251,13 +273,20 @@ export function getWeightedRandomIndex(prizes: string[], weights: number[]): num
     return getRandomIndex(prizes.length);
   }
 
-  let random = getRandomUnit() * totalWeight;
+  const target = getRandomUnit() * totalWeight;
+  let cumulative = 0;
+  let lastPositiveIndex = 0;
+
   for (let i = 0; i < normalizedWeights.length; i++) {
-    random -= normalizedWeights[i];
-    if (random <= 0) {
-      return Math.min(i, prizes.length - 1);
+    const w = normalizedWeights[i];
+    if (w > 0) {
+      lastPositiveIndex = i;
+      cumulative += w;
+      if (target < cumulative) {
+        return Math.min(i, prizes.length - 1);
+      }
     }
   }
 
-  return prizes.length - 1;
+  return Math.min(lastPositiveIndex, prizes.length - 1);
 }

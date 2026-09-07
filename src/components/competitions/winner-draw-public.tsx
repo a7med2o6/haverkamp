@@ -12,9 +12,7 @@ import {
   Gift,
   ArrowRight,
   ArrowLeft,
-  Download,
   X,
-  Sparkles,
   Users,
   Trash2,
 } from 'lucide-react';
@@ -388,6 +386,7 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
       items: activeItems,
       duration: state.duration * 1000,
       styleMode: state.styleMode,
+      wheelFontSize: state.wheelFontSize,
       onWin: (winner, index) => handleWin(winner, index),
     });
     wheelRef.current = wheel;
@@ -399,13 +398,14 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update wheel items/palette/duration when state changes
+  // Update wheel items/palette/duration/fontSize when state changes
   useEffect(() => {
     if (!wheelRef.current) return;
     wheelRef.current.setItems(activeItems);
     wheelRef.current.setStyleMode(state.styleMode);
+    wheelRef.current.setWheelFontSize(state.wheelFontSize ?? 18);
     wheelRef.current.duration = state.duration * 1000;
-  }, [activeItems, state.styleMode, state.duration]);
+  }, [activeItems, state.styleMode, state.duration, state.wheelFontSize]);
 
   // Fullscreen listener & cleanup
   useEffect(() => {

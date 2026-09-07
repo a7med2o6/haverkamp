@@ -35,6 +35,7 @@ export interface WheelRendererOptions {
   items?: string[];
   duration?: number; // ms
   styleMode?: string;
+  wheelFontSize?: number;
   onWin?: (winner: string, index: number) => void;
   onTick?: () => void;
 }
@@ -45,6 +46,7 @@ export class WheelRenderer {
   public items: string[];
   private palette: WheelColor[];
   private styleMode: string;
+  public wheelFontSize: number;
 
   public currentAngle = 0;
   public isSpinning = false;
@@ -75,6 +77,7 @@ export class WheelRenderer {
     this.items = options.items || [];
     this.styleMode = options.styleMode || 'vibrant';
     this.palette = PALETTES[this.styleMode] || PALETTES.vibrant;
+    this.wheelFontSize = typeof options.wheelFontSize === 'number' && Number.isFinite(options.wheelFontSize) ? options.wheelFontSize : 18;
     this.duration = options.duration || 5000;
     this.onWin = options.onWin || (() => {});
     this.onTick = options.onTick || (() => {});
@@ -137,6 +140,13 @@ export class WheelRenderer {
     this.draw();
   }
 
+  public setWheelFontSize(size: number) {
+    if (typeof size === 'number' && Number.isFinite(size) && size >= 10 && size <= 32) {
+      this.wheelFontSize = size;
+      this.draw();
+    }
+  }
+
   public resize() {
     const parent = this.canvas.parentElement;
     if (!parent) return;
@@ -145,7 +155,7 @@ export class WheelRenderer {
     const availableWidth = rect.width || 300;
     const availableHeight = rect.height || 300;
 
-    const size = Math.max(240, Math.floor(Math.min(availableWidth, availableHeight)));
+    const size = Math.max(120, Math.floor(Math.min(availableWidth, availableHeight)));
     const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
 
     this.canvas.width = size * dpr;
@@ -225,13 +235,10 @@ export class WheelRenderer {
       const sliceMidAngle = startAngle + sliceAngle / 2;
       ctx.rotate(sliceMidAngle);
 
-      const isMobile = displaySize < 420;
-      const maxFont = isMobile ? 15 : 18;
-      const minFont = isMobile ? 10 : 12;
-
-      const fontScaleFactor = Math.PI / Math.max(items.length, 4);
-      const calculatedFont = Math.floor(radius * fontScaleFactor * 0.52);
-      const fontSize = Math.max(minFont, Math.min(maxFont, calculatedFont));
+      const baseFont = typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
+        ? Math.max(10, Math.min(32, this.wheelFontSize))
+        : 18;
+      const fontSize = Math.max(7, Math.round(baseFont * (displaySize / 480)));
 
       ctx.font = `800 ${fontSize}px "Tajawal", "Readex Pro", sans-serif`;
 

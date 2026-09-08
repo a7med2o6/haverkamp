@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Trophy, Timer, ArrowRight, ArrowLeft, Sparkles, Award } from 'lucide-react';
+import { Trophy, Timer, ArrowRight, ArrowLeft, Sparkles } from 'lucide-react';
 import { getDictionary, getSettings, type Locale } from '@/lib/site-data';
 import { getCompetitions } from '@/lib/competitions';
 import { SiteNav } from '@/components/site/nav';
@@ -16,16 +16,24 @@ export async function CompetitionsDirectoryView({ locale }: { locale: Locale }) 
     ? 'اختر المسابقة المطلوبة للانتقال مباشرة إلى شاشة العرض التفاعلية داخل الفرع'
     : 'Choose a competition to jump directly to its branch display experience';
   const badgeLabel = isRtl ? 'شاشة الفرع التفاعلية' : 'Interactive Branch Display';
+  const navLabel = isRtl
+    ? 'المسابقات التفاعلية المعتمدة لعروض وفعاليات هافركامب الكويت 🇰🇼'
+    : 'Approved interactive competitions for Haverkamp Kuwait events 🇰🇼';
 
   return (
-    <>
+    <div className="hk-comp-shell">
       <div className="bg-stage" aria-hidden="true">
         <div className="orb o1" />
         <div className="orb o2" />
         <div className="orb o3" />
       </div>
 
-      <SiteNav t={t} locale={locale} />
+      <SiteNav
+        t={t}
+        locale={locale}
+        contextLabel={navLabel}
+        alternateHref={isRtl ? '/en/competitions' : '/competitions'}
+      />
 
       <main className="hk-comp-page">
         <div className="hk-comp-container">
@@ -62,11 +70,8 @@ export async function CompetitionsDirectoryView({ locale }: { locale: Locale }) 
                   {/* Interactive Card Visual Preview */}
                   <div className="hk-comp-card-preview" aria-hidden="true">
                     {comp.previewType === 'wheel' ? (
-                      <div className="relative flex items-center justify-center w-full h-full">
-                        <div className="w-24 h-24 rounded-full border-4 border-dashed border-[var(--hk-comp-accent-blue)] opacity-80 animate-spin-slow flex items-center justify-center">
-                          <Award className="size-8 text-[var(--hk-comp-accent-gold)]" />
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-[rgba(5,9,18,0.8)] to-transparent pointer-events-none" />
+                      <div className="hk-comp-wheel">
+                        <div className="hk-comp-wheel-disc animate-spin-slow" />
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center w-full h-full gap-1">
@@ -103,6 +108,6 @@ export async function CompetitionsDirectoryView({ locale }: { locale: Locale }) 
           instagram={setting('social.instagram', 'https://instagram.com/haverkampkw')}
         />
       </main>
-    </>
+    </div>
   );
 }

@@ -53,8 +53,65 @@
 }
 
 /* Base Directory Page Layout */
-.hk-comp-page {
+.hk-comp-shell {
+  --bg-0: #050912;
+  --bg-1: #0a1424;
+  --bg-2: #0d1f33;
+  --ink-0: var(--hk-comp-text-primary);
+  --ink-1: var(--hk-comp-text-secondary);
+  --ink-2: #7f93af;
+  --accent: var(--hk-comp-accent-blue);
+  --glass-tint: rgba(255, 255, 255, 0.035);
+  --glass-tint-strong: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-bright: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 30px 80px -20px rgba(0, 0, 0, 0.55),
+    0 8px 24px -8px rgba(0, 0, 0, 0.35);
   min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--hk-comp-bg-deep);
+  color: var(--hk-comp-text-primary);
+  color-scheme: dark;
+}
+
+.hk-comp-shell .bg-stage::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(255, 255, 255, 0.08), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%, rgba(255, 255, 255, 0.05), transparent 60%),
+    linear-gradient(135deg, #050505 0%, #0e0e0e 40%, #0a0a0a 60%, #050505 100%);
+  background-size: 200% 200%, 200% 200%, 200% 200%;
+}
+
+.hk-comp-shell .nav-brand .brand-mark {
+  filter: invert(1) brightness(1.4) hue-rotate(180deg);
+}
+
+.hk-comp-shell .nav-contextual {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  max-width: 1200px;
+  min-height: 60px;
+  padding: 10px 14px 10px 18px;
+}
+
+.hk-comp-shell .nav-contextual .nav-context {
+  max-width: 52rem;
+  margin: 0 auto;
+  color: var(--hk-comp-text-primary);
+  font-size: clamp(0.8125rem, 1.2vw, 1rem);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.hk-comp-shell .nav-contextual .lang-btn {
+  margin-inline-start: 0;
+}
+
+.hk-comp-page {
   background-color: var(--hk-comp-bg-deep);
   color: var(--hk-comp-text-primary);
   display: flex;
@@ -69,7 +126,38 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
-  flex: 1;
+}
+
+/* The shared footer follows the page theme by default. This directory is
+   intentionally always dark, so keep its navigation and footer tokens dark
+   even when the visitor has stored the light site theme. */
+.hk-comp-page > .footer {
+  width: min(calc(100% - 3rem), 1200px);
+  margin: 0 auto 1.5rem;
+  padding: 2rem 0 1.5rem;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.hk-comp-shell .footer-group h2 {
+  color: var(--hk-comp-text-primary);
+  font-size: 0.875rem;
+}
+
+.hk-comp-shell .footer-group a,
+.hk-comp-shell .footer-meta .copy,
+.hk-comp-shell .footer a.staff-login {
+  color: var(--hk-comp-text-secondary);
+}
+
+.hk-comp-shell .footer-group a.footer-whatsapp {
+  color: #32d779;
+}
+
+.hk-comp-shell .footer-group a:hover,
+.hk-comp-shell .footer-group a:focus-visible,
+.hk-comp-shell .footer a.staff-login:hover,
+.hk-comp-shell .footer a.staff-login:focus-visible {
+  color: var(--hk-comp-accent-blue);
 }
 
 /* Header & Intro Section */
@@ -215,6 +303,56 @@
   margin-bottom: 1.75rem;
   position: relative;
   overflow: hidden;
+}
+
+.hk-comp-wheel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 7rem;
+  aspect-ratio: 1;
+}
+
+.hk-comp-wheel::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: -0.2rem;
+  width: 0;
+  height: 0;
+  border-inline: 0.45rem solid transparent;
+  border-top: 0.8rem solid var(--hk-comp-text-primary);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45));
+}
+
+.hk-comp-wheel-disc {
+  position: relative;
+  width: 6.5rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(
+    #38bdf8 0deg 45deg,
+    #8b5cf6 45deg 90deg,
+    #f43f5e 90deg 135deg,
+    #f59e0b 135deg 180deg,
+    #fbbf24 180deg 225deg,
+    #10b981 225deg 270deg,
+    #14b8a6 270deg 315deg,
+    #3b82f6 315deg 360deg
+  );
+  box-shadow:
+    0 12px 28px -12px rgba(56, 189, 248, 0.55),
+    inset 0 0 0 5px rgba(255, 255, 255, 0.12);
+  will-change: transform;
+}
+
+.hk-comp-wheel-disc::after {
+  content: '';
+  position: absolute;
+  inset: 39%;
+  border-radius: 50%;
+  background: var(--hk-comp-bg-deep);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
 /* Card Action Launch Button */
@@ -419,12 +557,42 @@
 }
 
 @media (max-width: 640px) {
+  .hk-comp-shell .nav-wrap {
+    padding-inline: 12px;
+  }
+
+  .hk-comp-shell .nav-contextual {
+    gap: 0.625rem;
+    min-height: 58px;
+    padding: 8px 10px;
+    border-radius: 1rem;
+  }
+
+  .hk-comp-shell .nav-contextual .nav-brand .brand-mark {
+    height: 20px;
+  }
+
+  .hk-comp-shell .nav-contextual .nav-context {
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .hk-comp-shell .nav-contextual .lang-btn {
+    width: 34px;
+    height: 32px;
+  }
+
   .hk-comp-page {
-    padding-top: 4.25rem;
+    padding-top: 5rem;
   }
 
   .hk-comp-container {
     padding: 1.5rem 1rem 3rem;
+  }
+
+  .hk-comp-page > .footer {
+    width: calc(100% - 2rem);
+    margin-bottom: 1rem;
   }
 
   .hk-comp-header {

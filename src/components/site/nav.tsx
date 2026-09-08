@@ -18,10 +18,14 @@ export function SiteNav({
   t,
   locale,
   links,
+  contextLabel,
+  alternateHref,
 }: {
   t: Dictionary;
   locale: Locale;
   links?: NavLink[];
+  contextLabel?: string;
+  alternateHref?: string;
 }) {
   const home = locale === 'en' ? '/en' : '/';
   const other = locale === 'en' ? '/' : '/en';
@@ -37,7 +41,7 @@ export function SiteNav({
 
   return (
     <div className="nav-wrap">
-      <nav className="nav glass">
+      <nav className={`nav glass${contextLabel ? ' nav-contextual' : ''}`}>
         <div className="nav-brand">
           <Link href={home}>
             <Image
@@ -51,23 +55,29 @@ export function SiteNav({
           </Link>
         </div>
 
-        <div className="nav-links">
-          {items
-            .filter((l) => l.label)
-            .map((l) => (
-              <a key={l.href} href={l.href}>
-                {l.label}
-              </a>
-            ))}
-        </div>
+        {contextLabel ? (
+          <p className="nav-context">{contextLabel}</p>
+        ) : (
+          <div className="nav-links">
+            {items
+              .filter((l) => l.label)
+              .map((l) => (
+                <a key={l.href} href={l.href}>
+                  {l.label}
+                </a>
+              ))}
+          </div>
+        )}
 
-        <a href="/contactus.html" className="nav-cta">
-          {t('nav.cta')}
-        </a>
+        {!contextLabel && (
+          <a href="/contactus.html" className="nav-cta">
+            {t('nav.cta')}
+          </a>
+        )}
 
         {/* تبديل اللغة صار تنقّلاً بين مسارين ليُفهرَس كلٌّ منهما */}
         <Link
-          href={other}
+          href={alternateHref ?? other}
           className="lang-btn"
           aria-label={locale === 'ar' ? 'English' : 'العربية'}
           title={locale === 'ar' ? 'English' : 'العربية'}
@@ -75,13 +85,15 @@ export function SiteNav({
           {locale === 'ar' ? '🇬🇧' : '🇰🇼'}
         </Link>
 
-        <button className="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false">
-          <span />
-          <span />
-          <span />
-        </button>
+        {!contextLabel && (
+          <button className="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false">
+            <span />
+            <span />
+            <span />
+          </button>
+        )}
       </nav>
-      <div className="nav-drawer" id="nav-drawer" />
+      {!contextLabel && <div className="nav-drawer" id="nav-drawer" />}
     </div>
   );
 }

@@ -20,7 +20,12 @@ import { soundManager } from '@/lib/winner-draw/sound';
 import { normalizeBestDiff } from '@/lib/winner-draw/types';
 
 const TARGET_TIME = 10.0; // 10.000 seconds
+const TARGET_TIME_LABEL = TARGET_TIME.toFixed(3);
 const BEST_ATTEMPT_STORAGE_KEY = 'haverkamp_stop_at_10_best_diff_v1';
+
+function isExactDisplayedTarget(seconds: number) {
+  return seconds.toFixed(3) === TARGET_TIME_LABEL;
+}
 
 type GameState = 'idle' | 'running' | 'stopped';
 
@@ -88,6 +93,7 @@ export function StopAt10GameView({ locale }: { locale: Locale }) {
 
     const diff = Math.abs(finalElapsed - TARGET_TIME);
     const signed = finalElapsed - TARGET_TIME;
+    const isPerfectHit = isExactDisplayedTarget(finalElapsed);
 
     // Polite screen reader announcement on stop
     const announcementText = isRtl
@@ -102,7 +108,7 @@ export function StopAt10GameView({ locale }: { locale: Locale }) {
       } catch {}
     }
 
-    if (diff <= 0.05) {
+    if (isPerfectHit) {
       soundManager.playWinFanfare('fanfare');
       if (
         celebrationCanvasRef.current &&
@@ -151,6 +157,7 @@ export function StopAt10GameView({ locale }: { locale: Locale }) {
 
   const absDiff = capturedTime !== null ? Math.abs(capturedTime - TARGET_TIME) : null;
   const signedDiff = capturedTime !== null ? capturedTime - TARGET_TIME : null;
+  const isPerfectHit = capturedTime !== null && isExactDisplayedTarget(capturedTime);
 
   return (
     <div className="hk-game-view">
@@ -248,10 +255,10 @@ export function StopAt10GameView({ locale }: { locale: Locale }) {
               <div className="text-sm font-semibold text-slate-300 mt-2">
                 {isRtl ? 'الفرق المطلق:' : 'Absolute difference:'} {absDiff.toFixed(3)}s
               </div>
-              {absDiff <= 0.05 && (
+              {isPerfectHit && (
                 <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-extrabold">
                   <Target className="size-3.5" />
-                  <span>{isRtl ? 'دقة فائقة استثنائية!' : 'Exceptional Precision!'}</span>
+                  <span>{isRtl ? '10.000 بالضبط!' : 'Exact 10.000!'}</span>
                 </div>
               )}
             </div>

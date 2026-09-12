@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
 import { dateOnlyFromInput } from '@/lib/utils';
+import { openWashMonthRecords } from './month-service';
 
 const dateSchema = z
   .string()
@@ -33,6 +34,11 @@ const subscriptionFields = {
 
 const createSchema = z.object(subscriptionFields);
 const updateSchema = z.object({ id: z.string().min(1), ...subscriptionFields });
+
+const openMonthSchema = z.object({
+  year: z.number().int().min(2000, 'السنة غير صالحة').max(2100, 'السنة غير صالحة'),
+  month: z.number().int().min(1, 'الشهر غير صالح').max(12, 'الشهر غير صالح'),
+});
 
 async function validateReferences({
   customerId,
@@ -140,5 +146,22 @@ export const updateWashSubscription = action({
       revalidatePath(`/dashboard/customers/${before.customerId}`);
     }
     return { id: updated.id, message: `تم تحديث اشتراك الغسيل ${updated.code}` };
+  },
+});
+
+export const openWashMonth = action({
+  permission: 'wash:write',
+  schema: openMonthSchema,
+  audit: { entity: 'WashSubscriptionPeriod', action: 'OPEN' },
+  handler: async ({ year, month }) => {
+    const result = await openWashMonthRecords(year, month);
+
+    revalidatePath('/dashboard/wash');
+    revalidatePath('/dashboard/wash/billing');
+
+    return {
+      message: `تم فتح ${result.created} فترة، و${result.alreadyOpen} كانت مفتوحة مسبقاً`,
+      data: result,
+    };
   },
 });

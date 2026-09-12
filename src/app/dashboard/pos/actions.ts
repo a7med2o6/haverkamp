@@ -5,10 +5,39 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString } from '@/lib/action-utils';
+import type { Prisma } from '@/generated/prisma/client';
+import { todayDateOnly, toNumber } from '@/lib/utils';
 
 /** يقرّب إلى 3 خانات عشرية (فلس) لتفادي أخطاء الفاصلة العائمة */
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
+}
+
+async function makeSubscriptionPeriodEligible(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+  eligibleAt: Date
+) {
+  const period = await tx.washSubscriptionPeriod.findUnique({
+    where: { orderId },
+    select: { id: true },
+  });
+  if (!period) return;
+
+  const updated = await tx.washSubscriptionPeriod.updateMany({
+    where: { id: period.id, status: 'DUE' },
+    data: { status: 'ELIGIBLE', eligibleAt },
+  });
+  if (updated.count === 0) return;
+
+  await tx.washVisit.updateMany({
+    where: {
+      periodId: period.id,
+      status: 'BLOCKED',
+      scheduledDate: { gte: todayDateOnly() },
+    },
+    data: { status: 'PLANNED', skipReason: null },
+  });
 }
 
 const itemSchema = z.object({
@@ -276,6 +305,7 @@ export const setOrderDiscount = action({
         taxAmount: true,
         paidAmount: true,
         status: true,
+        channel: true,
         number: true,
         jobOrderId: true,
         customerId: true,
@@ -287,23 +317,30 @@ export const setOrderDiscount = action({
     }
 
     const discount = fils(discountAmount);
-    const subtotal = Number(order.subtotal);
+    const subtotal = toNumber(order.subtotal);
     if (discount > subtotal) throw new AppError('الخصم أكبر من قيمة الفاتورة');
 
-    const total = fils(subtotal - discount + Number(order.taxAmount));
-    const paid = Number(order.paidAmount);
+    const total = fils(subtotal - discount + toNumber(order.taxAmount));
+    const paid = toNumber(order.paidAmount);
     if (total < paid) {
       throw new AppError(`لا يمكن أن يقل الإجمالي عن المحصّل — ${paid.toFixed(3)} د.ك`);
     }
 
-    await db.order.update({
-      where: { id: orderId },
-      data: {
-        discountAmount: discount,
-        discountNote,
-        total,
-        status: paid <= 0 ? 'DRAFT' : paid >= total ? 'COMPLETED' : 'PARTIAL',
-      },
+    const settled = paid >= total;
+    await db.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          discountAmount: discount,
+          discountNote,
+          total,
+          status: settled ? 'COMPLETED' : paid > 0 ? 'PARTIAL' : 'DRAFT',
+        },
+      });
+
+      if (order.channel === 'SUBSCRIPTION' && settled) {
+        await makeSubscriptionPeriodEligible(tx, orderId, new Date());
+      }
     });
 
     /*
@@ -316,6 +353,8 @@ export const setOrderDiscount = action({
     revalidatePath('/dashboard/job-orders');
     if (order.jobOrderId) revalidatePath(`/dashboard/job-orders/${order.jobOrderId}`);
     if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
+    revalidatePath('/dashboard/wash');
+    revalidatePath('/dashboard/wash/billing');
     revalidatePath('/dashboard');
 
     return {
@@ -345,6 +384,7 @@ export const collectPayment = action({
         total: true,
         paidAmount: true,
         status: true,
+        channel: true,
         number: true,
         jobOrderId: true,
         customerId: true,
@@ -354,16 +394,24 @@ export const collectPayment = action({
     if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
       throw new AppError('لا يمكن التحصيل على فاتورة ملغاة أو مرتجعة');
     }
+    if (order.channel === 'SUBSCRIPTION' && method === 'CREDIT') {
+      /*
+        الآجل سيجعل الفاتورة مسدّدة ويفتح خط السير بلا دخول مال فعلي،
+        فيكسر قاعدة الدفع المسبق بصمت؛ لذلك لا يبدأ الاشتراك إلا بدفع حقيقي.
+      */
+      throw new AppError('اشتراك الغسيل يجب أن يُدفع بوسيلة دفع فعلية قبل بدء الخدمة');
+    }
 
-    const remaining = fils(Number(order.total) - Number(order.paidAmount));
+    const total = toNumber(order.total);
+    const remaining = fils(total - toNumber(order.paidAmount));
     if (remaining <= 0) throw new AppError('الفاتورة مسدّدة بالكامل');
     if (amount > remaining) {
       throw new AppError(`المتبقي ${remaining.toFixed(3)} د.ك فقط`);
     }
 
     const wasUnpaidDraft = order.status === 'DRAFT';
-    const paidAmount = fils(Number(order.paidAmount) + amount);
-    const settled = paidAmount >= Number(order.total);
+    const paidAmount = fils(toNumber(order.paidAmount) + amount);
+    const settled = paidAmount >= total;
 
     // وردية الصندوق المفتوحة — لتدخل المقبوضات النقدية في تسوية اليوم
     const session = await db.registerSession.findFirst({
@@ -385,6 +433,10 @@ export const collectPayment = action({
           ...(session ? { registerSessionId: session.id } : {}),
         },
       });
+
+      if (order.channel === 'SUBSCRIPTION' && settled) {
+        await makeSubscriptionPeriodEligible(tx, orderId, new Date());
+      }
 
       // مسودة لم تُخصم من المخزون بعد — نخصمه الآن عند أول تحصيل
       if (wasUnpaidDraft) {
@@ -430,6 +482,8 @@ export const collectPayment = action({
     // «مستحق عليه» في ملفّ العميل يتبع المحصَّل، فيُبطَل كاشه معها
     if (order.jobOrderId) revalidatePath(`/dashboard/job-orders/${order.jobOrderId}`);
     if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
+    revalidatePath('/dashboard/wash');
+    revalidatePath('/dashboard/wash/billing');
     revalidatePath('/dashboard');
 
     return {

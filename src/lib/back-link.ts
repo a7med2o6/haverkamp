@@ -16,7 +16,8 @@ export interface BackTarget {
   label: string;
 }
 
-const INTERNAL = /^\/dashboard(\/[A-Za-z0-9._~-]+)*\/?$/;
+const INTERNAL_PATH = /^\/dashboard(\/[A-Za-z0-9._~-]+)*\/?$/;
+const INTERNAL_ORIGIN = 'https://dashboard.local';
 
 /** اسم المكان كما يُقرأ في زرّ الرجوع */
 const LABELS: Array<[RegExp, string]> = [
@@ -29,17 +30,35 @@ const LABELS: Array<[RegExp, string]> = [
   [/^\/dashboard\/warranties\/[^/]+$/, 'العودة إلى الكفالة'],
   [/^\/dashboard\/warranties$/, 'العودة إلى الكفالات'],
   [/^\/dashboard\/bookings$/, 'العودة إلى الحجوزات'],
+  [/^\/dashboard\/wash\/billing$/, 'العودة إلى تحصيل الاشتراكات'],
   [/^\/dashboard\/vehicles\/[^/]+$/, 'العودة إلى السيارة'],
   [/^\/dashboard$/, 'العودة إلى النظرة العامة'],
 ];
 
 export function backTo(from: string | undefined, fallback: BackTarget): BackTarget {
-  if (!from || !INTERNAL.test(from)) return fallback;
-  // النقطة محرف مقبول في الجزء، فـ«..» يجتاز الشكل ويخرج من اللوحة
-  if (from.split('/').some((seg) => seg === '.' || seg === '..')) return fallback;
+  if (!from) return fallback;
 
-  const label = LABELS.find(([re]) => re.test(from))?.[1];
-  return { href: from, label: label ?? 'رجوع' };
+  let parsed: URL;
+  try {
+    parsed = new URL(from, INTERNAL_ORIGIN);
+  } catch {
+    return fallback;
+  }
+
+  /*
+    نسمح بمعلمات صفحات القوائم كي يعود الزائر إلى نفس الشهر أو المرشّح،
+    لكن الوجهة تبقى مساراً داخلياً بلا أصل خارجي أو جزء hash قابل للالتباس.
+  */
+  if (
+    parsed.origin !== INTERNAL_ORIGIN ||
+    !INTERNAL_PATH.test(parsed.pathname) ||
+    parsed.hash
+  ) {
+    return fallback;
+  }
+
+  const label = LABELS.find(([re]) => re.test(parsed.pathname))?.[1];
+  return { href: `${parsed.pathname}${parsed.search}`, label: label ?? 'رجوع' };
 }
 
 /** يُلحق مصدرَ الزيارة برابطٍ خارج — ليعرف المقصدُ من أين جاء */

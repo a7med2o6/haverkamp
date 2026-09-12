@@ -12,6 +12,7 @@ import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge';
 import { ORDER_STATUS, PAYMENT_METHOD } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
+import { customerIdsByPhone } from '@/lib/search-db';
 import { formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'الفواتير' };
@@ -24,6 +25,7 @@ export default async function InvoicesPage({
 }) {
   await requirePermission('pos:read');
   const { q, page: pageParam, status, customer } = await searchParams;
+  const phoneIds = q ? await customerIdsByPhone(q) : [];
   const page = Math.max(1, Number(pageParam) || 1);
 
   const where: Prisma.OrderWhereInput = {
@@ -32,7 +34,7 @@ export default async function InvoicesPage({
           OR: [
             { number: { contains: q, mode: 'insensitive' as const } },
             { customer: { name: { contains: q, mode: 'insensitive' as const } } },
-            { customer: { phone: { contains: q } } },
+            ...(phoneIds.length > 0 ? [{ customerId: { in: phoneIds } }] : []),
           ],
         }
       : {}),

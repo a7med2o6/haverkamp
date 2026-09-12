@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { CUSTOMER_SOURCE } from '@/lib/labels';
 import { normalizePlate } from '@/lib/search';
 import { vehicleIdsByPlate } from '@/lib/search-db';
+import { customerIdsByPhone } from '@/lib/search-db';
 import { formatDate, formatPhone } from '@/lib/utils';
 import { CustomerFormButton } from './customer-form';
 
@@ -28,7 +29,9 @@ export default async function CustomersPage({
   const { q, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const plateTerm = normalizePlate(q ?? '');
-  const plateIds = q ? await vehicleIdsByPlate(q) : [];
+  const [plateIds, phoneIds] = q
+    ? await Promise.all([vehicleIdsByPlate(q), customerIdsByPhone(q)])
+    : [[], []];
 
   const plateBranches: Prisma.CustomerWhereInput[] =
     plateIds.length > 0 ? [{ vehicles: { some: { id: { in: plateIds } } } }] : [];
@@ -37,7 +40,7 @@ export default async function CustomersPage({
     ? {
         OR: [
           { name: { contains: q, mode: 'insensitive' } },
-          { phone: { contains: q } },
+          ...(phoneIds.length > 0 ? [{ id: { in: phoneIds } }] : []),
           { code: { contains: q, mode: 'insensitive' } },
           { civilId: { contains: q } },
           ...plateBranches,

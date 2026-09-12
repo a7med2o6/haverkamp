@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { customerIdsByPhone } from '@/lib/search-db';
 import { serviceStatus, warrantyLabel, warrantyPartLabels } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -51,7 +52,7 @@ function buildWhere(
   now: Date,
   soon: Date,
   q?: string
-): Prisma.WarrantyWhereInput {
+, phoneIds: string[] = []): Prisma.WarrantyWhereInput {
   const byFilter: Prisma.WarrantyWhereInput =
     filter === 'valid'
       ? { isVoid: false, endDate: { gte: now } }
@@ -73,7 +74,9 @@ function buildWhere(
           { certificateNo: { contains: q, mode: 'insensitive' } },
           { vehicle: { plateNo: { contains: q, mode: 'insensitive' } } },
           { vehicle: { customer: { name: { contains: q, mode: 'insensitive' } } } },
-          { vehicle: { customer: { phone: { contains: q } } } },
+          ...(phoneIds.length > 0
+            ? [{ vehicle: { customer: { id: { in: phoneIds } } } }]
+            : []),
           { jobOrder: { number: { contains: q, mode: 'insensitive' } } },
         ],
       },
@@ -92,7 +95,8 @@ export default async function WarrantiesPage({
 
   const now = new Date();
   const soon = new Date(now.getTime() + EXPIRY_ALERT_DAYS * 86400000);
-  const where = buildWhere(filter, now, soon, q);
+  const phoneIds = q ? await customerIdsByPhone(q) : [];
+  const where = buildWhere(filter, now, soon, q, phoneIds);
 
   // المشروطة السارية — منها يُحسب المتأخر، وعليها يقوم الفلتر وعدّاده
   const conditioned = await db.warranty.findMany({

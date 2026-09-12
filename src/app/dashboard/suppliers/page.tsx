@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { supplierIdsByPhone } from '@/lib/search-db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
@@ -20,12 +21,13 @@ export default async function SuppliersPage({
 }) {
   const session = await requirePermission('inventory:read');
   const { q } = await searchParams;
+  const phoneIds = q ? await supplierIdsByPhone(q) : [];
 
   const where: Prisma.SupplierWhereInput = q
     ? {
         OR: [
           { name: { contains: q, mode: 'insensitive' } },
-          { phone: { contains: q } },
+          ...(phoneIds.length > 0 ? [{ id: { in: phoneIds } }] : []),
           { country: { contains: q, mode: 'insensitive' } },
         ],
       }

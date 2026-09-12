@@ -10,7 +10,7 @@ import { Pagination } from '@/components/dashboard/pagination';
 import { PAGE_SIZE } from '@/lib/constants';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { vehicleIdsByPlate } from '@/lib/search-db';
+import { customerIdsByPhone, vehicleIdsByPlate } from '@/lib/search-db';
 import { cn, formatDate } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'السيارات' };
@@ -63,7 +63,9 @@ export default async function VehiclesPage({
           }
         : {};
 
-  const plateIds = q ? await vehicleIdsByPlate(q) : [];
+  const [plateIds, phoneIds] = q
+    ? await Promise.all([vehicleIdsByPlate(q), customerIdsByPhone(q)])
+    : [[], []];
   const searchBranches: Prisma.VehicleWhereInput[] = [];
   if (q) {
     if (plateIds.length > 0) {
@@ -73,8 +75,10 @@ export default async function VehiclesPage({
       { make: { contains: q, mode: 'insensitive' } },
       { model: { contains: q, mode: 'insensitive' } },
       { customer: { is: { name: { contains: q, mode: 'insensitive' } } } },
-      { customer: { is: { phone: { contains: q } } } }
     );
+    if (phoneIds.length > 0) {
+      searchBranches.push({ customerId: { in: phoneIds } });
+    }
   }
 
   const where: Prisma.VehicleWhereInput = q

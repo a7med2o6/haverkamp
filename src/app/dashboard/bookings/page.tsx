@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { bookingIdsByGuestPhone, customerIdsByPhone } from '@/lib/search-db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
@@ -120,14 +121,18 @@ export default async function BookingsPage({
           : {};
 
   // بحث القائمة — بكود الحجز أو اسم العميل أو هاتفه، ومنه تُفتح بطاقة التقويم
+  // الحجز قد يسبق ملفّ العميل، فهاتفُه يُطلب في الضيف كما يُطلب في العميل
+  const [phoneIds, guestIds] = q
+    ? await Promise.all([customerIdsByPhone(q), bookingIdsByGuestPhone(q)])
+    : [[], []];
   const bySearch: Prisma.BookingWhereInput = q
     ? {
         OR: [
           { code: { contains: q, mode: 'insensitive' } },
           { guestName: { contains: q, mode: 'insensitive' } },
-          { guestPhone: { contains: q } },
           { customer: { name: { contains: q, mode: 'insensitive' } } },
-          { customer: { phone: { contains: q } } },
+          ...(phoneIds.length > 0 ? [{ customerId: { in: phoneIds } }] : []),
+          ...(guestIds.length > 0 ? [{ id: { in: guestIds } }] : []),
         ],
       }
     : {};

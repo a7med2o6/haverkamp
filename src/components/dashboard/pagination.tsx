@@ -5,6 +5,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PAGE_SIZE } from '@/lib/constants';
 
+function getPageNumbers(current: number, totalPages: number) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  if (current <= 4) {
+    return [1, 2, 3, 4, 5, '...', totalPages];
+  }
+  if (current >= totalPages - 3) {
+    return [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  }
+  return [1, '...', current - 1, current, current + 1, '...', totalPages];
+}
+
 export function Pagination({ page, total, pageSize = PAGE_SIZE }: { page: number; total: number; pageSize?: number }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -21,6 +34,7 @@ export function Pagination({ page, total, pageSize = PAGE_SIZE }: { page: number
 
   const from = (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
+  const pageNumbers = getPageNumbers(page, pages);
 
   return (
     <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
@@ -39,9 +53,39 @@ export function Pagination({ page, total, pageSize = PAGE_SIZE }: { page: number
           <ChevronRight />
           السابق
         </Button>
-        <span className="tnum px-2 text-[12px] text-[var(--text-1)]">
+
+        <div className="hidden items-center gap-1.5 sm:flex">
+          {pageNumbers.map((p, i) => {
+            if (p === '...') {
+              return (
+                <span key={`ellipsis-${i}`} className="px-1 text-[var(--text-2)]">
+                  &hellip;
+                </span>
+              );
+            }
+
+            const isCurrent = p === page;
+            return (
+              <Button
+                key={p}
+                variant={isCurrent ? 'primary' : 'ghost'}
+                size="sm"
+                className="tnum w-8 p-0"
+                onClick={() => go(p as number)}
+                aria-current={isCurrent ? 'page' : undefined}
+                aria-label={`الصفحة ${p}`}
+              >
+                {p}
+              </Button>
+            );
+          })}
+        </div>
+
+        {/* الشاشة الضيّقة لا تتسع للأرقام — يبقى العدّاد وحده */}
+        <span className="tnum px-2 text-[12px] text-[var(--text-1)] sm:hidden">
           {page} / {pages}
         </span>
+
         <Button
           variant="secondary"
           size="sm"

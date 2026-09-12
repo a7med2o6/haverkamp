@@ -49,6 +49,8 @@ export function JobStatusSelect({ id, status }: { id: string; status: string }) 
             router.refresh();
           } else {
             toast.error(res.error);
+            // المنع يردّ القائمة إلى حالتها الحقيقية، وإلا أظهرت ما لم يقع
+            router.refresh();
           }
         });
       }}

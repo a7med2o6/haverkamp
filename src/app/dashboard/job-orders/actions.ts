@@ -116,9 +116,42 @@ export const setJobStatus = action({
   handler: async ({ id, status }) => {
     const job = await db.jobOrder.findUnique({
       where: { id },
-      select: { completedAt: true, deliveredAt: true, bookingId: true },
+      select: {
+        completedAt: true,
+        deliveredAt: true,
+        bookingId: true,
+        order: { select: { number: true, status: true, total: true, paidAmount: true } },
+      },
     });
     if (!job) throw new AppError('أمر الشغل غير موجود');
+
+    /*
+      السيارة لا تخرج قبل سداد فاتورتها — قاعدة الفرع، فتُحرَس على الخادم
+      لا في الواجهة: إخفاء خيارٍ ليس منعاً.
+
+      ولا فاتورةَ يعني لم يُطالَب بشيء بعد، وهي أسوأ من فاتورةٍ معلّقة:
+      تلك يُعرف قدرُها، وهذه تخرج السيارة بلا أثرٍ للمال. والملغاة
+      والمرتجعة لا تُبرئ ذمّةً لأنها لم تُحصّل.
+
+      والصفرُ سداد: كفالةٌ أو مجاملةٌ تُفوتر بصفرٍ فتخرج سيارتها بلا حرج.
+    */
+    if (status === 'DELIVERED') {
+      const order = job.order;
+      if (!order) {
+        throw new AppError('لا فاتورة لهذا الأمر — أصدر الفاتورة وحصّلها قبل التسليم');
+      }
+      if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
+        throw new AppError(
+          `فاتورة ${order.number} ${order.status === 'CANCELLED' ? 'ملغاة' : 'مرتجعة'} — أصدر فاتورة سارية وحصّلها قبل التسليم`
+        );
+      }
+      const remaining = Number(order.total) - Number(order.paidAmount);
+      if (remaining > 0) {
+        throw new AppError(
+          `متبقٍّ على فاتورة ${order.number} ${remaining.toFixed(3)} د.ك — حصّله قبل التسليم`
+        );
+      }
+    }
 
     /*
       الطابع يُكتب عند بلوغ الحالة ويُمسح عند التراجع عنها.

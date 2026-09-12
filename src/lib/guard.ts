@@ -25,3 +25,13 @@ export async function assertPermission(permission: Permission) {
   if (!can(session.user.role, permission)) throw new Error('FORBIDDEN');
   return session;
 }
+
+/** نسخة للإجراءات المشتركة بين وحدتين — يكفي امتلاك إحدى الصلاحيات */
+export async function assertAnyPermission(permissions: readonly Permission[]) {
+  const session = await auth();
+  if (!session?.user) throw new Error('UNAUTHORIZED');
+  if (!permissions.some((permission) => can(session.user.role, permission))) {
+    throw new Error('FORBIDDEN');
+  }
+  return session;
+}

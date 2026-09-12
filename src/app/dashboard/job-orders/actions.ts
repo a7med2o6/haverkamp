@@ -729,7 +729,8 @@ export const lookupPlate = action({
  * اختياره لا مع الصفحة، فقائمة سيارات كل العملاء حِملٌ يُنقل بلا داعٍ.
  */
 export const customerVehicles = action({
-  permission: 'workshop:read',
+  // القائمة تخدم بيان التشغيل وعقد الغسيل؛ كل وحدة تجيزها بصلاحيتها وحدها
+  permission: ['workshop:read', 'wash:read'],
   schema: z.object({ customerId: z.string().min(1) }),
   handler: async ({ customerId }) => {
     const vehicles = await db.vehicle.findMany({

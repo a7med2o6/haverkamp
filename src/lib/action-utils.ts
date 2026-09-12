@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { assertPermission } from '@/lib/guard';
+import { assertAnyPermission, assertPermission } from '@/lib/guard';
 import { db } from '@/lib/db';
 import type { Permission } from '@/lib/rbac';
 
@@ -51,7 +51,7 @@ export function toErrorState(e: unknown): ActionState {
  * يغلّف server action بالتحقق من الصلاحية وتحليل المدخلات وتسجيل التدقيق.
  */
 export function action<S extends z.ZodType>(config: {
-  permission: Permission;
+  permission: Permission | readonly Permission[];
   schema: S;
   /** لتسجيل العملية في سجل التدقيق */
   audit?: { entity: string; action: string };
@@ -62,7 +62,9 @@ export function action<S extends z.ZodType>(config: {
 }) {
   return async (input: unknown): Promise<ActionState> => {
     try {
-      const session = await assertPermission(config.permission);
+      const session = Array.isArray(config.permission)
+        ? await assertAnyPermission(config.permission)
+        : await assertPermission(config.permission as Permission);
 
       const parsed = config.schema.safeParse(input);
       if (!parsed.success) {

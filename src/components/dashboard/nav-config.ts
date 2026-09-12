@@ -30,6 +30,7 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/job-orders', label: 'أوامر الشغل', icon: 'Wrench', module: 'workshop' },
       { href: '/dashboard/customers', label: 'العملاء', icon: 'Users', module: 'crm' },
       { href: '/dashboard/vehicles', label: 'السيارات', icon: 'Car', module: 'crm' },
+      { href: '/dashboard/wash', label: 'اشتراكات الغسيل', icon: 'Droplets', module: 'wash' },
       { href: '/dashboard/warranties', label: 'الكفالات', icon: 'ShieldCheck', module: 'crm' },
     ],
   },

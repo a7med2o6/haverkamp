@@ -24,6 +24,7 @@ enum Role {
   CASHIER // كاشير / نقطة بيع
   TECHNICIAN // فني
   RECEPTIONIST // استقبال
+  WASHER // غسّيل السيارات المتنقّل
 }
 
 model User {
@@ -48,6 +49,8 @@ model User {
   reviewsGiven     PerformanceReview[] @relation("ReviewAuthor")
   customerNotes    CustomerNote[]    @relation("CustomerNoteAuthor")
   vehicleServices  VehicleService[]
+  recordedWashVisits WashVisit[]     @relation("WashVisitRecorder")
+  createdWashPauses  WashPause[]     @relation("WashPauseCreator")
 
   @@index([role, isActive])
   @@map("users")
@@ -133,6 +136,7 @@ model ServicePackage {
   isPopular Boolean @default(false)
 
   translations ServicePackageTranslation[]
+  washSubscriptions WashSubscription[]
 
   @@index([serviceId, sortOrder])
   @@map("service_packages")
@@ -314,6 +318,7 @@ model Customer {
   jobOrders JobOrder[]
   orders    Order[]
   interactions    CustomerNote[]
+  washSubscriptions WashSubscription[]
 
   @@index([phone])
   @@index([name])
@@ -368,6 +373,7 @@ model Vehicle {
   warranties Warranty[]
   ownerships VehicleOwnership[]
   services   VehicleService[]
+  washSubscriptions WashSubscription[]
 
   @@index([customerId])
   @@map("vehicles")
@@ -600,6 +606,8 @@ model Employee {
   reviews      PerformanceReview[]
   jobItems     JobOrderItemAssignee[]
   advances     EmployeeAdvance[]
+  assignedWashVisits  WashVisit[] @relation("WashVisitAssignee")
+  completedWashVisits WashVisit[] @relation("WashVisitCompleter")
 
   @@index([status])
   @@index([departmentId])
@@ -1053,6 +1061,157 @@ model JobOrderItemAssignee {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  اشتراكات الغسيل المتنقّل · MOBILE WASH SUBSCRIPTIONS
+// ═══════════════════════════════════════════════════════════
+
+enum WashSubscriptionStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+/**
+ * عقد غسيل واحد لعميل واحد وسيارة واحدة.
+ *
+ * العميل هنا صاحب العقد والدافع وقت التوقيع، ولا يُشتقّ أبداً من
+ * Vehicle.customerId: قد تُباع السيارة أثناء العقد فيتغيّر مالكها الحالي،
+ * ولا يصحّ أن ينتقل التزام العقد وفواتيره إلى المشتري بصمت.
+ *
+ * ومكان الخدمة جزء من العقد لا من عنوان العميل، لأن السيارة قد تُغسل
+ * حيث يوقفها صاحبها عند العمل لا عند منزله.
+ */
+model WashSubscription {
+  id   String @id @default(cuid())
+  code String @unique // HK-WS-0001
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  vehicleId  String
+  /// لا نضع @unique هنا: التفرّد العادي يمنع السيارة من الاشتراك من جديد
+  /// بعد إنهاء عقدها؛ الترحيل يضيف بدلاً منه فهرساً فريداً جزئياً لغير ENDED.
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+
+  servicePackageId String?
+  servicePackage   ServicePackage? @relation(fields: [servicePackageId], references: [id], onDelete: SetNull)
+  /// السعر المتفق عليه يُنسخ وقت العقد فلا تغيّر تعديلات الباقة عقداً قائماً
+  monthlyPrice Decimal @db.Decimal(12, 3)
+
+  area          String
+  block         String?
+  street        String?
+  building      String?
+  locationNotes String?
+
+  /// مرساة تعاقب يوم ويوم الخاصة بهذا العقد
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+  status    WashSubscriptionStatus @default(ACTIVE)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  periods WashSubscriptionPeriod[]
+  pauses  WashPause[]
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([area, status])
+  @@map("wash_subscriptions")
+}
+
+enum WashPeriodStatus {
+  DUE
+  ELIGIBLE
+  CLOSED
+}
+
+/** استحقاق شهر واحد يحتفظ بسعر العقد وحدوده كما كانت عند فتحه */
+model WashSubscriptionPeriod {
+  id             String @id @default(cuid())
+  subscriptionId String
+  subscription   WashSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  year           Int
+  month          Int
+  fromDate       DateTime @db.Date
+  toDate         DateTime @db.Date
+  priceSnapshot  Decimal  @db.Decimal(12, 3)
+  orderId        String?  @unique
+  order          Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  status         WashPeriodStatus @default(DUE)
+  eligibleAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  visits WashVisit[]
+
+  @@unique([subscriptionId, year, month])
+  @@map("wash_subscription_periods")
+}
+
+enum WashVisitStatus {
+  BLOCKED
+  PLANNED
+  COMPLETED
+  SKIPPED
+}
+
+enum WashSkipReason {
+  UNPAID
+  CAR_ABSENT
+  CUSTOMER_TRAVEL
+  WEATHER
+  HOLIDAY
+  OPERATIONAL
+  OTHER
+}
+
+/**
+ * غسلة واحدة مستحقة في شهر الاشتراك.
+ *
+ * dueDate هو يوم الاستحقاق الثابت الناتج من تعاقب تاريخ بدء العقد، أما
+ * scheduledDate فهو اليوم الذي يذهب فيه الغسّيل فعلاً. المطر أو العطلة
+ * يغيّران scheduledDate وحده، فلا ينكسر تعاقب يوم ويوم ولا تتبدّل فرديته.
+ */
+model WashVisit {
+  id            String @id @default(cuid())
+  periodId      String
+  period        WashSubscriptionPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  dueDate       DateTime @db.Date
+  scheduledDate DateTime @db.Date
+  status        WashVisitStatus @default(BLOCKED)
+  skipReason    WashSkipReason?
+
+  assignedEmployeeId String?
+  assignedEmployee   Employee? @relation("WashVisitAssignee", fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  completedByEmployeeId String?
+  completedByEmployee   Employee? @relation("WashVisitCompleter", fields: [completedByEmployeeId], references: [id], onDelete: SetNull)
+  completedAt DateTime?
+
+  recordedByUserId String?
+  recordedByUser   User? @relation("WashVisitRecorder", fields: [recordedByUserId], references: [id], onDelete: SetNull)
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  @@unique([periodId, dueDate])
+  @@index([scheduledDate, status])
+  @@map("wash_visits")
+}
+
+/** فترات الإيقاف محفوظة كسجل مستقل لأن التغطية ستحتاج حدود كل فترة لاحقاً */
+model WashPause {
+  id             String @id @default(cuid())
+  subscriptionId String
+  subscription   WashSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  fromDate        DateTime @db.Date
+  toDate          DateTime @db.Date
+  reason          String?
+  createdByUserId String?
+  createdByUser   User? @relation("WashPauseCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+
+  @@map("wash_pauses")
+}
+
+// ═══════════════════════════════════════════════════════════
 //  نقطة البيع والفواتير · POS & INVOICES
 // ═══════════════════════════════════════════════════════════
 
@@ -1068,6 +1227,7 @@ enum OrderChannel {
   POS // نقطة بيع بالفرع
   INVOICE // فاتورة أمر شغل
   ONLINE
+  SUBSCRIPTION // فاتورة اشتراك غسيل شهرية
 }
 
 model Order {
@@ -1097,6 +1257,7 @@ model Order {
 
   items    OrderItem[]
   payments Payment[]
+  washSubscriptionPeriod WashSubscriptionPeriod?
 
   @@index([status, createdAt])
   @@index([channel, createdAt])

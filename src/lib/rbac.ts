@@ -6,6 +6,7 @@ export const MODULES = [
   'cms',
   'crm',
   'workshop',
+  'wash',
   'pos',
   'inventory',
   'hr',
@@ -36,7 +37,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ADMIN: ALL,
   MANAGER: [
     ...readOnly('dashboard'),
-    ...full('crm', 'workshop', 'pos', 'inventory'),
+    ...full('crm', 'workshop', 'wash', 'pos', 'inventory'),
     ...readWrite('cms'),
     ...readOnly('hr', 'reports'),
   ],
@@ -44,11 +45,16 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ACCOUNTANT: [
     ...readOnly('dashboard'),
     ...readWrite('pos', 'inventory'),
-    ...readOnly('crm', 'workshop', 'hr', 'reports'),
+    ...readOnly('crm', 'workshop', 'wash', 'hr', 'reports'),
   ],
   CASHIER: [...readOnly('dashboard'), ...readWrite('pos'), ...readOnly('crm', 'inventory')],
   TECHNICIAN: [...readOnly('dashboard', 'crm'), ...readWrite('workshop')],
-  RECEPTIONIST: [...readOnly('dashboard'), ...readWrite('crm', 'workshop'), ...readOnly('pos')],
+  RECEPTIONIST: [
+    ...readOnly('dashboard'),
+    ...readWrite('crm', 'workshop', 'wash'),
+    ...readOnly('pos'),
+  ],
+  WASHER: [...readOnly('dashboard'), ...readWrite('wash')],
 };
 
 export function can(role: Role | undefined | null, permission: Permission): boolean {
@@ -72,4 +78,5 @@ export const ROLE_LABELS: Record<Role, string> = {
   CASHIER: 'كاشير',
   TECHNICIAN: 'فني',
   RECEPTIONIST: 'استقبال',
+  WASHER: 'غسيل',
 };

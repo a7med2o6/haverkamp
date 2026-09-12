@@ -8,6 +8,7 @@ const PREFIXES = {
   purchase: 'HK-PO',
   employee: 'HK-E',
   warranty: 'HK-W',
+  washSubscription: 'HK-WS',
 } as const;
 
 export type CounterKey = keyof typeof PREFIXES;

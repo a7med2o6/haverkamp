@@ -41,6 +41,8 @@ export interface WheelRendererOptions {
   onTick?: () => void;
 }
 
+const TAU = Math.PI * 2;
+
 export class WheelRenderer {
   public canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -242,18 +244,26 @@ export class WheelRenderer {
 
     ctx.restore();
 
-    // 3. Upright Labels
-    // The sectors rotate, but the text is redrawn in screen space on every frame.
-    // This keeps Arabic and Latin prize names in one readable direction without
-    // the abrupt 180-degree flip that used to happen when a sector crossed sides.
+    /*
+      3. الأسماء على أضلاع القطاعات.
+
+      النصّ الأفقي كان يأخذ أقصر بُعدَي القطاع — وترَه — ويهدر طوله
+      الشعاعي، فيتكرمش الاسم في سطرين ويُقصّ. وبعجلة ذات اثنتي عشرة
+      جائزة يبلغ الوتر نحو خُمسِ نصف القطر، والطول الشعاعي نحو ثلاثة
+      أخماسه: ثلاثة أضعافٍ تُهدر.
+
+      فيُكتب النصّ على ضلع القطاع: طولُه للحروف، ووترُه لارتفاع أسطره.
+      ويُقلب مئةً وثمانين حين يقع القطاع في النصف الأيسر، فلا يُقرأ
+      اسمٌ مقلوباً رأساً على عقب.
+    */
     const hubRadius = Math.max(24, Math.round(radius * 0.22));
     const innerRadius = hubRadius + Math.max(8, displaySize * 0.018);
     const outerRadius = radius - Math.max(12, displaySize * 0.03);
-    const maxRadialWidth = outerRadius - innerRadius;
     const midRadius = (innerRadius + outerRadius) / 2;
     const sliceChordWidth = 2 * midRadius * Math.sin(sliceAngle / 2);
-    const maxLabelWidth = Math.min(maxRadialWidth, sliceChordWidth * 0.78);
-    const maxTransverseHeight = midRadius * sliceAngle * 0.74;
+    // الطول الشعاعي هو مدى الحروف الآن، والوتر هو ما يتّسع له ارتفاع الأسطر
+    const maxLabelWidth = (outerRadius - innerRadius) * 0.92;
+    const maxTransverseHeight = sliceChordWidth * 0.82;
     const baseFont =
       typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
         ? Math.max(10, Math.min(32, this.wheelFontSize))
@@ -291,11 +301,18 @@ export class WheelRenderer {
           : index % palette.length;
       const colorObj = palette[colorIdx];
       const screenAngle = index * sliceAngle + sliceAngle / 2 + currentAngle;
-      const labelX = center + Math.cos(screenAngle) * midRadius;
-      const labelY = center + Math.sin(screenAngle) * midRadius;
 
       ctx.save();
       const layout = layouts[index];
+
+      ctx.translate(center, center);
+      ctx.rotate(screenAngle);
+      ctx.translate(midRadius, 0);
+      // النصف الأيسر يُقرأ مقلوباً لولا القلب — والزاوية تُردّ إلى دورة واحدة أولاً
+      const turn = ((screenAngle % TAU) + TAU) % TAU;
+      if (turn > Math.PI / 2 && turn < (3 * Math.PI) / 2) {
+        ctx.rotate(Math.PI);
+      }
 
       ctx.font = `800 ${layout.fontSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
       ctx.fillStyle = colorObj.text;
@@ -307,9 +324,8 @@ export class WheelRenderer {
       ctx.shadowOffsetY = 1;
 
       const totalHeight = (layout.lines.length - 1) * layout.lineHeight;
-      const startY = labelY - totalHeight / 2;
       layout.lines.forEach((line, lineIdx) => {
-        ctx.fillText(line, labelX, startY + lineIdx * layout.lineHeight);
+        ctx.fillText(line, 0, -totalHeight / 2 + lineIdx * layout.lineHeight);
       });
       ctx.restore();
     });

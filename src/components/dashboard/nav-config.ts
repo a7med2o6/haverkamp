@@ -29,7 +29,7 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/bookings', label: 'الحجوزات', icon: 'CalendarClock', module: 'crm' },
       { href: '/dashboard/job-orders', label: 'أوامر الشغل', icon: 'Wrench', module: 'workshop' },
       { href: '/dashboard/customers', label: 'العملاء', icon: 'Users', module: 'crm' },
-      { href: '/dashboard/vehicles', label: 'السيارات', icon: 'Car', module: 'crm', soon: true },
+      { href: '/dashboard/vehicles', label: 'السيارات', icon: 'Car', module: 'crm' },
       { href: '/dashboard/warranties', label: 'الكفالات', icon: 'ShieldCheck', module: 'crm' },
     ],
   },

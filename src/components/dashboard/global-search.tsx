@@ -1,5 +1,6 @@
 'use client';
 
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -97,10 +98,26 @@ export function GlobalSearch() {
     if (!open) return;
     const frame = requestAnimationFrame(() => inputRef.current?.focus());
     const previousOverflow = document.body.style.overflow;
+    const previousRight = document.body.style.paddingRight;
+    const previousLeft = document.body.style.paddingLeft;
+    /*
+      قفل التمرير يُخفي شريطه فيتّسع المستند بعرضه، وتقفز الصفحة كلها
+      عشرَ بكسلات لحظة الفتح. نعوّضه حشواً بعرضه، وجهتُه تُقاس ولا تُفترض:
+      المتصفّح يُبقي شريط الجذر يميناً في RTL أيضاً، فحشو inline-end يقع
+      في الجهة الخطأ. والفراغ بين حافة المستند وحافة النافذة هو الدليل.
+    */
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    const onRight =
+      window.innerWidth - document.documentElement.getBoundingClientRect().right > 0;
     document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) {
+      document.body.style[onRight ? 'paddingRight' : 'paddingLeft'] = `${scrollbar}px`;
+    }
     return () => {
       cancelAnimationFrame(frame);
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousRight;
+      document.body.style.paddingLeft = previousLeft;
     };
   }, [open]);
 
@@ -221,11 +238,18 @@ export function GlobalSearch() {
         </kbd>
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-black/65 p-4 backdrop-blur-sm"
-          onMouseDown={(event) => event.target === event.currentTarget && closeSearch()}
-        >
+      {/*
+        ترويسة اللوحة عليها backdrop-filter، وهو يُنشئ كتلة احتواء للعناصر
+        الثابتة داخلها — فـinset-0 كان ينسب إلى شريط الترويسة (٥٥ بكسل) لا
+        إلى الشاشة، فيخرج الصندوق عن حدّه ويُقصّ. الـportal يرفعه إلى body
+        فيعود ثابتاً إلى المتصفّح كما يُفترض.
+      */}
+      {open &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[60] grid place-items-center bg-black/65 p-4 backdrop-blur-sm"
+            onMouseDown={(event) => event.target === event.currentTarget && closeSearch()}
+          >
           <div
             ref={dialogRef}
             role="dialog"
@@ -392,10 +416,11 @@ export function GlobalSearch() {
                   )}
                 </div>
               ) : null}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }

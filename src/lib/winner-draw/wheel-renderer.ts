@@ -1,4 +1,5 @@
 import { soundManager } from './sound';
+import { fitWheelLabel, type WheelLabelLayout } from './label-geometry';
 
 export interface WheelColor {
   bg: string;
@@ -62,6 +63,13 @@ export class WheelRenderer {
   private lastSectorIndex = -1;
   private animId: number | null = null;
   private colorMap: number[] = [];
+  /*
+    تخطيط الأسماء لا يتغيّر بالدوران: يتبع النصّ ومقاس العجلة وحجم الخط
+    وحدها. وحسابه في كل إطارٍ يعني ضبط ctx.font عشرات المرّات لكل جائزة
+    ستّين مرّة في الثانية — وضبط الخط أغلى ما في الرسم. فيُحسب مرّة
+    ويُحفظ ببصمة مدخلاته، ويُعاد حسابه حين تتغيّر.
+  */
+  private labelCache: { sig: string; layouts: WheelLabelLayout[] } | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private displaySize = 300;
   private center = 150;
@@ -230,54 +238,91 @@ export class WheelRenderer {
       ctx.fillStyle = '#ffffff';
       ctx.fill();
 
-      // Typography
-      ctx.save();
-      const sliceMidAngle = startAngle + sliceAngle / 2;
-      ctx.rotate(sliceMidAngle);
-
-      const baseFont = typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
-        ? Math.max(10, Math.min(32, this.wheelFontSize))
-        : 18;
-      const fontSize = Math.max(7, Math.round(baseFont * (displaySize / 480)));
-
-      ctx.font = `800 ${fontSize}px "Tajawal", "Readex Pro", sans-serif`;
-
-      const maxTextWidth = radius - Math.max(38, displaySize * 0.135) - Math.max(14, displaySize * 0.035);
-      let text = item;
-      if (ctx.measureText(text).width > maxTextWidth) {
-        while (text.length > 2 && ctx.measureText(text + '...').width > maxTextWidth) {
-          text = text.slice(0, -1);
-        }
-        text += '...';
-      }
-
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
-
-      ctx.fillStyle = colorObj.text;
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-
-      const textPadding = Math.max(18, displaySize * 0.06);
-      ctx.fillText(text, radius - textPadding, 0);
-
-      ctx.restore();
     });
 
     ctx.restore();
 
-    // 3. Center Hub Socket (Clean Dark Luxury Framing for the Haverkamp Logo button)
+    // 3. Upright Labels
+    // The sectors rotate, but the text is redrawn in screen space on every frame.
+    // This keeps Arabic and Latin prize names in one readable direction without
+    // the abrupt 180-degree flip that used to happen when a sector crossed sides.
+    const hubRadius = Math.max(24, Math.round(radius * 0.22));
+    const innerRadius = hubRadius + Math.max(8, displaySize * 0.018);
+    const outerRadius = radius - Math.max(12, displaySize * 0.03);
+    const maxRadialWidth = outerRadius - innerRadius;
+    const midRadius = (innerRadius + outerRadius) / 2;
+    const sliceChordWidth = 2 * midRadius * Math.sin(sliceAngle / 2);
+    const maxLabelWidth = Math.min(maxRadialWidth, sliceChordWidth * 0.78);
+    const maxTransverseHeight = midRadius * sliceAngle * 0.74;
+    const baseFont =
+      typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
+        ? Math.max(10, Math.min(32, this.wheelFontSize))
+        : 18;
+    const scale = Math.min(1.35, displaySize / 480);
+    const preferredFontSize = Math.max(8, Math.round(baseFont * scale));
+    const minFontSize = Math.max(7, Math.round(8 * scale));
+
+    const sig = `${maxLabelWidth}|${maxTransverseHeight}|${preferredFontSize}|${minFontSize}|${items.join('\u0000')}`;
+    if (!this.labelCache || this.labelCache.sig !== sig) {
+      const measure = (str: string, fSize: number) => {
+        ctx.font = `800 ${fSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
+        return ctx.measureText(str).width;
+      };
+      this.labelCache = {
+        sig,
+        layouts: items.map((item) =>
+          fitWheelLabel(
+            measure,
+            item,
+            maxLabelWidth,
+            maxTransverseHeight,
+            preferredFontSize,
+            minFontSize
+          )
+        ),
+      };
+    }
+    const layouts = this.labelCache.layouts;
+
+    items.forEach((item, index) => {
+      const colorIdx =
+        this.colorMap && this.colorMap.length === items.length
+          ? this.colorMap[index]
+          : index % palette.length;
+      const colorObj = palette[colorIdx];
+      const screenAngle = index * sliceAngle + sliceAngle / 2 + currentAngle;
+      const labelX = center + Math.cos(screenAngle) * midRadius;
+      const labelY = center + Math.sin(screenAngle) * midRadius;
+
+      ctx.save();
+      const layout = layouts[index];
+
+      ctx.font = `800 ${layout.fontSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
+      ctx.fillStyle = colorObj.text;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.direction = /[\u0600-\u06ff]/.test(item) ? 'rtl' : 'ltr';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.68)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 1;
+
+      const totalHeight = (layout.lines.length - 1) * layout.lineHeight;
+      const startY = labelY - totalHeight / 2;
+      layout.lines.forEach((line, lineIdx) => {
+        ctx.fillText(line, labelX, startY + lineIdx * layout.lineHeight);
+      });
+      ctx.restore();
+    });
+
+    // 4. Center Hub Socket (Clean Dark Luxury Framing for the Haverkamp Logo button)
     ctx.save();
     ctx.beginPath();
-    const hubRadius = Math.max(38, displaySize * 0.135);
-    ctx.arc(center, center, hubRadius + 3, 0, Math.PI * 2);
+    ctx.arc(center, center, hubRadius + 2, 0, Math.PI * 2);
     ctx.fillStyle = '#081220';
     ctx.fill();
 
     // Outer sleek dark rim (no gold color)
-    ctx.lineWidth = Math.max(3, displaySize * 0.008);
+    ctx.lineWidth = Math.max(2.5, displaySize * 0.007);
     ctx.strokeStyle = '#0f172a';
     ctx.stroke();
 
@@ -289,7 +334,7 @@ export class WheelRenderer {
     ctx.stroke();
     ctx.restore();
 
-    // 4. Pointer Arrow
+    // 5. Pointer Arrow
     this.drawPointer();
   }
 

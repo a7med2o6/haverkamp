@@ -14,10 +14,10 @@ export const dynamic = 'force-dynamic';
 export default async function NewIntakePage({
   searchParams,
 }: {
-  searchParams: Promise<{ booking?: string }>;
+  searchParams: Promise<{ booking?: string; customer?: string }>;
 }) {
   await requirePermission('workshop:write');
-  const { booking: bookingId } = await searchParams;
+  const { booking: bookingId, customer: customerParam } = await searchParams;
 
   const [customers, brands] = await Promise.all([
     db.customer.findMany({
@@ -67,10 +67,19 @@ export default async function NewIntakePage({
   // حجز حُوّل سلفاً لا يُحوَّل ثانيةً
   if (booking?.jobOrder) redirect(`/dashboard/job-orders/${booking.jobOrder.id}`);
 
-  // عميل الحجز معروف قبل التصيير، فسياراته تصل مع الصفحة لا بنداء بعدها
-  const bookingVehicles = booking?.customerId
+  /*
+    العميل يُعرَف من حجزه أو من ملفّه الذي جاء الموظف منه، والحجز أولى
+    لأنه يحمل سيارته وخدمته معه. والمَعلمة تأتي من شريط العنوان فتُتحقَّق:
+    محظورٌ أو غير موجودٍ لا يُعلَّم، وإلا لعُلِّم في القائمة من ليس فيها.
+  */
+  const seededCustomerId =
+    booking?.customerId ??
+    (customerParam && customers.some((c) => c.id === customerParam) ? customerParam : null);
+
+  // عميلٌ معروف قبل التصيير، فسياراته تصل مع الصفحة لا بنداء بعدها
+  const seededVehicles = seededCustomerId
     ? await db.vehicle.findMany({
-        where: { customerId: booking.customerId },
+        where: { customerId: seededCustomerId },
         orderBy: { createdAt: 'desc' },
         select: { id: true, make: true, model: true, year: true, plateNo: true },
       })
@@ -101,7 +110,8 @@ export default async function NewIntakePage({
               }
             : null
         }
-        bookingVehicles={bookingVehicles.map((v) => ({
+        initialCustomerId={seededCustomerId}
+        initialVehicles={seededVehicles.map((v) => ({
           id: v.id,
           label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,
           plateNo: v.plateNo,

@@ -75,11 +75,14 @@ export function IntakeForm({
   customers,
   brands,
   booking,
-  bookingVehicles = [],
+  initialCustomerId = null,
+  initialVehicles = [],
 }: {
   customers: Array<{ id: string; name: string; phone: string }>;
-  /** سيارات عميل الحجز — تصل جاهزة فلا تُجلب عند فتح الشاشة */
-  bookingVehicles?: OwnedVehicle[];
+  /** سيارات العميل المعروف سلفاً — تصل جاهزة فلا تُجلب عند فتح الشاشة */
+  initialVehicles?: OwnedVehicle[];
+  /** عميلٌ جاء الموظف من ملفّه — يُعلَّم سلفاً ويسبقه الحجز إن وُجد */
+  initialCustomerId?: string | null;
   brands: Brand[];
   /** حجز يُملأ منه البيان — القادم من «تحويل إلى أمر شغل» */
   booking?: BookingSeed | null;
@@ -100,7 +103,7 @@ export function IntakeForm({
   } | null>(null);
   const [looking, setLooking] = useState(false);
   /** سيارات العميل المسجّل — يختار منها بدل أن يتذكّر اللوحة */
-  const [owned, setOwned] = useState<OwnedVehicle[]>(bookingVehicles);
+  const [owned, setOwned] = useState<OwnedVehicle[]>(initialVehicles);
 
   /*
     تُجلب عند اختيار العميل لا مع الصفحة: مئات العملاء بسياراتهم حِملٌ
@@ -117,7 +120,7 @@ export function IntakeForm({
   }, []);
 
   const [head, setHead] = useState({
-    customerId: booking?.customerId ?? '',
+    customerId: booking?.customerId ?? initialCustomerId ?? '',
     vehicleId: booking?.vehicleId ?? '',
     odometer: '',
     promisedAt: '',

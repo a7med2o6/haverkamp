@@ -578,7 +578,10 @@ export default async function CustomerDetailPage({
         text="لا يوجد نشاط مسجّل لهذا العميل بعد."
         action={
           canWrite && !history.isBlocked ? (
-            <Link href="/dashboard/job-orders/new" className={buttonVariants({ size: 'sm' })}>
+            <Link
+              href={`/dashboard/job-orders/new?customer=${history.id}`}
+              className={buttonVariants({ size: 'sm' })}
+            >
               <Plus />
               بيان تشغيل جديد
             </Link>
@@ -767,7 +770,11 @@ export default async function CustomerDetailPage({
 
         <div className="flex flex-wrap items-center gap-2">
           {canWrite && !customer.isBlocked && (
-            <Link href="/dashboard/job-orders/new" className={buttonVariants({ size: 'sm' })}>
+            /* العميل يصل مع الرابط فيُعلَّم في البيان — لا يُعاد اختياره */
+            <Link
+              href={`/dashboard/job-orders/new?customer=${customer.id}`}
+              className={buttonVariants({ size: 'sm' })}
+            >
               <Plus />
               بيان تشغيل جديد
             </Link>

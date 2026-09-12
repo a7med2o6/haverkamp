@@ -11,7 +11,8 @@ import { PAGE_SIZE } from '@/lib/constants';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { CUSTOMER_SOURCE } from '@/lib/labels';
-import { digitsOnly, normalizePlate } from '@/lib/search';
+import { normalizePlate } from '@/lib/search';
+import { vehicleIdsByPlate } from '@/lib/search-db';
 import { formatDate, formatPhone } from '@/lib/utils';
 import { CustomerFormButton } from './customer-form';
 
@@ -27,19 +28,10 @@ export default async function CustomersPage({
   const { q, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
   const plateTerm = normalizePlate(q ?? '');
-  const plateDigits = digitsOnly(q ?? '');
+  const plateIds = q ? await vehicleIdsByPlate(q) : [];
 
-  const plateBranches: Prisma.CustomerWhereInput[] = [];
-  if (plateTerm) {
-    plateBranches.push({
-      vehicles: { some: { plateNo: { contains: plateTerm, mode: 'insensitive' } } },
-    });
-  }
-  if (plateDigits && plateDigits !== plateTerm) {
-    plateBranches.push({
-      vehicles: { some: { plateNo: { contains: plateDigits, mode: 'insensitive' } } },
-    });
-  }
+  const plateBranches: Prisma.CustomerWhereInput[] =
+    plateIds.length > 0 ? [{ vehicles: { some: { id: { in: plateIds } } } }] : [];
 
   const where: Prisma.CustomerWhereInput = q
     ? {
@@ -107,16 +99,12 @@ export default async function CustomersPage({
               />
             ) : (
               customers.map((c) => {
-                const matchedVehicles = q
-                  ? c.vehicles.filter((vehicle) => {
-                      const normalized = normalizePlate(vehicle.plateNo ?? '');
-                      const digits = digitsOnly(vehicle.plateNo ?? '');
-                      return (
-                        (plateTerm !== '' && normalized.includes(plateTerm)) ||
-                        (plateDigits !== '' && digits.includes(plateDigits))
-                      );
-                    })
-                  : [];
+                const matchedVehicles =
+                  q && plateTerm
+                    ? c.vehicles.filter((vehicle) =>
+                        normalizePlate(vehicle.plateNo ?? '').includes(plateTerm)
+                      )
+                    : [];
 
                 return (
                   <Tr key={c.id}>

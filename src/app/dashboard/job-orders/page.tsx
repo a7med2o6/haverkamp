@@ -15,7 +15,7 @@ import { cn, dueStatus, formatDate, formatKWD, toNumber } from '@/lib/utils';
 import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { Plus } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
-import { digitsOnly, normalizePlate } from '@/lib/search';
+import { vehicleIdsByPlate } from '@/lib/search-db';
 
 export const metadata: Metadata = { title: 'أوامر الشغل' };
 export const dynamic = 'force-dynamic';
@@ -65,8 +65,7 @@ export default async function JobOrdersPage({
           ? {}
           : { status: filter };
 
-  const plateTerm = normalizePlate(q ?? '');
-  const plateDigits = digitsOnly(q ?? '');
+  const plateIds = q ? await vehicleIdsByPlate(q) : [];
   const searchBranches: Prisma.JobOrderWhereInput[] = [];
   if (q) {
     searchBranches.push(
@@ -74,19 +73,8 @@ export default async function JobOrdersPage({
       { customer: { is: { name: { contains: q, mode: 'insensitive' } } } },
       { customer: { is: { phone: { contains: q } } } }
     );
-    if (plateTerm) {
-      searchBranches.push({
-        vehicle: {
-          is: { plateNo: { contains: plateTerm, mode: 'insensitive' } },
-        },
-      });
-    }
-    if (plateDigits && plateDigits !== plateTerm) {
-      searchBranches.push({
-        vehicle: {
-          is: { plateNo: { contains: plateDigits, mode: 'insensitive' } },
-        },
-      });
+    if (plateIds.length > 0) {
+      searchBranches.push({ vehicleId: { in: plateIds } });
     }
   }
 

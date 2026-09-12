@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Prisma } from '@/generated/prisma/client';
 import { action } from '@/lib/action-utils';
 import { db } from '@/lib/db';
-import { digitsOnly, normalizePlate } from '@/lib/search';
+import { vehicleIdsByPlate } from '@/lib/search-db';
 
 export const globalSearch = action({
   permission: 'crm:read',
@@ -16,18 +16,14 @@ export const globalSearch = action({
       .max(60, 'مصطلح البحث طويل جداً'),
   }),
   handler: async ({ q }) => {
-    const plateTerm = normalizePlate(q);
-    const plateDigits = digitsOnly(q);
+    const plateIds = await vehicleIdsByPlate(q, 24);
     const vehicleMatches: Prisma.VehicleWhereInput[] = [
       { make: { contains: q, mode: 'insensitive' } },
       { model: { contains: q, mode: 'insensitive' } },
     ];
 
-    if (plateTerm) {
-      vehicleMatches.push({ plateNo: { contains: plateTerm, mode: 'insensitive' } });
-    }
-    if (plateDigits && plateDigits !== plateTerm) {
-      vehicleMatches.push({ plateNo: { contains: plateDigits, mode: 'insensitive' } });
+    if (plateIds.length > 0) {
+      vehicleMatches.push({ id: { in: plateIds } });
     }
 
     const [customers, vehicles] = await Promise.all([

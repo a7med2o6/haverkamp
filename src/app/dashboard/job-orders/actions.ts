@@ -6,7 +6,8 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
-import { digitsOnly, normalizePlate } from '@/lib/search';
+import { normalizePlate } from '@/lib/search';
+import { vehicleIdsByPlate } from '@/lib/search-db';
 import {
   BODY_PARTS,
   intakeLabel,
@@ -661,28 +662,17 @@ export const lookupPlate = action({
     });
 
     /*
-      المطابقة التامة على الصورة الموحّدة قبل الجزئية: «77 889» و«77889»
-      لوحةٌ واحدة، فتُلتقط بلا لبس. أما الاحتواء فيبقى آخر محاولة ومشروطاً
-      بطول أربعة، لأن «123» يحتويها «91234» — ومطابقةٌ خاطئة هنا تُنبّه
-      الموظف إلى نقل ملكية سيارةٍ ليست التي بين يديه.
+      «10-83538» تُخزَّن بشرطتها، فالمطابقة التامّة وحدها تُخفيها عن من
+      كتبها بمسافة. والتوحيد يجري على الطرفين في vehicleIdsByPlate، فتُجمع
+      صور اللوحة الواحدة. ولا يُقبل إلا مرشّحٌ واحد: «123» تطابق «91234»
+      أيضاً، ومطابقةٌ خاطئة هنا تدعو الموظف إلى نقل ملكية سيارةٍ أخرى.
     */
     const normalized = normalizePlate(plateNo);
-    if (!vehicle && normalized && normalized !== plateNo.trim()) {
-      vehicle = await db.vehicle.findUnique({ where: { plateNo: normalized }, select });
-    }
-
-    const digits = digitsOnly(plateNo);
-    if (!vehicle && digits && digits !== normalized) {
-      vehicle = await db.vehicle.findUnique({ where: { plateNo: digits }, select });
-    }
-
-    const MIN_PARTIAL = 4;
-    for (const term of [normalized, digits]) {
-      if (vehicle || term.length < MIN_PARTIAL) continue;
-      vehicle = await db.vehicle.findFirst({
-        where: { plateNo: { contains: term, mode: 'insensitive' } },
-        select,
-      });
+    if (!vehicle && normalized) {
+      const candidates = await vehicleIdsByPlate(plateNo, 2);
+      if (candidates.length === 1) {
+        vehicle = await db.vehicle.findUnique({ where: { id: candidates[0] }, select });
+      }
     }
 
     if (!vehicle) return { data: { found: false } };

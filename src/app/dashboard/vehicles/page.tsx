@@ -10,7 +10,7 @@ import { Pagination } from '@/components/dashboard/pagination';
 import { PAGE_SIZE } from '@/lib/constants';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { digitsOnly, normalizePlate } from '@/lib/search';
+import { vehicleIdsByPlate } from '@/lib/search-db';
 import { cn, formatDate } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'السيارات' };
@@ -63,15 +63,11 @@ export default async function VehiclesPage({
           }
         : {};
 
-  const plateTerm = normalizePlate(q ?? '');
-  const plateDigits = digitsOnly(q ?? '');
+  const plateIds = q ? await vehicleIdsByPlate(q) : [];
   const searchBranches: Prisma.VehicleWhereInput[] = [];
   if (q) {
-    if (plateTerm) {
-      searchBranches.push({ plateNo: { contains: plateTerm, mode: 'insensitive' } });
-    }
-    if (plateDigits && plateDigits !== plateTerm) {
-      searchBranches.push({ plateNo: { contains: plateDigits, mode: 'insensitive' } });
+    if (plateIds.length > 0) {
+      searchBranches.push({ id: { in: plateIds } });
     }
     searchBranches.push(
       { make: { contains: q, mode: 'insensitive' } },

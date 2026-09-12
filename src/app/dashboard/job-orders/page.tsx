@@ -6,6 +6,7 @@ import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Pagination } from '@/components/dashboard/pagination';
+import { SearchBar } from '@/components/dashboard/search-bar';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { JOB_STATUS } from '@/lib/labels';
@@ -14,6 +15,7 @@ import { cn, dueStatus, formatDate, formatKWD, toNumber } from '@/lib/utils';
 import { CustomerFilterBar } from '@/components/dashboard/customer-filter';
 import { Plus } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import { digitsOnly, normalizePlate } from '@/lib/search';
 
 export const metadata: Metadata = { title: 'أوامر الشغل' };
 export const dynamic = 'force-dynamic';
@@ -26,13 +28,20 @@ const FILTERS = [
   { key: 'all', label: 'الكل' },
 ] as const;
 
+function listHref(filter: string, customer?: string, q?: string) {
+  const params = new URLSearchParams({ filter });
+  if (customer) params.set('customer', customer);
+  if (q) params.set('q', q);
+  return `/dashboard/job-orders?${params}`;
+}
+
 export default async function JobOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string; customer?: string }>;
+  searchParams: Promise<{ filter?: string; page?: string; customer?: string; q?: string }>;
 }) {
   const session = await requirePermission('workshop:read');
-  const { filter: filterParam, page: pageParam, customer } = await searchParams;
+  const { filter: filterParam, page: pageParam, customer, q } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
   /*
@@ -56,10 +65,39 @@ export default async function JobOrdersPage({
           ? {}
           : { status: filter };
 
-  // تصفية بعميل واحد — يصلها الموظف من رابط «عرض الكل» في ملف العميل
-  const where: Prisma.JobOrderWhereInput = customer
-    ? { AND: [byFilter, { customerId: customer }] }
-    : byFilter;
+  const plateTerm = normalizePlate(q ?? '');
+  const plateDigits = digitsOnly(q ?? '');
+  const searchBranches: Prisma.JobOrderWhereInput[] = [];
+  if (q) {
+    searchBranches.push(
+      { number: { contains: q, mode: 'insensitive' } },
+      { customer: { is: { name: { contains: q, mode: 'insensitive' } } } },
+      { customer: { is: { phone: { contains: q } } } }
+    );
+    if (plateTerm) {
+      searchBranches.push({
+        vehicle: {
+          is: { plateNo: { contains: plateTerm, mode: 'insensitive' } },
+        },
+      });
+    }
+    if (plateDigits && plateDigits !== plateTerm) {
+      searchBranches.push({
+        vehicle: {
+          is: { plateNo: { contains: plateDigits, mode: 'insensitive' } },
+        },
+      });
+    }
+  }
+
+  // تصفية العميل والبحث يضيّقان مرشّح الحالة نفسه ولا يستبدل أحدهما الآخر
+  const where: Prisma.JobOrderWhereInput = {
+    AND: [
+      byFilter,
+      ...(customer ? [{ customerId: customer }] : []),
+      ...(q ? [{ OR: searchBranches }] : []),
+    ],
+  };
 
   const [jobs, total] = await Promise.all([
     db.jobOrder.findMany({
@@ -97,15 +135,20 @@ export default async function JobOrdersPage({
       {customer && (
         <CustomerFilterBar
           customerId={customer}
-          clearHref={`/dashboard/job-orders?filter=${filter}`}
+          clearHref={listHref(filter, undefined, q)}
         />
       )}
+
+      <SearchBar
+        placeholder="ابحث برقم الأمر أو العميل أو اللوحة…"
+        className="mb-4 max-w-md"
+      />
 
       <div className="mb-4 flex flex-wrap gap-1.5">
         {FILTERS.map((f) => (
           <Link
             key={f.key}
-            href={`/dashboard/job-orders?filter=${f.key}${customer ? `&customer=${customer}` : ''}`}
+            href={listHref(f.key, customer, q)}
             className={cn(
               'rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors',
               filter === f.key
@@ -152,8 +195,10 @@ export default async function JobOrdersPage({
           <tbody>
             {jobs.length === 0 ? (
               <EmptyState
-                title="لا توجد أوامر شغل"
-                description="أنشئ أمر شغل جديد أو حوّل حجزاً قائماً"
+                title={q ? 'لا توجد نتائج مطابقة' : 'لا توجد أوامر شغل'}
+                description={
+                  q ? 'جرّب مصطلح بحث آخر' : 'أنشئ أمر شغل جديد أو حوّل حجزاً قائماً'
+                }
                 colSpan={8}
               />
             ) : (
@@ -240,4 +285,3 @@ export default async function JobOrdersPage({
     </>
   );
 }
-

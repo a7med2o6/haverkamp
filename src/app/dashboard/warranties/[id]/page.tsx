@@ -142,9 +142,16 @@ export default async function WarrantyDetailPage({
 
             <div className="grid gap-3 text-[13px] sm:grid-cols-2">
               <Info label="العميل">
-                <span className="font-medium text-[var(--text-0)]">
+                {/* الصفحة محروسة بـcrm:read، فمن يراها يقرأ ملفّ صاحبها */}
+                <Link
+                  href={withFrom(
+                    `/dashboard/customers/${warranty.vehicle.customer.id}`,
+                    `/dashboard/warranties/${warranty.id}`
+                  )}
+                  className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                >
                   {warranty.vehicle.customer.name}
-                </span>
+                </Link>
                 <span className="tnum block text-[12px] text-[var(--text-2)]" dir="ltr">
                   {warranty.vehicle.customer.phone}
                 </span>

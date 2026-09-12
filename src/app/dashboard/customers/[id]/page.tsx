@@ -839,11 +839,18 @@ export default async function CustomerDetailPage({
         <p className="text-[12px] text-[var(--text-2)]">
           <span className="tnum">{jobActivity._count}</span> زيارة · آخر زيارة{' '}
           <span className="tnum">{formatDate(jobActivity._max.receivedAt)}</span> ·{' '}
+          {/*
+            الرابط في السطر الهادئ لا في كتلة المستحق وحدها: من سدّد كلّ ما
+            عليه لا تظهر له الكتلة، فينقطع طريقه إلى فواتيره وهي قائمة.
+          */}
           {money._count > 0 ? (
-            <>
+            <Link
+              href={`/dashboard/invoices?customer=${customer.id}`}
+              className="hover:text-accent hover:underline"
+            >
               <span className="tnum">{money._count}</span> فاتورة بإجمالي{' '}
               <span className="tnum">{formatKWD(invoiced)}</span>
-            </>
+            </Link>
           ) : (
             'لا فواتير بعد'
           )}

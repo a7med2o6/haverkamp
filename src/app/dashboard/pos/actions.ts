@@ -271,7 +271,15 @@ export const setOrderDiscount = action({
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      select: { subtotal: true, taxAmount: true, paidAmount: true, status: true, number: true },
+      select: {
+        subtotal: true,
+        taxAmount: true,
+        paidAmount: true,
+        status: true,
+        number: true,
+        jobOrderId: true,
+        customerId: true,
+      },
     });
     if (!order) throw new AppError('الفاتورة غير موجودة');
     if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
@@ -298,8 +306,18 @@ export const setOrderDiscount = action({
       },
     });
 
+    /*
+      الخصم يغيّر ما يُطلب من العميل، وما يُطلب يُعرض في غير صفحة الفاتورة:
+      أمرُ شغلها يعرض إجماليها، وملفُّ صاحبها يعرض مستحقّه، واللوحة تعرض
+      مبيعات يومها. فتُبطَل كواشيها جميعاً وإلا بقي المعروض ما قبل الخصم.
+    */
     revalidatePath(`/dashboard/invoices/${orderId}`);
     revalidatePath('/dashboard/invoices');
+    revalidatePath('/dashboard/job-orders');
+    if (order.jobOrderId) revalidatePath(`/dashboard/job-orders/${order.jobOrderId}`);
+    if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
+    revalidatePath('/dashboard');
+
     return {
       id: orderId,
       message: discount > 0 ? `تم تسجيل خصم ${discount.toFixed(3)} د.ك` : 'تم إلغاء الخصم',
@@ -323,7 +341,14 @@ export const collectPayment = action({
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      select: { total: true, paidAmount: true, status: true, number: true },
+      select: {
+        total: true,
+        paidAmount: true,
+        status: true,
+        number: true,
+        jobOrderId: true,
+        customerId: true,
+      },
     });
     if (!order) throw new AppError('الفاتورة غير موجودة');
     if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
@@ -402,6 +427,10 @@ export const collectPayment = action({
     revalidatePath('/dashboard/invoices');
     revalidatePath(`/dashboard/invoices/${orderId}`);
     revalidatePath('/dashboard/products');
+    // «مستحق عليه» في ملفّ العميل يتبع المحصَّل، فيُبطَل كاشه معها
+    if (order.jobOrderId) revalidatePath(`/dashboard/job-orders/${order.jobOrderId}`);
+    if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
+    revalidatePath('/dashboard');
 
     return {
       id: orderId,

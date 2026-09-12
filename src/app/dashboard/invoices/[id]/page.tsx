@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
-import { backTo } from '@/lib/back-link';
+import { backTo, withFrom } from '@/lib/back-link';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +41,8 @@ export default async function InvoiceDetailPage({
     href: '/dashboard/invoices',
     label: 'العودة إلى الفواتير',
   });
+  const here = `/dashboard/invoices/${id}`;
+  const canReadCustomer = can(session.user.role, 'crm:read');
 
   const [order, settings] = await Promise.all([
     db.order.findUnique({
@@ -132,7 +134,19 @@ export default async function InvoiceDetailPage({
                 <p className="text-[11px] text-[var(--text-2)]">العميل</p>
                 {order.customer ? (
                   <>
-                    <p className="font-medium text-[var(--text-0)]">{order.customer.name}</p>
+                    {/* اسم العميل بابُ ملفّه — ولمن لا يملك قراءة العملاء يبقى نصّاً */}
+                    <p className="font-medium text-[var(--text-0)]">
+                      {canReadCustomer ? (
+                        <Link
+                          href={withFrom(`/dashboard/customers/${order.customer.id}`, here)}
+                          className="hover:text-accent hover:underline print:no-underline"
+                        >
+                          {order.customer.name}
+                        </Link>
+                      ) : (
+                        order.customer.name
+                      )}
+                    </p>
                     <p className="tnum text-[12px] text-[var(--text-2)]" dir="ltr">
                       {order.customer.phone}
                     </p>

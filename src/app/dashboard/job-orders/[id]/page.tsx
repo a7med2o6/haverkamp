@@ -59,7 +59,16 @@ export default async function JobOrderDetailPage({
         vehicle: true,
         items: { orderBy: { id: 'asc' } },
         warranties: { include: { service: { include: { translations: { where: { locale: 'ar' } } } } } },
-        order: { select: { id: true, number: true } },
+        order: {
+          select: {
+            id: true,
+            number: true,
+            subtotal: true,
+            discountAmount: true,
+            taxAmount: true,
+            total: true,
+          },
+        },
         booking: { select: { code: true } },
       },
     }),
@@ -83,7 +92,22 @@ export default async function JobOrderDetailPage({
   const canInvoice = can(session.user.role, 'pos:write');
   const canWarranty = can(session.user.role, 'crm:write');
 
-  const totalValue = job.items.reduce((s, i) => s + toNumber(i.total), 0);
+  /*
+    قيمة البنود تجمع الآباء وحدهم: أبناء الباقة بنودٌ تفصيليّة ثمنُها في
+    أبيها، فجمعُها معه يحسب الباقة مرّتين. وهي اليوم بصفر، لكنّ الصفر
+    حالٌ لا عهد.
+  */
+  const itemsValue = job.items
+    .filter((i) => !i.parentId)
+    .reduce((s, i) => s + toNumber(i.total), 0);
+
+  /*
+    ما يُطلب من العميل هو إجمالي فاتورته إن صدرت: الخصم يقع عليها لا على
+    بنود الشغل، فبنودُه تبقى بأسعارها شاهدةً على قيمة ما عُمل. وقبل
+    الفاتورة لا مرجع إلا البنود.
+  */
+  const invoiceDiscount = job.order ? toNumber(job.order.discountAmount) : 0;
+  const totalValue = job.order ? toNumber(job.order.total) : itemsValue;
 
   const isActive = job.status !== 'DELIVERED' && job.status !== 'CANCELLED';
   const due = dueStatus(job.promisedAt, isActive);
@@ -205,7 +229,15 @@ export default async function JobOrderDetailPage({
         {/* ── البنود ── */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>بنود الشغل — {formatKWD(totalValue)}</CardTitle>
+            <CardTitle>
+              بنود الشغل — {formatKWD(totalValue)}
+              {invoiceDiscount > 0 && (
+                <span className="ms-2 text-[12px] font-normal text-[var(--text-2)]">
+                  (قيمة البنود {formatKWD(itemsValue)} − خصم{' '}
+                  {formatKWD(invoiceDiscount)})
+                </span>
+              )}
+            </CardTitle>
             {canWrite && (
               <JobItemForm
                 jobOrderId={job.id}

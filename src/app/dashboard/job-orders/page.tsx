@@ -100,8 +100,9 @@ export default async function JobOrdersPage({
       include: {
         customer: { select: { id: true, name: true, phone: true } },
         vehicle: { select: { make: true, model: true, plateNo: true } },
-        items: { select: { total: true } },
-        order: { select: { id: true, number: true } },
+        // الآباء وحدهم: ثمن أبناء الباقة في أبيهم، وجمعُهم معه يحسبها مرّتين
+        items: { where: { parentId: null }, select: { total: true } },
+        order: { select: { id: true, number: true, total: true } },
       },
     }),
     db.jobOrder.count({ where }),
@@ -195,7 +196,10 @@ export default async function JobOrdersPage({
               />
             ) : (
               jobs.map((j) => {
-                const value = j.items.reduce((s, i) => s + toNumber(i.total), 0);
+                // إجمالي الفاتورة إن صدرت — فالخصم يقع عليها لا على بنود الشغل
+                const value = j.order
+                  ? toNumber(j.order.total)
+                  : j.items.reduce((s, i) => s + toNumber(i.total), 0);
                 const due = dueStatus(
                   j.promisedAt,
                   j.status !== 'DELIVERED' && j.status !== 'CANCELLED'

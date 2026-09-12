@@ -1,5 +1,4 @@
 import { soundManager } from './sound';
-import { fitWheelLabel, type WheelLabelLayout } from './label-geometry';
 
 export interface WheelColor {
   bg: string;
@@ -41,8 +40,6 @@ export interface WheelRendererOptions {
   onTick?: () => void;
 }
 
-const TAU = Math.PI * 2;
-
 export class WheelRenderer {
   public canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
@@ -65,13 +62,6 @@ export class WheelRenderer {
   private lastSectorIndex = -1;
   private animId: number | null = null;
   private colorMap: number[] = [];
-  /*
-    تخطيط الأسماء لا يتغيّر بالدوران: يتبع النصّ ومقاس العجلة وحجم الخط
-    وحدها. وحسابه في كل إطارٍ يعني ضبط ctx.font عشرات المرّات لكل جائزة
-    ستّين مرّة في الثانية — وضبط الخط أغلى ما في الرسم. فيُحسب مرّة
-    ويُحفظ ببصمة مدخلاته، ويُعاد حسابه حين تتغيّر.
-  */
-  private labelCache: { sig: string; layouts: WheelLabelLayout[] } | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private displaySize = 300;
   private center = 150;
@@ -240,97 +230,56 @@ export class WheelRenderer {
       ctx.fillStyle = '#ffffff';
       ctx.fill();
 
+      /*
+        الاسم يدور مع قطاعه ولا يُقلب — كبرنامج السحب الأصلي في win-kw.
+        يُكتب من حافة العجلة إلى داخلها محاذىً إلى اليمين، فيأخذ نصف
+        القطر كلّه لا وترَ القطاع. ونصفُ العجلة يُقرأ مقلوباً في كل
+        لحظة، وهو المألوف في عجلات الحظّ: العين تتبع القطاع الواقف عند
+        السهم لا الدائرة كلها.
+      */
+      ctx.save();
+      ctx.rotate(startAngle + sliceAngle / 2);
+
+      const isMobile = displaySize < 420;
+      const maxFont = isMobile ? 15 : 18;
+      const minFont = isMobile ? 10 : 12;
+      const preferred =
+        typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
+          ? Math.max(10, Math.min(32, this.wheelFontSize))
+          : maxFont;
+      const fontScaleFactor = Math.PI / Math.max(items.length, 4);
+      const calculatedFont = Math.floor(radius * fontScaleFactor * 0.52);
+      const fontSize = Math.max(minFont, Math.min(preferred, calculatedFont));
+
+      ctx.font = `800 ${fontSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
+
+      const maxTextWidth = radius - displaySize * 0.14;
+      let text = item;
+      if (ctx.measureText(text).width > maxTextWidth) {
+        while (text.length > 2 && ctx.measureText(text + '...').width > maxTextWidth) {
+          text = text.slice(0, -1);
+        }
+        text += '...';
+      }
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+
+      ctx.fillStyle = colorObj.text;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      const textPadding = Math.max(20, displaySize * 0.07);
+      ctx.fillText(text, radius - textPadding, 0);
+      ctx.restore();
     });
 
     ctx.restore();
 
-    /*
-      3. الأسماء على أضلاع القطاعات.
-
-      النصّ الأفقي كان يأخذ أقصر بُعدَي القطاع — وترَه — ويهدر طوله
-      الشعاعي، فيتكرمش الاسم في سطرين ويُقصّ. وبعجلة ذات اثنتي عشرة
-      جائزة يبلغ الوتر نحو خُمسِ نصف القطر، والطول الشعاعي نحو ثلاثة
-      أخماسه: ثلاثة أضعافٍ تُهدر.
-
-      فيُكتب النصّ على ضلع القطاع: طولُه للحروف، ووترُه لارتفاع أسطره.
-      ويُقلب مئةً وثمانين حين يقع القطاع في النصف الأيسر، فلا يُقرأ
-      اسمٌ مقلوباً رأساً على عقب.
-    */
-    const hubRadius = Math.max(24, Math.round(radius * 0.22));
-    const innerRadius = hubRadius + Math.max(8, displaySize * 0.018);
-    const outerRadius = radius - Math.max(12, displaySize * 0.03);
-    const midRadius = (innerRadius + outerRadius) / 2;
-    const sliceChordWidth = 2 * midRadius * Math.sin(sliceAngle / 2);
-    // الطول الشعاعي هو مدى الحروف الآن، والوتر هو ما يتّسع له ارتفاع الأسطر
-    const maxLabelWidth = (outerRadius - innerRadius) * 0.92;
-    const maxTransverseHeight = sliceChordWidth * 0.82;
-    const baseFont =
-      typeof this.wheelFontSize === 'number' && Number.isFinite(this.wheelFontSize)
-        ? Math.max(10, Math.min(32, this.wheelFontSize))
-        : 18;
-    const scale = Math.min(1.35, displaySize / 480);
-    const preferredFontSize = Math.max(8, Math.round(baseFont * scale));
-    const minFontSize = Math.max(7, Math.round(8 * scale));
-
-    const sig = `${maxLabelWidth}|${maxTransverseHeight}|${preferredFontSize}|${minFontSize}|${items.join('\u0000')}`;
-    if (!this.labelCache || this.labelCache.sig !== sig) {
-      const measure = (str: string, fSize: number) => {
-        ctx.font = `800 ${fSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
-        return ctx.measureText(str).width;
-      };
-      this.labelCache = {
-        sig,
-        layouts: items.map((item) =>
-          fitWheelLabel(
-            measure,
-            item,
-            maxLabelWidth,
-            maxTransverseHeight,
-            preferredFontSize,
-            minFontSize
-          )
-        ),
-      };
-    }
-    const layouts = this.labelCache.layouts;
-
-    items.forEach((item, index) => {
-      const colorIdx =
-        this.colorMap && this.colorMap.length === items.length
-          ? this.colorMap[index]
-          : index % palette.length;
-      const colorObj = palette[colorIdx];
-      const screenAngle = index * sliceAngle + sliceAngle / 2 + currentAngle;
-
-      ctx.save();
-      const layout = layouts[index];
-
-      ctx.translate(center, center);
-      ctx.rotate(screenAngle);
-      ctx.translate(midRadius, 0);
-      // النصف الأيسر يُقرأ مقلوباً لولا القلب — والزاوية تُردّ إلى دورة واحدة أولاً
-      const turn = ((screenAngle % TAU) + TAU) % TAU;
-      if (turn > Math.PI / 2 && turn < (3 * Math.PI) / 2) {
-        ctx.rotate(Math.PI);
-      }
-
-      ctx.font = `800 ${layout.fontSize}px "IBM Plex Sans Arabic", "Tajawal", "Readex Pro", sans-serif`;
-      ctx.fillStyle = colorObj.text;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.direction = /[\u0600-\u06ff]/.test(item) ? 'rtl' : 'ltr';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.68)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetY = 1;
-
-      const totalHeight = (layout.lines.length - 1) * layout.lineHeight;
-      layout.lines.forEach((line, lineIdx) => {
-        ctx.fillText(line, 0, -totalHeight / 2 + lineIdx * layout.lineHeight);
-      });
-      ctx.restore();
-    });
-
     // 4. Center Hub Socket (Clean Dark Luxury Framing for the Haverkamp Logo button)
+    const hubRadius = Math.max(24, Math.round(radius * 0.22));
     ctx.save();
     ctx.beginPath();
     ctx.arc(center, center, hubRadius + 2, 0, Math.PI * 2);

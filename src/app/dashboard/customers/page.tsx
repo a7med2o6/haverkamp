@@ -11,6 +11,7 @@ import { PAGE_SIZE } from '@/lib/constants';
 import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { CUSTOMER_SOURCE } from '@/lib/labels';
+import { digitsOnly, normalizePlate } from '@/lib/search';
 import { formatDate, formatPhone } from '@/lib/utils';
 import { CustomerFormButton } from './customer-form';
 
@@ -25,6 +26,20 @@ export default async function CustomersPage({
   const session = await requirePermission('crm:read');
   const { q, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+  const plateTerm = normalizePlate(q ?? '');
+  const plateDigits = digitsOnly(q ?? '');
+
+  const plateBranches: Prisma.CustomerWhereInput[] = [];
+  if (plateTerm) {
+    plateBranches.push({
+      vehicles: { some: { plateNo: { contains: plateTerm, mode: 'insensitive' } } },
+    });
+  }
+  if (plateDigits && plateDigits !== plateTerm) {
+    plateBranches.push({
+      vehicles: { some: { plateNo: { contains: plateDigits, mode: 'insensitive' } } },
+    });
+  }
 
   const where: Prisma.CustomerWhereInput = q
     ? {
@@ -33,6 +48,7 @@ export default async function CustomersPage({
           { phone: { contains: q } },
           { code: { contains: q, mode: 'insensitive' } },
           { civilId: { contains: q } },
+          ...plateBranches,
         ],
       }
     : {};
@@ -45,6 +61,7 @@ export default async function CustomersPage({
       take: PAGE_SIZE,
       include: {
         _count: { select: { vehicles: true, jobOrders: true } },
+        vehicles: { select: { plateNo: true, make: true, model: true } },
       },
     }),
     db.customer.count({ where }),
@@ -61,7 +78,7 @@ export default async function CustomersPage({
       />
 
       <SearchBar
-        placeholder="ابحث بالاسم أو الهاتف أو الرقم المدني…"
+        placeholder="ابحث بالاسم أو الهاتف أو الرقم المدني أو رقم اللوحة…"
         className="mb-4 max-w-md"
       />
 
@@ -89,43 +106,68 @@ export default async function CustomersPage({
                 colSpan={8}
               />
             ) : (
-              customers.map((c) => (
-                <Tr key={c.id}>
-                  <Td className="tnum text-[12px]" dir="ltr">
-                    {c.code}
-                  </Td>
-                  <Td>
-                    <Link
-                      href={`/dashboard/customers/${c.id}`}
-                      className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
-                    >
-                      {c.name}
-                    </Link>
-                    {c.isBlocked && (
-                      <Badge tone="danger" className="ms-2">
-                        محظور
+              customers.map((c) => {
+                const matchedVehicles = q
+                  ? c.vehicles.filter((vehicle) => {
+                      const normalized = normalizePlate(vehicle.plateNo ?? '');
+                      const digits = digitsOnly(vehicle.plateNo ?? '');
+                      return (
+                        (plateTerm !== '' && normalized.includes(plateTerm)) ||
+                        (plateDigits !== '' && digits.includes(plateDigits))
+                      );
+                    })
+                  : [];
+
+                return (
+                  <Tr key={c.id}>
+                    <Td className="tnum text-[12px]" dir="ltr">
+                      {c.code}
+                    </Td>
+                    <Td>
+                      <Link
+                        href={`/dashboard/customers/${c.id}`}
+                        className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                      >
+                        {c.name}
+                      </Link>
+                      {c.isBlocked && (
+                        <Badge tone="danger" className="ms-2">
+                          محظور
+                        </Badge>
+                      )}
+                      {matchedVehicles.map((vehicle) => (
+                        <p
+                          key={vehicle.plateNo}
+                          className="mt-1 text-[11px] text-[var(--text-2)]"
+                        >
+                          لوحة مطابقة:{' '}
+                          <span className="tnum" dir="ltr">
+                            {vehicle.plateNo}
+                          </span>{' '}
+                          — {vehicle.make} {vehicle.model}
+                        </p>
+                      ))}
+                    </Td>
+                    {/*
+                      `dir=ltr` يصحّح ترتيب الأرقام، لكنه يجعل بداية السطر
+                      يساراً فينفصل العمود عن ترويسته المحاذاة يميناً.
+                      `text-end` يعيده إلى حافة العمود كبقية الأعمدة.
+                    */}
+                    <Td className="tnum whitespace-nowrap text-end" dir="ltr">
+                      {formatPhone(c.phone)}
+                    </Td>
+                    <Td>{c.area ?? '—'}</Td>
+                    <Td className="tnum">{c._count.vehicles}</Td>
+                    <Td className="tnum">{c._count.jobOrders}</Td>
+                    <Td>
+                      <Badge tone={CUSTOMER_SOURCE[c.source].tone}>
+                        {CUSTOMER_SOURCE[c.source].label}
                       </Badge>
-                    )}
-                  </Td>
-                  {/*
-                    `dir=ltr` يصحّح ترتيب الأرقام، لكنه يجعل بداية السطر
-                    يساراً فينفصل العمود عن ترويسته المحاذاة يميناً.
-                    `text-end` يعيده إلى حافة العمود كبقية الأعمدة.
-                  */}
-                  <Td className="tnum whitespace-nowrap text-end" dir="ltr">
-                    {formatPhone(c.phone)}
-                  </Td>
-                  <Td>{c.area ?? '—'}</Td>
-                  <Td className="tnum">{c._count.vehicles}</Td>
-                  <Td className="tnum">{c._count.jobOrders}</Td>
-                  <Td>
-                    <Badge tone={CUSTOMER_SOURCE[c.source].tone}>
-                      {CUSTOMER_SOURCE[c.source].label}
-                    </Badge>
-                  </Td>
-                  <Td className="tnum text-[12px]">{formatDate(c.createdAt)}</Td>
-                </Tr>
-              ))
+                    </Td>
+                    <Td className="tnum text-[12px]">{formatDate(c.createdAt)}</Td>
+                  </Tr>
+                );
+              })
             )}
           </tbody>
         </Table>

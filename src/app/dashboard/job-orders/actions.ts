@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
+import { digitsOnly, normalizePlate } from '@/lib/search';
 import {
   BODY_PARTS,
   intakeLabel,
@@ -646,16 +647,43 @@ export const lookupPlate = action({
   permission: 'workshop:read',
   schema: z.object({ plateNo: z.string().trim().min(1) }),
   handler: async ({ plateNo }) => {
-    const vehicle = await db.vehicle.findUnique({
-      where: { plateNo },
-      select: {
-        id: true,
-        make: true,
-        model: true,
-        customerId: true,
-        customer: { select: { name: true } },
-      },
+    const select = {
+      id: true,
+      make: true,
+      model: true,
+      customerId: true,
+      customer: { select: { name: true } },
+    } satisfies Prisma.VehicleSelect;
+
+    let vehicle = await db.vehicle.findUnique({
+      where: { plateNo: plateNo.trim() },
+      select,
     });
+
+    /*
+      المطابقة التامة على الصورة الموحّدة قبل الجزئية: «77 889» و«77889»
+      لوحةٌ واحدة، فتُلتقط بلا لبس. أما الاحتواء فيبقى آخر محاولة ومشروطاً
+      بطول أربعة، لأن «123» يحتويها «91234» — ومطابقةٌ خاطئة هنا تُنبّه
+      الموظف إلى نقل ملكية سيارةٍ ليست التي بين يديه.
+    */
+    const normalized = normalizePlate(plateNo);
+    if (!vehicle && normalized && normalized !== plateNo.trim()) {
+      vehicle = await db.vehicle.findUnique({ where: { plateNo: normalized }, select });
+    }
+
+    const digits = digitsOnly(plateNo);
+    if (!vehicle && digits && digits !== normalized) {
+      vehicle = await db.vehicle.findUnique({ where: { plateNo: digits }, select });
+    }
+
+    const MIN_PARTIAL = 4;
+    for (const term of [normalized, digits]) {
+      if (vehicle || term.length < MIN_PARTIAL) continue;
+      vehicle = await db.vehicle.findFirst({
+        where: { plateNo: { contains: term, mode: 'insensitive' } },
+        select,
+      });
+    }
 
     if (!vehicle) return { data: { found: false } };
 

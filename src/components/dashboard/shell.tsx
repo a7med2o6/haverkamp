@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { signOut } from 'next-auth/react';
 import { LogOut, Menu, Moon, Sun, X } from 'lucide-react';
 import { Sidebar } from './sidebar';
+import { GlobalSearch } from './global-search';
 import { Button } from '@/components/ui/button';
 import { ROLE_LABELS } from '@/lib/rbac';
 import type { Role } from '@/generated/prisma/enums';
@@ -105,7 +106,9 @@ export function DashboardShell({
             <Menu className="size-5" />
           </button>
 
-          <div className="flex-1" />
+          <div className="flex min-w-0 flex-1 justify-center">
+            <GlobalSearch />
+          </div>
 
           <Button
             variant="ghost"

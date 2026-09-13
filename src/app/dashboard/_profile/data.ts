@@ -6,8 +6,8 @@ import { BOOKING_STATUS, JOB_STATUS, ORDER_STATUS, PAYMENT_METHOD } from '@/lib/
 import { expiryStatus, formatKWD, toNumber } from '@/lib/utils';
 
 /*
-  ما تتقاسمه أقسام ملف العميل: الصلاحيات، وتحويل أوامر الشغل والحجوزات
-  والفواتير إلى صفٍّ واحد الشكل، وحساب حال الكفالة.
+  ما تتقاسمه صفحتا ملف العميل وملف السيارة: الصلاحيات، وتحويل أوامر الشغل
+  والحجوزات والفواتير إلى صفٍّ واحد الشكل، وحساب حال الكفالة.
 */
 
 export type Tone = NonNullable<BadgeProps['tone']>;
@@ -17,13 +17,26 @@ export type TabKey = 'overview' | 'cars' | 'work' | 'invoices' | 'wash' | 'conta
 
 /** ما يراه صاحب الجلسة — يُحسب مرّة في الصفحة ويُمرَّر، فلا يُسأل عنه في كل قسم */
 export interface ProfilePerms {
+  /** كتابة العملاء والسيارات والسيرفس — crm:write */
   write: boolean;
   remove: boolean;
   workshop: boolean;
+  /** فتح بيان تشغيل — صفحته محروسة بـ workshop:write لا بـ crm */
+  workshopWrite: boolean;
   invoices: boolean;
   wash: boolean;
   washWrite: boolean;
 }
+
+/** السجلّ نفسه يُقرأ من جهة العميل أو من جهة السيارة */
+export type ProfileScope = { customerId: string } | { vehicleId: string };
+
+export function scopeWhere(scope: ProfileScope) {
+  return 'vehicleId' in scope ? { vehicleId: scope.vehicleId } : { customerId: scope.customerId };
+}
+
+/** أوامر لم تُسلَّم بعد — «جاهز للتسليم» منها لأن السيارة ما زالت واقفة */
+export const OPEN_JOB_STATUSES = ['RECEIVED', 'IN_PROGRESS', 'QUALITY_CHECK', 'READY'] as const;
 
 export const TONE_RANK: Record<Tone, number> = {
   neutral: 0,
@@ -49,13 +62,23 @@ export function parseLimit(value: string | string[] | undefined) {
   return Math.min(PAGE_CAP, Math.max(PAGE_STEP, Math.ceil(n / PAGE_STEP) * PAGE_STEP));
 }
 
-export function customerHref(id: string, params: Record<string, string | number | undefined>) {
+export type HrefParams = Record<string, string | number | undefined>;
+
+function profileHref(base: string, params: HrefParams) {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== '') search.set(key, String(value));
   }
   const query = search.toString();
-  return `/dashboard/customers/${id}${query ? `?${query}` : ''}`;
+  return `${base}${query ? `?${query}` : ''}`;
+}
+
+export function customerHref(id: string, params: HrefParams) {
+  return profileHref(`/dashboard/customers/${id}`, params);
+}
+
+export function vehicleHref(id: string, params: HrefParams) {
+  return profileHref(`/dashboard/vehicles/${id}`, params);
 }
 
 export function vehicleLabel(vehicle: { make: string; model: string } | null | undefined) {
@@ -94,12 +117,20 @@ export interface ProfileEvent {
   payments?: string;
 }
 
+/**
+ * من أين يُقرأ الصفّ: ملف العميل يعرف صاحبه فيذكر السيارة، وملف السيارة
+ * يعرفها فيذكر من سُجّل الأمر باسمه — لا «مالكها حينها» تخميناً، فالسجلّ
+ * يشهد بمن جاء بها لا بمن كان يملكها.
+ */
+export type EventView = 'customer' | 'vehicle';
+
 export const JOB_EVENT_SELECT = {
   id: true,
   number: true,
   receivedAt: true,
   status: true,
   vehicle: { select: { make: true, model: true } },
+  customer: { select: { id: true, name: true } },
 } satisfies Prisma.JobOrderSelect;
 
 export const BOOKING_EVENT_SELECT = {
@@ -109,7 +140,9 @@ export const BOOKING_EVENT_SELECT = {
   status: true,
   serviceKey: true,
   serviceSpec: true,
+  guestName: true,
   vehicle: { select: { make: true, model: true } },
+  customer: { select: { id: true, name: true } },
   service: {
     select: { translations: { where: { locale: 'ar' }, select: { name: true } } },
   },
@@ -129,16 +162,31 @@ export const ORDER_EVENT_SELECT = {
   payments: { orderBy: { receivedAt: 'asc' }, select: { method: true, amount: true } },
 } satisfies Prisma.OrderSelect;
 
+export const JOB_INVOICE_SELECT = {
+  jobOrderId: true,
+  number: true,
+  total: true,
+  paidAmount: true,
+  status: true,
+} satisfies Prisma.OrderSelect;
+
 type JobRow = Prisma.JobOrderGetPayload<{ select: typeof JOB_EVENT_SELECT }>;
 type BookingRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_EVENT_SELECT }>;
 type OrderRow = Prisma.OrderGetPayload<{ select: typeof ORDER_EVENT_SELECT }>;
+type JobInvoice = Prisma.OrderGetPayload<{ select: typeof JOB_INVOICE_SELECT }>;
 
-export function jobEvent(job: JobRow, here: string): ProfileEvent {
+function remainingOf(total: number, paid: number, status: OrderRow['status']) {
+  const live = status !== 'CANCELLED' && status !== 'REFUNDED';
+  return live ? Math.max(0, Math.round((total - paid) * 1000) / 1000) : 0;
+}
+
+export function jobEvent(job: JobRow, here: string, view: EventView = 'customer'): ProfileEvent {
   return {
     kind: 'job',
     id: job.id,
     number: job.number,
-    detail: vehicleLabel(job.vehicle) ?? 'بدون سيارة',
+    detail:
+      view === 'vehicle' ? `باسم ${job.customer.name}` : (vehicleLabel(job.vehicle) ?? 'بدون سيارة'),
     date: job.receivedAt,
     withTime: false,
     status: JOB_STATUS[job.status],
@@ -149,30 +197,38 @@ export function jobEvent(job: JobRow, here: string): ProfileEvent {
 export function bookingEvent(
   booking: BookingRow,
   here: string,
-  customerId: string,
   /** أمر الشغل لمن يرى الورشة؛ الكاشير يُحال إلى قائمة الحجوزات لا إلى صفحةٍ مغلقة دونه */
-  canOpenJob: boolean
+  canOpenJob: boolean,
+  view: EventView = 'customer'
 ): ProfileEvent {
+  const service = bookingServiceLabel(booking);
+  const party = booking.customer?.name ?? booking.guestName;
   return {
     kind: 'booking',
     id: booking.id,
     number: booking.code,
     detail:
-      joinDetail(vehicleLabel(booking.vehicle), bookingServiceLabel(booking)) ?? 'بدون خدمة',
+      (view === 'vehicle'
+        ? joinDetail(party ? `باسم ${party}` : null, service)
+        : joinDetail(vehicleLabel(booking.vehicle), service)) ?? 'بدون خدمة',
     date: booking.scheduledAt,
     withTime: true,
     status: BOOKING_STATUS[booking.status],
-    href: booking.jobOrder && canOpenJob
-      ? withFrom(`/dashboard/job-orders/${booking.jobOrder.id}`, here)
-      : withFrom(`/dashboard/bookings?view=list&customer=${customerId}`, here),
+    href:
+      booking.jobOrder && canOpenJob
+        ? withFrom(`/dashboard/job-orders/${booking.jobOrder.id}`, here)
+        : withFrom(
+            booking.customer
+              ? `/dashboard/bookings?view=list&customer=${booking.customer.id}`
+              : '/dashboard/bookings?view=list',
+            here
+          ),
   };
 }
 
 export function invoiceEvent(order: OrderRow, here: string): ProfileEvent {
   const total = toNumber(order.total);
-  const paid = toNumber(order.paidAmount);
-  const live = order.status !== 'CANCELLED' && order.status !== 'REFUNDED';
-  const remaining = live ? Math.max(0, Math.round((total - paid) * 1000) / 1000) : 0;
+  const remaining = remainingOf(total, toNumber(order.paidAmount), order.status);
   const period = order.washSubscriptionPeriod;
 
   return {
@@ -200,6 +256,26 @@ export function invoiceEvent(order: OrderRow, here: string): ProfileEvent {
           ? 'لم يُسدَّد شيء'
           : undefined,
   };
+}
+
+/**
+ * فاتورة الأمر على صفّه — لمن يرى الفواتير — بلا مجموعٍ للسيارة: الفاتورة
+ * على العميل، وجمعُ فواتير ملّاكٍ مختلفين رقمٌ لا يملكه أحد.
+ */
+export function withJobInvoices(events: ProfileEvent[], invoices: JobInvoice[]) {
+  const byJob = new Map(invoices.map((invoice) => [invoice.jobOrderId, invoice]));
+  return events.map((event) => {
+    const invoice = event.kind === 'job' ? byJob.get(event.id) : undefined;
+    if (!invoice) return event;
+    const total = toNumber(invoice.total);
+    const remaining = remainingOf(total, toNumber(invoice.paidAmount), invoice.status);
+    return {
+      ...event,
+      amount: total,
+      remaining: remaining > 0 ? remaining : undefined,
+      payments: `فاتورة ${invoice.number} · ${ORDER_STATUS[invoice.status].label}`,
+    };
+  });
 }
 
 const KIND_ORDER: Record<ProfileEvent['kind'], number> = { job: 0, booking: 1, invoice: 2 };
@@ -285,6 +361,20 @@ export function warrantyRows(
         TONE_RANK[b.badge.tone] - TONE_RANK[a.badge.tone] ||
         a.urgentAt.getTime() - b.urgentAt.getTime()
     );
+}
+
+/**
+ * أشدّ سيرفسٍ مطلوب بين كفالات السيارة: الأسوأ حالاً ثم الأقرب موعداً.
+ * لا يعود إلا من كفالةٍ سارية مشروطة — فلا يُطلب سيرفسٌ لكفالةٍ ملغاة أو منتهية.
+ */
+export function mostUrgentService(rows: WarrantyRow[]) {
+  return rows
+    .flatMap((row) => (row.service ? [{ row, service: row.service }] : []))
+    .sort(
+      (a, b) =>
+        TONE_RANK[b.service.tone] - TONE_RANK[a.service.tone] ||
+        (a.service.dueAt?.getTime() ?? 0) - (b.service.dueAt?.getTime() ?? 0)
+    )[0];
 }
 
 /**

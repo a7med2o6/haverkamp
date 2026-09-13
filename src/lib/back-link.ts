@@ -32,6 +32,7 @@ const LABELS: Array<[RegExp, string]> = [
   [/^\/dashboard\/bookings$/, 'العودة إلى الحجوزات'],
   [/^\/dashboard\/wash\/billing$/, 'العودة إلى تحصيل الاشتراكات'],
   [/^\/dashboard\/vehicles\/[^/]+$/, 'العودة إلى السيارة'],
+  [/^\/dashboard\/vehicles$/, 'العودة إلى السيارات'],
   [/^\/dashboard$/, 'العودة إلى النظرة العامة'],
 ];
 

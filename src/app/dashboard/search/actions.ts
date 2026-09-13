@@ -48,6 +48,7 @@ export const globalSearch = action({
         orderBy: { createdAt: 'desc' },
         take: 6,
         select: {
+          id: true,
           plateNo: true,
           make: true,
           model: true,

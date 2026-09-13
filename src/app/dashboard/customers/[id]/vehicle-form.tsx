@@ -24,11 +24,16 @@ export function VehicleFormButton({
   customerId,
   vehicle,
   canDelete = false,
+  triggerVariant,
+  afterDeleteHref,
 }: {
   customerId: string;
   vehicle?: VehicleValues;
   /** الحذف داخل نافذة التعديل — لا زرّ أحمر دائم بجانب كل سيارة يُضغط سهواً */
   canDelete?: boolean;
+  triggerVariant?: 'ghost' | 'secondary';
+  /** من صفحة السيارة نفسها: بعد حذفها لا صفحة يُعاد تحميلها، فيُنتقل إلى هنا */
+  afterDeleteHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   const isEdit = !!vehicle?.id;
@@ -36,7 +41,7 @@ export function VehicleFormButton({
   return (
     <>
       <Button
-        variant={isEdit ? 'ghost' : 'secondary'}
+        variant={triggerVariant ?? (isEdit ? 'ghost' : 'secondary')}
         size="sm"
         onClick={() => setOpen(true)}
         aria-label={isEdit ? 'تعديل السيارة' : 'إضافة سيارة'}
@@ -58,6 +63,7 @@ export function VehicleFormButton({
             }
           }
           canDelete={isEdit && canDelete}
+          afterDeleteHref={afterDeleteHref}
           onClose={() => setOpen(false)}
         />
       )}
@@ -68,10 +74,12 @@ export function VehicleFormButton({
 function VehicleModal({
   initial,
   canDelete,
+  afterDeleteHref,
   onClose,
 }: {
   initial: VehicleValues;
   canDelete: boolean;
+  afterDeleteHref?: string;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -112,7 +120,8 @@ function VehicleModal({
       if (res.ok) {
         toast.success(res.message ?? 'تم الحذف');
         onClose();
-        router.refresh();
+        if (afterDeleteHref) router.push(afterDeleteHref);
+        else router.refresh();
       } else {
         toast.error(res.error);
       }

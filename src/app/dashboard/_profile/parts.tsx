@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { ArrowLeft, CalendarDays, Receipt, Wrench } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CircleAlert, CircleCheck, Receipt, Wrench } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatDate, formatDateTime, formatKWD } from '@/lib/utils';
-import type { ProfileEvent, Tone } from './profile-data';
+import type { ProfileEvent, Tone } from './data';
 
 const KIND_META: Record<ProfileEvent['kind'], { label: string; icon: LucideIcon }> = {
   job: { label: 'أمر شغل', icon: Wrench },
@@ -22,6 +22,9 @@ const MONTH = new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
   year: 'numeric',
   timeZone: 'Asia/Kuwait',
 });
+
+/** ما يُرى دون نقرة؛ الباقي تحت «عرض N أخرى» كي لا تغرق الصفحة في يوم مزدحم */
+const VISIBLE_ATTENTION = 4;
 
 export function Panel({
   title,
@@ -107,6 +110,162 @@ export function EmptyPanel({ text, action }: { text: string; action?: React.Reac
     </div>
   );
 }
+
+/* ─────────────────────────── بطاقة الملف ─────────────────────────── */
+
+export function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <div className={cn('border-[var(--line)] p-4', className)}>
+      <p className="text-[11px] text-[var(--text-2)]">{label}</p>
+      <p className="tnum mt-1 text-[15px] font-bold text-[var(--text-0)]">{value}</p>
+    </div>
+  );
+}
+
+export function Info({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <Icon className="mt-0.5 size-4 shrink-0 text-[var(--text-2)]" />
+      <div className="min-w-0 flex-1">
+        <dt className="text-[11px] text-[var(--text-2)]">{label}</dt>
+        <dd className="whitespace-pre-line text-[13px] leading-relaxed text-[var(--text-1)]">{children}</dd>
+      </div>
+    </div>
+  );
+}
+
+export interface ProfileTabItem {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  count?: number;
+  alert?: number;
+}
+
+export function ProfileTabs({
+  label,
+  tabs,
+  active,
+  hrefFor,
+}: {
+  label: string;
+  tabs: ProfileTabItem[];
+  active: string;
+  hrefFor: (key: string) => string;
+}) {
+  return (
+    /*
+      الخطّ الرمادي ظلٌّ داخل الصفّ لا حدٌّ للحاوية: الحدّ مع إنزال اللسان
+      بكسلاً فوقه يفيض عن الحاوية عمودياً، والتمرير الأفقي يجرّ معه شريط
+      تمريرٍ عمودياً يظهر في آخر الألسنة.
+    */
+    <nav aria-label={label} className="mb-4 overflow-x-auto">
+      <div className="flex w-max min-w-full gap-1 shadow-[inset_0_-1px_0_var(--line)]">
+        {tabs.map((item) => {
+          const isActive = item.key === active;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.key}
+              href={hrefFor(item.key)}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                /* الإطار العام حول الروابط يلتفّ على اللسان مربّعاً — الخطّ السفلي والخلفية يكفيان للوحة المفاتيح */
+                'inline-flex items-center gap-2 rounded-t-[var(--radius-sm)] border-b-2 px-3.5 py-3 text-[13px] transition-colors focus-visible:bg-[var(--glass-strong)] focus-visible:outline-none',
+                isActive
+                  ? 'border-accent font-semibold text-accent'
+                  : 'border-transparent font-medium text-[var(--text-2)] hover:text-[var(--text-0)]'
+              )}
+            >
+              <Icon className="size-4" />
+              {item.label}
+              {item.alert ? (
+                <span className="tnum rounded-full bg-danger px-1.5 text-[10px] font-bold leading-4 text-[var(--danger-ink)]">
+                  {item.alert}
+                </span>
+              ) : item.count != null ? (
+                <span className="tnum rounded-full bg-[var(--glass-strong)] px-1.5 text-[11px] leading-4 text-[var(--text-2)]">
+                  {item.count}
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+/* ─────────────────────────── يحتاج انتباه ─────────────────────────── */
+
+export interface AttentionRowView {
+  id: string;
+  icon: LucideIcon;
+  tile: string;
+  title: string;
+  detail: string;
+  action: React.ReactNode;
+}
+
+export function AttentionPanel({ rows, calmText }: { rows: AttentionRowView[]; calmText: string }) {
+  if (rows.length === 0) {
+    return (
+      <div className="flex items-center gap-2.5 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] px-4 py-3.5 text-[13px] text-[var(--text-1)] sm:px-5">
+        <CircleCheck className="size-4 shrink-0 text-ok" />
+        {calmText}
+      </div>
+    );
+  }
+
+  const shown = rows.slice(0, VISIBLE_ATTENTION);
+  const hidden = rows.slice(VISIBLE_ATTENTION);
+
+  return (
+    <Panel title="يحتاج انتباه" icon={CircleAlert} iconClassName="text-danger" count={rows.length}>
+      <div className="divide-y divide-[var(--line)]">
+        {shown.map((row) => (
+          <AttentionLine key={row.id} {...row} />
+        ))}
+      </div>
+      {hidden.length > 0 && (
+        <details className="group border-t border-[var(--line)]">
+          <summary className="cursor-pointer list-none px-4 py-2.5 text-center text-[12px] font-medium text-accent marker:content-none sm:px-5">
+            <span className="group-open:hidden">عرض {hidden.length} أخرى</span>
+            <span className="hidden group-open:inline">إخفاء</span>
+          </summary>
+          <div className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
+            {hidden.map((row) => (
+              <AttentionLine key={row.id} {...row} />
+            ))}
+          </div>
+        </details>
+      )}
+    </Panel>
+  );
+}
+
+function AttentionLine({ icon, tile, title, detail, action }: AttentionRowView) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+      <IconTile icon={icon} className={tile} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-[var(--text-0)]">{title}</p>
+        <p className="mt-0.5 truncate text-[12px] text-[var(--text-2)]">{detail}</p>
+      </div>
+      <div className="shrink-0">{action}</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── صفوف النشاط ─────────────────────────── */
 
 export function EventRow({ event }: { event: ProfileEvent }) {
   const meta = KIND_META[event.kind];

@@ -1,14 +1,5 @@
 import Link from 'next/link';
-import type { LucideIcon } from 'lucide-react';
-import {
-  CalendarDays,
-  CircleAlert,
-  CircleCheck,
-  Droplets,
-  Receipt,
-  ShieldCheck,
-  Wrench,
-} from 'lucide-react';
+import { CalendarDays, Droplets, Receipt, ShieldCheck, Wrench } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -30,13 +21,17 @@ import {
   newestFirst,
   warrantyRows,
   type ProfilePerms,
-} from './profile-data';
-import { EventList, IconTile, Panel, PanelLink, Plate } from './profile-parts';
+} from '@/app/dashboard/_profile/data';
+import {
+  AttentionPanel,
+  EventList,
+  Panel,
+  PanelLink,
+  Plate,
+  type AttentionRowView,
+} from '@/app/dashboard/_profile/parts';
 import { RecordServiceButton } from './service-form';
 import { VehicleFormButton } from './vehicle-form';
-
-/** ما يُرى دون نقرة؛ الباقي تحت «عرض N أخرى» كي لا تغرق الصفحة في يوم مزدحم */
-const VISIBLE_ATTENTION = 4;
 
 export async function OverviewTab({
   customerId,
@@ -99,7 +94,7 @@ export async function OverviewTab({
 
   const recent = [
     ...jobs.map((job) => jobEvent(job, here)),
-    ...bookings.map((booking) => bookingEvent(booking, here, customerId, perms.workshop)),
+    ...bookings.map((booking) => bookingEvent(booking, here, perms.workshop)),
     ...orders.map((order) => invoiceEvent(order, here)),
   ]
     .sort(newestFirst)
@@ -115,43 +110,10 @@ export async function OverviewTab({
     .sort(mostUrgentFirst);
 
   const rows = attention.map((item) => attentionRow(item, { customerId, here, perms }));
-  const shown = rows.slice(0, VISIBLE_ATTENTION);
-  const hidden = rows.slice(VISIBLE_ATTENTION);
 
   return (
     <div className="space-y-4">
-      {rows.length > 0 ? (
-        <Panel
-          title="يحتاج انتباه"
-          icon={CircleAlert}
-          iconClassName="text-danger"
-          count={rows.length}
-        >
-          <div className="divide-y divide-[var(--line)]">
-            {shown.map((row) => (
-              <AttentionLine key={row.id} {...row} />
-            ))}
-          </div>
-          {hidden.length > 0 && (
-            <details className="group border-t border-[var(--line)]">
-              <summary className="cursor-pointer list-none px-4 py-2.5 text-center text-[12px] font-medium text-accent marker:content-none sm:px-5">
-                <span className="group-open:hidden">عرض {hidden.length} أخرى</span>
-                <span className="hidden group-open:inline">إخفاء</span>
-              </summary>
-              <div className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
-                {hidden.map((row) => (
-                  <AttentionLine key={row.id} {...row} />
-                ))}
-              </div>
-            </details>
-          )}
-        </Panel>
-      ) : (
-        <div className="flex items-center gap-2.5 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] px-4 py-3.5 text-[13px] text-[var(--text-1)] sm:px-5">
-          <CircleCheck className="size-4 shrink-0 text-ok" />
-          لا شيء معلّق على هذا العميل الآن.
-        </div>
-      )}
+      <AttentionPanel rows={rows} calmText="لا شيء معلّق على هذا العميل الآن." />
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Panel
@@ -195,9 +157,12 @@ export async function OverviewTab({
               {cars.map(({ vehicle, rows: [worst] }) => (
                 <div key={vehicle.id} className="px-4 py-3 sm:px-5">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-[13px] font-medium text-[var(--text-0)]">
+                    <Link
+                      href={withFrom(`/dashboard/vehicles/${vehicle.id}`, here)}
+                      className="truncate text-[13px] font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                    >
                       {vehicle.make} {vehicle.model}
-                    </span>
+                    </Link>
                     <Plate value={vehicle.plateNo} />
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -216,15 +181,6 @@ export async function OverviewTab({
       </div>
     </div>
   );
-}
-
-interface AttentionRowView {
-  id: string;
-  icon: LucideIcon;
-  tile: string;
-  title: string;
-  detail: string;
-  action: React.ReactNode;
 }
 
 function attentionRow(
@@ -316,17 +272,4 @@ function attentionRow(
         ),
       };
   }
-}
-
-function AttentionLine({ icon, tile, title, detail, action }: AttentionRowView) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-      <IconTile icon={icon} className={tile} />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-[var(--text-0)]">{title}</p>
-        <p className="mt-0.5 truncate text-[12px] text-[var(--text-2)]">{detail}</p>
-      </div>
-      <div className="shrink-0">{action}</div>
-    </div>
-  );
 }

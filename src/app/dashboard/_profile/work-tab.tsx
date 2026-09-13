@@ -7,15 +7,19 @@ import { cn } from '@/lib/utils';
 import {
   BOOKING_EVENT_SELECT,
   JOB_EVENT_SELECT,
+  JOB_INVOICE_SELECT,
   PAGE_CAP,
   PAGE_STEP,
   bookingEvent,
-  customerHref,
   jobEvent,
   newestFirst,
+  scopeWhere,
+  withJobInvoices,
+  type HrefParams,
   type ProfilePerms,
-} from './profile-data';
-import { EmptyPanel, EventList, MonthGroups, Panel, PanelLink } from './profile-parts';
+  type ProfileScope,
+} from './data';
+import { EmptyPanel, EventList, MonthGroups, Panel, PanelLink } from './parts';
 
 /** القادم حدٌّ مستقل: حجزٌ بعد شهور لا يزاحم ما جرى هذا الأسبوع على مقاعد الصفحة */
 const UPCOMING_SHOWN = 5;
@@ -23,24 +27,35 @@ const UPCOMING_SHOWN = 5;
 type WorkFilter = 'all' | 'job' | 'booking';
 
 export async function WorkTab({
-  customerId,
+  scope,
   here,
-  from,
+  hrefFor,
   perms,
   blocked,
+  newJobHref,
+  jobsListHref,
+  bookingsListHref,
   type,
   limit,
   now,
 }: {
-  customerId: string;
+  scope: ProfileScope;
   here: string;
-  from?: string;
+  /** رابط هذا القسم بمعلماته — الصفحة تضيف `from` */
+  hrefFor: (params: HrefParams) => string;
   perms: ProfilePerms;
   blocked: boolean;
+  newJobHref: string;
+  /** قوائم الأقسام الكاملة بعد سقف «عرض المزيد» — حيث تقبل القائمة هذا المرشّح */
+  jobsListHref?: string;
+  bookingsListHref?: string;
   type?: string;
   limit: number;
   now: Date;
 }) {
+  const view = 'vehicleId' in scope ? 'vehicle' : 'customer';
+  const where = scopeWhere(scope);
+
   // من لا يرى الورشة لا مرشّح له: الحجوزات وحدها ما يُعرض
   const filter: WorkFilter =
     perms.workshop && (type === 'job' || type === 'booking') ? type : perms.workshop ? 'all' : 'booking';
@@ -48,24 +63,24 @@ export async function WorkTab({
   const wantBookings = filter !== 'job';
 
   const upcomingWhere: Prisma.BookingWhereInput = {
-    customerId,
+    ...where,
     status: { in: ['PENDING', 'CONFIRMED'] },
     scheduledAt: { gte: now },
   };
   // «الماضي» كل ما ليس قادماً: ما فات موعده، أو ما خرج من الانتظار أياً كان تاريخه
   const pastWhere: Prisma.BookingWhereInput = {
-    customerId,
+    ...where,
     OR: [{ scheduledAt: { lt: now } }, { status: { notIn: ['PENDING', 'CONFIRMED'] } }],
   };
 
   const [jobCount, pastBookingCount, upcomingCount, jobs, pastBookings, upcoming] =
     await Promise.all([
-      perms.workshop ? db.jobOrder.count({ where: { customerId } }) : 0,
+      perms.workshop ? db.jobOrder.count({ where }) : 0,
       db.booking.count({ where: pastWhere }),
       db.booking.count({ where: upcomingWhere }),
       wantJobs
         ? db.jobOrder.findMany({
-            where: { customerId },
+            where,
             orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
             take: limit,
             select: JOB_EVENT_SELECT,
@@ -89,30 +104,42 @@ export async function WorkTab({
         : [],
     ]);
 
+  // ملف العميل له قسم فواتير؛ ملف السيارة يعرض فاتورة كل أمر على صفّه
+  const invoices =
+    view === 'vehicle' && perms.invoices && jobs.length > 0
+      ? await db.order.findMany({
+          where: { jobOrderId: { in: jobs.map((job) => job.id) } },
+          select: JOB_INVOICE_SELECT,
+        })
+      : [];
+
   /*
     أخذُ `limit` من كل مصدر ثم الدمج والقصّ لا يُسقط صفّاً من أحدث `limit`
     عامّةً: ما لم يؤخذ من مصدرٍ أقدمُ من كل ما أُخذ منه.
   */
-  const past = [
-    ...jobs.map((job) => jobEvent(job, here)),
-    ...pastBookings.map((booking) => bookingEvent(booking, here, customerId, perms.workshop)),
-  ]
+  const past = withJobInvoices(
+    [
+      ...jobs.map((job) => jobEvent(job, here, view)),
+      ...pastBookings.map((booking) => bookingEvent(booking, here, perms.workshop, view)),
+    ],
+    invoices
+  )
     .sort(newestFirst)
     .slice(0, limit);
   const pastTotal = (wantJobs ? jobCount : 0) + (wantBookings ? pastBookingCount : 0);
   const hasMore = pastTotal > past.length;
   const everything = jobCount + pastBookingCount + upcomingCount;
+  const subject = view === 'vehicle' ? 'لهذه السيارة' : 'لهذا العميل';
 
   if (everything === 0) {
     return (
       <EmptyPanel
-        text={perms.workshop ? 'لا أوامر شغل ولا حجوزات لهذا العميل بعد.' : 'لا حجوزات لهذا العميل بعد.'}
+        text={
+          perms.workshop ? `لا أوامر شغل ولا حجوزات ${subject} بعد.` : `لا حجوزات ${subject} بعد.`
+        }
         action={
-          perms.write && perms.workshop && !blocked ? (
-            <Link
-              href={`/dashboard/job-orders/new?customer=${customerId}`}
-              className={buttonVariants({ size: 'sm' })}
-            >
+          perms.workshopWrite && !blocked ? (
+            <Link href={newJobHref} className={buttonVariants({ size: 'sm' })}>
               <Plus />
               بيان تشغيل جديد
             </Link>
@@ -127,8 +154,6 @@ export async function WorkTab({
     { key: 'job', label: 'أوامر الشغل', count: jobCount },
     { key: 'booking', label: 'الحجوزات', count: pastBookingCount + upcomingCount },
   ];
-  const jobsList = `/dashboard/job-orders?filter=all&customer=${customerId}`;
-  const bookingsList = `/dashboard/bookings?view=list&customer=${customerId}`;
 
   return (
     <div className="space-y-4">
@@ -137,11 +162,7 @@ export async function WorkTab({
           {chips.map((chip) => (
             <Link
               key={chip.key}
-              href={customerHref(customerId, {
-                tab: 'work',
-                type: chip.key === 'all' ? undefined : chip.key,
-                from,
-              })}
+              href={hrefFor({ tab: 'work', type: chip.key === 'all' ? undefined : chip.key })}
               scroll={false}
               aria-current={filter === chip.key ? 'true' : undefined}
               className={cn(
@@ -164,13 +185,13 @@ export async function WorkTab({
           icon={CalendarDays}
           count={upcomingCount}
           action={
-            upcomingCount > upcoming.length ? (
-              <PanelLink href={bookingsList}>كل الحجوزات</PanelLink>
+            upcomingCount > upcoming.length && bookingsListHref ? (
+              <PanelLink href={bookingsListHref}>كل الحجوزات</PanelLink>
             ) : null
           }
         >
           <EventList
-            events={upcoming.map((booking) => bookingEvent(booking, here, customerId, perms.workshop))}
+            events={upcoming.map((booking) => bookingEvent(booking, here, perms.workshop, view))}
           />
         </Panel>
       )}
@@ -182,11 +203,10 @@ export async function WorkTab({
             hasMore ? (
               limit < PAGE_CAP ? (
                 <Link
-                  href={customerHref(customerId, {
+                  href={hrefFor({
                     tab: 'work',
                     type: filter === 'all' || !perms.workshop ? undefined : filter,
                     limit: limit + PAGE_STEP,
-                    from,
                   })}
                   scroll={false}
                   className={buttonVariants({ variant: 'ghost', size: 'sm' })}
@@ -195,8 +215,10 @@ export async function WorkTab({
                 </Link>
               ) : (
                 <>
-                  {wantJobs && <PanelLink href={jobsList}>كل أوامر الشغل</PanelLink>}
-                  {wantBookings && <PanelLink href={bookingsList}>كل الحجوزات</PanelLink>}
+                  {wantJobs && jobsListHref && <PanelLink href={jobsListHref}>كل أوامر الشغل</PanelLink>}
+                  {wantBookings && bookingsListHref && (
+                    <PanelLink href={bookingsListHref}>كل الحجوزات</PanelLink>
+                  )}
                 </>
               )
             ) : null
@@ -208,7 +230,7 @@ export async function WorkTab({
             text="لا نتائج لهذا الفلتر."
             action={
               <Link
-                href={customerHref(customerId, { tab: 'work', from })}
+                href={hrefFor({ tab: 'work' })}
                 className={buttonVariants({ variant: 'secondary', size: 'sm' })}
               >
                 مسح الفلتر

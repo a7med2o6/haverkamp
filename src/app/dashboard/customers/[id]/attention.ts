@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { bookingServiceLabel, serviceStatus, warrantyLabel } from '@/lib/intake';
 import { kuwaitDayRange } from '@/lib/reminders';
 import { dayKey, toNumber } from '@/lib/utils';
-import { TONE_RANK, joinDetail, vehicleLabel, type ProfilePerms } from './profile-data';
+import { TONE_RANK, joinDetail, vehicleLabel, type ProfilePerms } from '@/app/dashboard/_profile/data';
 
 /*
   «يحتاج انتباه» مرتّب بما ينتظر الآن قبل ما يُذكَّر به: السيارة الواقفة

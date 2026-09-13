@@ -24,6 +24,7 @@ type CustomerResult = {
 };
 
 type VehicleResult = {
+  id: string;
   plateNo: string | null;
   make: string;
   model: string;
@@ -59,8 +60,9 @@ export function GlobalSearch() {
     ...(results?.customers.map((customer) => ({
       href: `/dashboard/customers/${customer.id}`,
     })) ?? []),
+    // البحث باللوحة يعني غالباً أن السيارة وصلت — فتُفتح هي لا مالكها
     ...(results?.vehicles.map((vehicle) => ({
-      href: `/dashboard/customers/${vehicle.customer.id}`,
+      href: `/dashboard/vehicles/${vehicle.id}`,
     })) ?? []),
   ];
 
@@ -371,12 +373,9 @@ export function GlobalSearch() {
                           const index = results.customers.length + vehicleIndex;
                           return (
                             <Link
-                              key={
-                                vehicle.plateNo ??
-                                `${vehicle.customer.id}-${vehicle.make}-${vehicle.model}-${vehicleIndex}`
-                              }
+                              key={vehicle.id}
                               id={`${listboxId}-option-${index}`}
-                              href={`/dashboard/customers/${vehicle.customer.id}`}
+                              href={`/dashboard/vehicles/${vehicle.id}`}
                               role="option"
                               aria-selected={activeIndex === index}
                               onMouseEnter={() => setActiveIndex(index)}

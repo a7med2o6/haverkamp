@@ -2,7 +2,7 @@ import { db } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
 import { CUSTOMER_NOTE_TYPE } from '@/lib/labels';
 import { cn, formatDate, formatDateTime } from '@/lib/utils';
-import { EmptyPanel, Panel } from './profile-parts';
+import { EmptyPanel, Panel } from '@/app/dashboard/_profile/parts';
 import { AddNoteButton, DeleteNoteButton, FollowUpToggle } from './notes-client';
 
 /** مئة قيد تغطّي سنوات من تواصل عميل واحد؛ الحدّ يمنع صفحةً بلا قاع */

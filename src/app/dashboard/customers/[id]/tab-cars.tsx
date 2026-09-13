@@ -10,8 +10,8 @@ import {
   mostUrgentFirst,
   warrantyRows,
   type ProfilePerms,
-} from './profile-data';
-import { IconTile, Plate, TONE_TEXT } from './profile-parts';
+} from '@/app/dashboard/_profile/data';
+import { IconTile, Plate, TONE_TEXT } from '@/app/dashboard/_profile/parts';
 import { RecordServiceButton } from './service-form';
 import { VehicleFormButton } from './vehicle-form';
 
@@ -114,7 +114,12 @@ export async function CarsTab({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-[15px] font-bold text-[var(--text-0)]">
-                    {vehicle.make} {vehicle.model}
+                    <Link
+                      href={withFrom(`/dashboard/vehicles/${vehicle.id}`, here)}
+                      className="hover:text-accent hover:underline"
+                    >
+                      {vehicle.make} {vehicle.model}
+                    </Link>
                   </h3>
                   <Plate value={vehicle.plateNo} />
                   {washed.has(vehicle.id) && <Badge tone="info">اشتراك غسيل</Badge>}

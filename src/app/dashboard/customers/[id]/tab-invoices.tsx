@@ -9,8 +9,8 @@ import {
   customerHref,
   invoiceEvent,
   newestFirst,
-} from './profile-data';
-import { EmptyPanel, MonthGroups, PanelLink } from './profile-parts';
+} from '@/app/dashboard/_profile/data';
+import { EmptyPanel, MonthGroups, PanelLink } from '@/app/dashboard/_profile/parts';
 
 export async function InvoicesTab({
   customerId,

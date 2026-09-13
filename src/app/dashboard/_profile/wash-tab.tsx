@@ -6,8 +6,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { withFrom } from '@/lib/back-link';
 import { cn, formatDateOnly, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
 import { washLocationLine } from '@/app/dashboard/wash/location';
-import { monthName, type ProfilePerms } from './profile-data';
-import { EmptyPanel, IconTile, Plate } from './profile-parts';
+import { monthName, scopeWhere, type ProfilePerms, type ProfileScope } from './data';
+import { EmptyPanel, IconTile, Plate } from './parts';
 
 const SUBSCRIPTION_STATUS = {
   ACTIVE: { label: 'سارٍ', tone: 'ok' },
@@ -25,16 +25,18 @@ const PERIOD_STATUS = {
 const PERIODS_SHOWN = 6;
 
 export async function WashTab({
-  customerId,
+  scope,
   here,
   perms,
 }: {
-  customerId: string;
+  scope: ProfileScope;
   here: string;
   perms: ProfilePerms;
 }) {
+  // من ملف العميل يُعرَّف العقد بسيارته، ومن ملف السيارة بصاحب العقد
+  const byVehicle = 'vehicleId' in scope;
   const subscriptions = await db.washSubscription.findMany({
-    where: { customerId },
+    where: scopeWhere(scope),
     orderBy: [{ status: 'asc' }, { startDate: 'desc' }],
     select: {
       id: true,
@@ -48,6 +50,7 @@ export async function WashTab({
       startDate: true,
       endDate: true,
       vehicle: { select: { make: true, model: true, plateNo: true } },
+      customer: { select: { name: true } },
       servicePackage: {
         select: { translations: { where: { locale: 'ar' }, select: { name: true } } },
       },
@@ -63,7 +66,7 @@ export async function WashTab({
   if (subscriptions.length === 0) {
     return (
       <EmptyPanel
-        text="لا اشتراكات غسيل لهذا العميل."
+        text={byVehicle ? 'لا اشتراكات غسيل لهذه السيارة.' : 'لا اشتراكات غسيل لهذا العميل.'}
         action={
           perms.washWrite ? (
             <Link href="/dashboard/wash" className={buttonVariants({ variant: 'secondary', size: 'sm' })}>
@@ -148,9 +151,11 @@ export async function WashTab({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-[15px] font-bold text-[var(--text-0)]">
-                    {subscription.vehicle.make} {subscription.vehicle.model}
+                    {byVehicle
+                      ? `باسم ${subscription.customer.name}`
+                      : `${subscription.vehicle.make} ${subscription.vehicle.model}`}
                   </h3>
-                  <Plate value={subscription.vehicle.plateNo} />
+                  {!byVehicle && <Plate value={subscription.vehicle.plateNo} />}
                   <Badge tone={status.tone}>{status.label}</Badge>
                   {/* الغسلة المخطّطة لا توجد إلا لشهرٍ مدفوع: إن وُجدت فالغسيل ماضٍ وإن بقي شهرٌ قديم غير مسدّد */}
                   {due && subscription.status === 'ACTIVE' && !next && (

@@ -29,12 +29,12 @@ import { backTo } from '@/lib/back-link';
 import { cn, formatDate, formatKWD, formatPhone, toNumber } from '@/lib/utils';
 import { CustomerFormButton } from '../customer-form';
 import { loadAttention } from './attention';
-import { customerHref, parseLimit, type ProfilePerms, type TabKey } from './profile-data';
+import { customerHref, parseLimit, type ProfilePerms, type TabKey } from '@/app/dashboard/_profile/data';
 import { OverviewTab } from './tab-overview';
 import { CarsTab } from './tab-cars';
-import { WorkTab } from './tab-work';
+import { WorkTab } from '@/app/dashboard/_profile/work-tab';
 import { InvoicesTab } from './tab-invoices';
-import { WashTab } from './tab-wash';
+import { WashTab } from '@/app/dashboard/_profile/wash-tab';
 import { ContactTab } from './tab-contact';
 
 /*
@@ -96,6 +96,7 @@ export default async function CustomerDetailPage({
     invoices: can(role, 'pos:read'),
     wash: can(role, 'wash:read'),
     washWrite: can(role, 'wash:write'),
+    workshopWrite: can(role, 'workshop:write'),
   };
   const from = single(query.from);
   const now = new Date();
@@ -197,11 +198,14 @@ export default async function CustomerDetailPage({
     case 'work':
       content = (
         <WorkTab
-          customerId={customer.id}
+          scope={{ customerId: customer.id }}
           here={here}
-          from={from}
+          hrefFor={(params) => customerHref(customer.id, { ...params, from })}
           perms={perms}
           blocked={customer.isBlocked}
+          newJobHref={`/dashboard/job-orders/new?customer=${customer.id}`}
+          jobsListHref={`/dashboard/job-orders?filter=all&customer=${customer.id}`}
+          bookingsListHref={`/dashboard/bookings?view=list&customer=${customer.id}`}
           type={single(query.type)}
           limit={limit}
           now={now}
@@ -212,7 +216,7 @@ export default async function CustomerDetailPage({
       content = <InvoicesTab customerId={customer.id} here={here} from={from} limit={limit} />;
       break;
     case 'wash':
-      content = <WashTab customerId={customer.id} here={here} perms={perms} />;
+      content = <WashTab scope={{ customerId: customer.id }} here={here} perms={perms} />;
       break;
     case 'contact':
       content = <ContactTab customerId={customer.id} canWrite={perms.write} now={now} />;
@@ -275,7 +279,7 @@ export default async function CustomerDetailPage({
                 عميل محظور — لا يُنشأ له بيان تشغيل جديد.
               </p>
             ) : (
-              perms.write && (
+              perms.workshopWrite && (
                 /* العميل يصل مع الرابط فيُعلَّم في البيان — لا يُعاد اختياره */
                 <Link
                   href={`/dashboard/job-orders/new?customer=${customer.id}`}
@@ -416,8 +420,13 @@ export default async function CustomerDetailPage({
         </aside>
 
         <div className="min-w-0">
-          <nav aria-label="أقسام ملف العميل" className="mb-4 overflow-x-auto border-b border-[var(--line)]">
-            <div className="flex min-w-max gap-1">
+          {/*
+            الخطّ الرمادي ظلٌّ داخل الصفّ لا حدٌّ للحاوية: الحدّ مع إنزال اللسان
+            بكسلاً فوقه يفيض عن الحاوية عمودياً، والتمرير الأفقي يجرّ معه شريط
+            تمريرٍ عمودياً يظهر في آخر الألسنة.
+          */}
+          <nav aria-label="أقسام ملف العميل" className="mb-4 overflow-x-auto">
+            <div className="flex w-max min-w-full gap-1 shadow-[inset_0_-1px_0_var(--line)]">
               {tabs.map((item) => {
                 const active = item.key === tab;
                 const Icon = item.icon;
@@ -431,7 +440,7 @@ export default async function CustomerDetailPage({
                     aria-current={active ? 'page' : undefined}
                     className={cn(
                       /* الإطار العام حول الروابط يلتفّ على اللسان مربّعاً — الخطّ السفلي والخلفية يكفيان للوحة المفاتيح */
-                      '-mb-px inline-flex items-center gap-2 rounded-t-[var(--radius-sm)] border-b-2 px-3.5 py-3 text-[13px] transition-colors focus-visible:bg-[var(--glass-strong)] focus-visible:outline-none',
+                      'inline-flex items-center gap-2 rounded-t-[var(--radius-sm)] border-b-2 px-3.5 py-3 text-[13px] transition-colors focus-visible:bg-[var(--glass-strong)] focus-visible:outline-none',
                       active
                         ? 'border-accent font-semibold text-accent'
                         : 'border-transparent font-medium text-[var(--text-2)] hover:text-[var(--text-0)]'

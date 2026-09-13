@@ -14,10 +14,14 @@ export const dynamic = 'force-dynamic';
 export default async function NewIntakePage({
   searchParams,
 }: {
-  searchParams: Promise<{ booking?: string; customer?: string }>;
+  searchParams: Promise<{ booking?: string; customer?: string; vehicle?: string }>;
 }) {
   await requirePermission('workshop:write');
-  const { booking: bookingId, customer: customerParam } = await searchParams;
+  const {
+    booking: bookingId,
+    customer: customerParam,
+    vehicle: vehicleParam,
+  } = await searchParams;
 
   const [customers, brands] = await Promise.all([
     db.customer.findMany({
@@ -68,13 +72,30 @@ export default async function NewIntakePage({
   if (booking?.jobOrder) redirect(`/dashboard/job-orders/${booking.jobOrder.id}`);
 
   /*
-    العميل يُعرَف من حجزه أو من ملفّه الذي جاء الموظف منه، والحجز أولى
-    لأنه يحمل سيارته وخدمته معه. والمَعلمة تأتي من شريط العنوان فتُتحقَّق:
+    القادم من ملف سيارة: السيارة تحمل مالكها، فيُعلَّم الاثنان معاً. والمالك
+    يُقرأ من السيارة على الخادم لا من الرابط، ومحظورٌ لا يُعلَّم هو ولا سيارته.
+  */
+  const vehicleSeed =
+    !booking && vehicleParam
+      ? await db.vehicle.findUnique({
+          where: { id: vehicleParam },
+          select: { id: true, customerId: true },
+        })
+      : null;
+  const vehicleOwnerListed = Boolean(
+    vehicleSeed && customers.some((c) => c.id === vehicleSeed.customerId)
+  );
+
+  /*
+    العميل يُعرَف من حجزه أو من سيارته أو من ملفّه الذي جاء الموظف منه، والحجز
+    أولى لأنه يحمل سيارته وخدمته معه. والمَعلمة تأتي من شريط العنوان فتُتحقَّق:
     محظورٌ أو غير موجودٍ لا يُعلَّم، وإلا لعُلِّم في القائمة من ليس فيها.
   */
   const seededCustomerId =
     booking?.customerId ??
+    (vehicleSeed && vehicleOwnerListed ? vehicleSeed.customerId : null) ??
     (customerParam && customers.some((c) => c.id === customerParam) ? customerParam : null);
+  const seededVehicleId = vehicleSeed && vehicleOwnerListed ? vehicleSeed.id : null;
 
   // عميلٌ معروف قبل التصيير، فسياراته تصل مع الصفحة لا بنداء بعدها
   const seededVehicles = seededCustomerId
@@ -111,6 +132,7 @@ export default async function NewIntakePage({
             : null
         }
         initialCustomerId={seededCustomerId}
+        initialVehicleId={seededVehicleId}
         initialVehicles={seededVehicles.map((v) => ({
           id: v.id,
           label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,

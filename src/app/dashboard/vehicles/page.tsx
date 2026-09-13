@@ -174,11 +174,17 @@ export default async function VehiclesPage({
                 return (
                   <Tr key={vehicle.id}>
                     <Td className="tnum whitespace-nowrap text-end" dir="ltr">
-                      {vehicle.plateNo ?? '—'}
+                      {/* اللوحة والسيارة تفتحان ملف السيارة؛ اسم المالك يفتح ملفّه */}
+                      <Link
+                        href={`/dashboard/vehicles/${vehicle.id}`}
+                        className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                      >
+                        {vehicle.plateNo ?? '—'}
+                      </Link>
                     </Td>
                     <Td className="whitespace-nowrap">
                       <Link
-                        href={`/dashboard/customers/${vehicle.customer.id}`}
+                        href={`/dashboard/vehicles/${vehicle.id}`}
                         className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
                       >
                         {vehicle.make} {vehicle.model}

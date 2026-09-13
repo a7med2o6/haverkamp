@@ -23,9 +23,12 @@ export interface VehicleValues {
 export function VehicleFormButton({
   customerId,
   vehicle,
+  canDelete = false,
 }: {
   customerId: string;
   vehicle?: VehicleValues;
+  /** الحذف داخل نافذة التعديل — لا زرّ أحمر دائم بجانب كل سيارة يُضغط سهواً */
+  canDelete?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const isEdit = !!vehicle?.id;
@@ -34,11 +37,12 @@ export function VehicleFormButton({
     <>
       <Button
         variant={isEdit ? 'ghost' : 'secondary'}
-        size={isEdit ? 'icon-sm' : 'sm'}
+        size="sm"
         onClick={() => setOpen(true)}
         aria-label={isEdit ? 'تعديل السيارة' : 'إضافة سيارة'}
       >
-        {isEdit ? <Pencil /> : <><Plus />إضافة سيارة</>}
+        {isEdit ? <Pencil /> : <Plus />}
+        {isEdit ? 'تعديل' : 'إضافة سيارة'}
       </Button>
       {open && (
         <VehicleModal
@@ -53,6 +57,7 @@ export function VehicleFormButton({
               notes: '',
             }
           }
+          canDelete={isEdit && canDelete}
           onClose={() => setOpen(false)}
         />
       )}
@@ -60,11 +65,24 @@ export function VehicleFormButton({
   );
 }
 
-function VehicleModal({ initial, onClose }: { initial: VehicleValues; onClose: () => void }) {
+function VehicleModal({
+  initial,
+  canDelete,
+  onClose,
+}: {
+  initial: VehicleValues;
+  canDelete: boolean;
+  onClose: () => void;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  /*
+    التأكيد يحلّ محلّ النموذج في النافذة نفسها لا فوقها: نافذتان متراكبتان
+    تُغلق إحداهما بـ Escape فتبقى الأخرى معلّقة بلا سياق.
+  */
+  const [confirming, setConfirming] = useState(false);
 
   function set<K extends keyof VehicleValues>(k: K, v: VehicleValues[K]) {
     setValues((prev) => ({ ...prev, [k]: v }));
@@ -86,6 +104,50 @@ function VehicleModal({ initial, onClose }: { initial: VehicleValues; onClose: (
     });
   }
 
+  function onDelete() {
+    if (!initial.id) return;
+    const id = initial.id;
+    startTransition(async () => {
+      const res = await deleteVehicle({ id, customerId: initial.customerId });
+      if (res.ok) {
+        toast.success(res.message ?? 'تم الحذف');
+        onClose();
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  if (confirming) {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        title="حذف السيارة"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
+              رجوع
+            </Button>
+            <Button variant="danger" onClick={onDelete} disabled={pending}>
+              {pending && <Loader2 className="animate-spin" />}
+              تأكيد الحذف
+            </Button>
+          </>
+        }
+      >
+        <div className="flex items-start gap-3">
+          <Car className="mt-0.5 size-5 shrink-0 text-danger" />
+          <p className="text-sm text-[var(--text-1)]">
+            سيتم حذف {initial.make} {initial.model} نهائياً. لا يمكن التراجع عن هذا الإجراء.
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       open
@@ -94,6 +156,17 @@ function VehicleModal({ initial, onClose }: { initial: VehicleValues; onClose: (
       size="lg"
       footer={
         <>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              onClick={() => setConfirming(true)}
+              disabled={pending}
+              className="me-auto text-danger hover:text-danger"
+            >
+              <Trash2 />
+              حذف السيارة
+            </Button>
+          )}
           <Button variant="ghost" onClick={onClose} disabled={pending}>
             إلغاء
           </Button>
@@ -154,63 +227,5 @@ function VehicleModal({ initial, onClose }: { initial: VehicleValues; onClose: (
         </Field>
       </form>
     </Modal>
-  );
-}
-
-export function DeleteVehicleButton({ id, customerId }: { id: string; customerId: string }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [confirming, setConfirming] = useState(false);
-
-  function onDelete() {
-    startTransition(async () => {
-      const res = await deleteVehicle({ id, customerId });
-      if (res.ok) {
-        toast.success(res.message ?? 'تم الحذف');
-        setConfirming(false);
-        router.refresh();
-      } else {
-        toast.error(res.error);
-      }
-    });
-  }
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => setConfirming(true)}
-        aria-label="حذف السيارة"
-      >
-        <Trash2 className="text-danger" />
-      </Button>
-      {confirming && (
-        <Modal
-          open
-          onClose={() => setConfirming(false)}
-          title="حذف السيارة"
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
-                إلغاء
-              </Button>
-              <Button variant="danger" onClick={onDelete} disabled={pending}>
-                {pending && <Loader2 className="animate-spin" />}
-                تأكيد الحذف
-              </Button>
-            </>
-          }
-        >
-          <div className="flex items-start gap-3">
-            <Car className="mt-0.5 size-5 shrink-0 text-danger" />
-            <p className="text-sm text-[var(--text-1)]">
-              سيتم حذف السيارة نهائياً. لا يمكن التراجع عن هذا الإجراء.
-            </p>
-          </div>
-        </Modal>
-      )}
-    </>
   );
 }

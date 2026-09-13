@@ -16,7 +16,16 @@ import { deleteVehicleService, recordVehicleService } from '../actions';
  * الغالب أن تُسجَّل والسيارة واقفة، فالتاريخ يأتي معبّأً بالآن ولا يُلمس
  * إلا لتسجيل زيارة فائتة.
  */
-export function RecordServiceButton({ vehicleId, label }: { vehicleId: string; label: string }) {
+export function RecordServiceButton({
+  vehicleId,
+  label,
+  labelled = false,
+}: {
+  vehicleId: string;
+  label: string;
+  /** بنصٍّ ظاهر حيث يُطلب التسجيل كثيراً — الأيقونة وحدها لا تُقرأ من أول نظرة */
+  labelled?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [visitedAt, setVisitedAt] = useState(() => toLocalInput(new Date()));
   const [notes, setNotes] = useState('');
@@ -41,12 +50,13 @@ export function RecordServiceButton({ vehicleId, label }: { vehicleId: string; l
     <>
       <Button
         variant="secondary"
-        size="icon-sm"
+        size={labelled ? 'sm' : 'icon-sm'}
         onClick={() => setOpen(true)}
         title="تسجيل زيارة سيرفس"
         aria-label="تسجيل زيارة سيرفس"
       >
         <CalendarCheck />
+        {labelled && 'تسجيل سيرفس'}
       </Button>
 
       {open && (

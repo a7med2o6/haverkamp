@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
-import { dateOnlyFromInput, todayInKuwait } from '@/lib/utils';
+import { dateOnlyFromInput, todayDateOnly } from '@/lib/utils';
 import type { Prisma } from '@/generated/prisma/client';
 import { openWashMonthRecords } from './month-service';
 
@@ -157,7 +157,7 @@ export const updateWashSubscription = action({
             where: {
               period: { subscriptionId: id },
               status: { in: ['PLANNED', 'BLOCKED'] },
-              scheduledDate: { gte: todayInKuwait() },
+              scheduledDate: { gte: todayDateOnly() },
             },
             data: { assignedEmployeeId: defaultWasherId ?? null },
           });
@@ -253,7 +253,7 @@ export const createWashPause = action({
       await tx.washVisit.updateMany({
         where: {
           period: { subscriptionId },
-          scheduledDate: { gte: todayInKuwait(), lte: toDate },
+          scheduledDate: { gte: todayDateOnly(), lte: toDate },
           AND: { scheduledDate: { gte: fromDate } },
           status: { in: ['PLANNED', 'BLOCKED'] },
         },
@@ -277,7 +277,7 @@ export const deleteWashPause = action({
       if (!pause) throw new AppError('إيقاف الاشتراك غير موجود');
 
       const baseWhere = {
-        scheduledDate: { gte: new Date(Math.max(pause.fromDate.getTime(), todayInKuwait().getTime())), lte: pause.toDate },
+        scheduledDate: { gte: new Date(Math.max(pause.fromDate.getTime(), todayDateOnly().getTime())), lte: pause.toDate },
         status: 'SKIPPED' as const,
         skipReason: 'CUSTOMER_TRAVEL' as const,
       };
@@ -338,7 +338,7 @@ async function visitMutationContext(
     throw new AppError('تغيّرت حالة الغسلة — حدّث الصفحة وحاول مرة أخرى');
   }
 
-  const today = todayInKuwait();
+  const today = todayDateOnly();
   if (user.role === 'WASHER') {
     if (!user.employee) throw new AppError('حساب الغسّيل غير مرتبط بموظف');
     if (visit.assignedEmployeeId !== user.employee.id) {

@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
-import { cn, dateOnlyToInput, formatDateOnly, todayInKuwait } from '@/lib/utils';
+import { cn, dateOnlyToInput, formatDateOnly, todayDateOnly } from '@/lib/utils';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -70,7 +70,7 @@ export default async function WashCoveragePage({
 }) {
   const session = await requirePermission('wash:read');
   const params = await searchParams;
-  const today = todayInKuwait();
+  const today = todayDateOnly();
   const currentYear = today.getUTCFullYear();
   const currentMonth = today.getUTCMonth() + 1;
   const requestedYear = params.year && /^\d{4}$/.test(params.year) ? Number(params.year) : currentYear;

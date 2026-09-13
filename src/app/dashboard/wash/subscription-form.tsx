@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
-import { dateOnlyToInput, formatPhone, todayInKuwait } from '@/lib/utils';
+import { dateOnlyToInput, formatPhone, todayDateOnly } from '@/lib/utils';
 import { customerVehicles } from '@/app/dashboard/job-orders/actions';
 import { createWashSubscription, updateWashSubscription } from './actions';
 
@@ -60,7 +60,7 @@ const EMPTY: WashSubscriptionFormValues = {
   street: '',
   building: '',
   locationNotes: '',
-  startDate: dateOnlyToInput(todayInKuwait()),
+  startDate: dateOnlyToInput(todayDateOnly()),
   monthlyPrice: '',
   notes: '',
 };

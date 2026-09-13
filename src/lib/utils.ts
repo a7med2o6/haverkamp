@@ -56,18 +56,16 @@ export function formatDateTime(d: Date | string | null | undefined, locale = 'ar
    منتصف ليل UTC. أي استخدام لـ setHours(0,0,0,0) المحلي ثم toISOString
    يُنقص يوماً كاملاً في الكويت (UTC+3) — لذلك نتعامل معها بـ UTC دائماً. */
 
-/** منتصف ليل UTC لليوم الحالي حسب التقويم المحلي */
-export function todayDateOnly(): Date {
-  const now = new Date();
-  return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-}
-
 /**
- * يوم الكويت الحالي عند منتصف ليل UTC.
- * عمليات الغسيل تبدأ قبل أن يلحق خادم UTC بالتاريخ الكويتي، لذلك نقرأ
- * أجزاء التقويم في Asia/Kuwait صراحةً ثم نعيدها بصيغة @db.Date المعتادة.
+ * اليوم الحالي بتقويم الكويت، عند منتصف ليل UTC.
+ *
+ * كانت تقرأ تقويم الخادم، وهو على VPS بتوقيت UTC يتأخّر عن الكويت ثلاث
+ * ساعات: من منتصف الليل إلى الثالثة فجراً يرى اليومَ الذي مضى، فيُسجَّل
+ * حضورُ الفجر على أمس، وتُحسب الإقامة المنتهية الليلةَ سارية. والفرع في
+ * الكويت، فيومُه يومُ الكويت أيّاً كان مكان الخادم. والكويت بلا توقيت صيفي،
+ * فلا ينزاح الفرق في السنة.
  */
-export function todayInKuwait(): Date {
+export function todayDateOnly(): Date {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Kuwait',
     year: 'numeric',

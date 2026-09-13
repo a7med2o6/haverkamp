@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { AlertTriangle, CheckCircle2, Clock3, Route } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
-import { formatDateOnly, todayInKuwait } from '@/lib/utils';
+import { formatDateOnly, todayDateOnly } from '@/lib/utils';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function WashTodayPage() {
   const session = await requirePermission('wash:read');
-  const today = todayInKuwait();
+  const today = todayDateOnly();
   const employee = await db.employee.findUnique({
     where: { userId: session.user.id },
     select: { id: true, fullName: true },

@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import type { Prisma } from '@/generated/prisma/client';
-import { todayInKuwait, toNumber } from '@/lib/utils';
+import { todayDateOnly, toNumber } from '@/lib/utils';
 
 /** يقرّب إلى 3 خانات عشرية (فلس) لتفادي أخطاء الفاصلة العائمة */
 function fils(n: number) {
@@ -34,7 +34,7 @@ async function makeSubscriptionPeriodEligible(
     where: {
       periodId: period.id,
       status: 'BLOCKED',
-      scheduledDate: { gte: todayInKuwait() },
+      scheduledDate: { gte: todayDateOnly() },
     },
     data: { status: 'PLANNED', skipReason: null },
   });

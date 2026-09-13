@@ -124,6 +124,7 @@ export default async function WashSubscriptionsPage({
   }));
   const packageOptions = packages.map((servicePackage) => ({
     id: servicePackage.id,
+    price: toNumber(servicePackage.price),
     label: `${servicePackage.translations[0]?.name ?? 'باقة غسيل'} — ${formatKWD(
       toNumber(servicePackage.price)
     )}${servicePackage.isActive ? '' : ' — غير مفعّلة'}`,

@@ -42,6 +42,8 @@ interface CustomerOption {
 
 interface PackageOption {
   id: string;
+  /** سعر الباقة الشهري — يُقترح في خانة الاشتراك عند اختيارها */
+  price: number;
   label: string;
 }
 
@@ -285,7 +287,17 @@ function WashSubscriptionFormModal({
         <Field label="الباقة" error={errors.servicePackageId?.[0]} hint="اختيارية">
           <Select
             value={values.servicePackageId ?? ''}
-            onChange={(event) => set('servicePackageId', event.target.value)}
+            onChange={(event) => {
+              const id = event.target.value;
+              set('servicePackageId', id);
+              /*
+                الباقة تقترح السعر ولا تفرضه: يُملأ عند اختيارها ويبقى قابلاً
+                للتعديل، لأن الاتفاق مع العميل قد يخالف سعر القائمة. والعودة
+                إلى «بدون باقة» لا تمسح ما كُتب.
+              */
+              const chosen = packages.find((servicePackage) => servicePackage.id === id);
+              if (chosen) set('monthlyPrice', chosen.price.toFixed(3));
+            }}
           >
             <option value="">بدون باقة مرتبطة</option>
             {packages.map((servicePackage) => (

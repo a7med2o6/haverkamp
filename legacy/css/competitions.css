@@ -393,6 +393,200 @@
   overflow: hidden;
 }
 
+/* Winner draw controls use semantic spacing here because the legacy site's
+   unlayered reset intentionally clears element padding after Tailwind loads. */
+.hk-draw-toolbar {
+  padding: 0.5rem 1.5rem;
+}
+
+.hk-draw-back {
+  padding-inline: 1rem;
+}
+
+.hk-draw-controls {
+  padding: 0.25rem;
+}
+
+.hk-draw-winners-trigger {
+  padding-inline: 0.75rem;
+}
+
+.hk-winners-panel-header {
+  padding: 1.25rem;
+}
+
+.hk-winners-heading-copy {
+  gap: 0.125rem;
+}
+
+.hk-winners-list {
+  padding: 0.75rem 1.25rem;
+}
+
+.hk-winners-empty {
+  gap: 0.75rem;
+  padding-inline: 1.5rem;
+}
+
+.hk-winners-row {
+  padding-block: 1rem;
+}
+
+.hk-winners-row-copy {
+  gap: 0.25rem;
+}
+
+.hk-winners-panel-footer {
+  padding: 1rem 1.25rem;
+}
+
+.hk-winners-clear {
+  padding-inline: 0.75rem;
+}
+
+.hk-winners-close {
+  min-width: 5.5rem;
+  padding-inline: 1.25rem;
+}
+
+/* Winner reveal: one authored celebration moment, then a calm readable result. */
+@keyframes hk-winner-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes hk-winner-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hk-winner-trophy-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes hk-winner-ring-burst {
+  from {
+    opacity: 0.8;
+    transform: scale(0.78);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes hk-winner-name-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hk-winner-celebration {
+  animation: hk-winner-overlay-in 200ms var(--hk-comp-ease-out) both;
+}
+
+.hk-winner-card {
+  isolation: isolate;
+  padding: 2rem 1.25rem 4.25rem;
+  animation: hk-winner-card-in 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hk-winner-card > :not(.hk-winner-card-light) {
+  position: relative;
+  z-index: 1;
+}
+
+.hk-winner-card-light {
+  position: absolute;
+  z-index: 0;
+  inset: -22% -20% auto;
+  height: 55%;
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.22), rgba(14, 165, 233, 0.07) 42%, transparent 70%);
+  pointer-events: none;
+}
+
+.hk-winner-hero {
+  gap: 0.125rem;
+}
+
+.hk-winner-trophy-stage {
+  width: 12rem;
+  height: 9.5rem;
+}
+
+.hk-winner-trophy {
+  animation: hk-winner-trophy-in 650ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both;
+}
+
+.hk-winner-trophy-ring {
+  position: absolute;
+  inset: 12% 18%;
+  border: 1px solid rgba(253, 230, 138, 0.75);
+  border-radius: 50%;
+  box-shadow: 0 12px 36px -12px rgba(251, 191, 36, 0.7);
+  animation: hk-winner-ring-burst 800ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.hk-winner-spark {
+  opacity: 0;
+  animation: hk-winner-trophy-in 500ms var(--hk-comp-ease-out) 360ms both;
+}
+
+.hk-winner-spark-start {
+  inset-inline-start: 0.5rem;
+  top: 22%;
+}
+
+.hk-winner-spark-end {
+  inset-inline-end: 0.75rem;
+  top: 52%;
+}
+
+.hk-winner-flourish span {
+  width: 2.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.75));
+}
+
+.hk-winner-flourish span:last-child {
+  transform: scaleX(-1);
+}
+
+.hk-winner-name {
+  animation: hk-winner-name-in 600ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+
+.hk-winner-prize {
+  padding: 0.5rem 1.5rem;
+}
+
+.hk-winner-download {
+  padding: 0.75rem 1rem;
+}
+
+.hk-winner-action {
+  min-height: 2.75rem;
+  padding: 0.75rem;
+}
+
 .hk-game-header {
   display: flex;
   align-items: center;
@@ -586,6 +780,10 @@
     padding-top: 5rem;
   }
 
+  .hk-draw-toolbar {
+    padding-inline: 0.75rem;
+  }
+
   .hk-comp-container {
     padding: 1.5rem 1rem 3rem;
   }
@@ -646,6 +844,15 @@
   .hk-timer-display {
     margin: 1.5rem 0;
   }
+
+  .hk-winner-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .hk-winner-trophy-stage {
+    width: 10rem;
+    height: 8rem;
+  }
 }
 
 /* Prefers Reduced Motion */
@@ -661,5 +868,18 @@
   .hk-game-back-link {
     transition: none !important;
     transform: none !important;
+  }
+
+  .hk-wheel-spin-halo,
+  .hk-wheel-idle-aura,
+  .hk-winner-trophy-ring {
+    animation: none !important;
+  }
+
+  .hk-winner-card,
+  .hk-winner-trophy,
+  .hk-winner-spark,
+  .hk-winner-name {
+    animation: hk-winner-overlay-in 200ms var(--hk-comp-ease-out) both;
   }
 }

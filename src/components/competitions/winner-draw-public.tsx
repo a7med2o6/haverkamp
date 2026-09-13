@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import {
   Volume2,
@@ -15,6 +16,10 @@ import {
   X,
   Users,
   Trash2,
+  Sparkles,
+  Camera,
+  CheckCircle2,
+  UserMinus,
 } from 'lucide-react';
 import type { Locale } from '@/lib/site-data';
 import { soundManager } from '@/lib/winner-draw/sound';
@@ -31,31 +36,6 @@ import {
   getRandomIndex,
   getWeightedRandomIndex,
 } from '@/lib/winner-draw/types';
-
-/**
- * Official Haverkamp German Geometric Emblem
- * Pure vector representation matching brand identity.
- */
-function HaverkampEmblem({ className = 'w-full h-full' }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 2048 2048"
-      className={className}
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      {/* Outer Square Frame with Cutout */}
-      <path
-        fillRule="evenodd"
-        d="M335 168 H1713 V1546 H335 Z M612 445 V1269 H1436 V445 Z"
-      />
-      {/* Inner Solid Square */}
-      <rect x="726" y="559" width="596" height="596" />
-      {/* Bottom Stem */}
-      <rect x="833" y="1546" width="383" height="334" />
-    </svg>
-  );
-}
 
 export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
   const isRtl = locale === 'ar';
@@ -189,56 +169,97 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
     });
 
     const durationMs =
-      customDuration ||
+      customDuration ??
       (currentState.celebrationDuration === 'until_closed'
-        ? 8000
-        : Math.min(parseInt(currentState.celebrationDuration, 10), 8000));
+        ? 10000
+        : Math.min(parseInt(currentState.celebrationDuration, 10) || 10000, 12000));
     const animationEnd = Date.now() + durationMs;
+    const brandColors = ['#FBBF24', '#FDE68A', '#38BDF8', '#0EA5E9', '#FFFFFF'];
+    const celebrationColors = [...brandColors, '#EC4899', '#10B981', '#F43F5E'];
 
-    if (currentState.celebrationStyle === 'fireworks') {
-      myConfetti({
-        particleCount: 150,
-        spread: 360,
-        startVelocity: 55,
-        origin: { x: 0.5, y: 0.4 },
-        shapes: ['star', 'circle'],
-        colors: ['#FBBF24', '#38BDF8', '#EC4899', '#10B981', '#F43F5E', '#FFFFFF'],
-      });
-
+    const repeatUntilEnd = (effect: () => void, cadence: number) => {
       celebrationIntervalRef.current = setInterval(() => {
-        const timeLeft = animationEnd - Date.now();
-        if (timeLeft <= 0) {
+        if (Date.now() >= animationEnd) {
           if (celebrationIntervalRef.current) {
             clearInterval(celebrationIntervalRef.current);
             celebrationIntervalRef.current = null;
           }
           return;
         }
+        effect();
+      }, cadence);
+    };
 
+    if (currentState.celebrationStyle === 'fireworks') {
+      const launchFirework = (x = 0.18 + Math.random() * 0.64) => {
         myConfetti({
-          particleCount: 18,
-          angle: 60,
-          spread: 80,
-          origin: { x: 0, y: 0.75 },
-          colors: ['#FBBF24', '#38BDF8', '#EC4899', '#10B981', '#FFFFFF'],
+          particleCount: 44,
+          spread: 360,
+          startVelocity: 34,
+          gravity: 0.82,
+          decay: 0.92,
+          ticks: 170,
+          scalar: 0.92,
+          origin: { x, y: 0.2 + Math.random() * 0.22 },
+          shapes: ['star', 'circle'],
+          colors: celebrationColors,
         });
+      };
 
-        myConfetti({
-          particleCount: 18,
-          angle: 120,
-          spread: 80,
-          origin: { x: 1, y: 0.75 },
-          colors: ['#FBBF24', '#38BDF8', '#EC4899', '#10B981', '#FFFFFF'],
-        });
-      }, 200);
-    } else {
+      launchFirework(0.26);
+      launchFirework(0.5);
+      launchFirework(0.74);
+      repeatUntilEnd(() => launchFirework(), 520);
+    } else if (currentState.celebrationStyle === 'golden_stars') {
       myConfetti({
-        particleCount: 160,
-        spread: 120,
-        startVelocity: 48,
-        origin: { x: 0.5, y: 0.4 },
-        colors: ['#FBBF24', '#38BDF8', '#10B981', '#FFFFFF'],
+        particleCount: 90,
+        spread: 115,
+        startVelocity: 38,
+        gravity: 0.72,
+        decay: 0.94,
+        ticks: 210,
+        scalar: 1.15,
+        origin: { x: 0.5, y: 0.35 },
+        shapes: ['star'],
+        colors: ['#F59E0B', '#FBBF24', '#FDE68A', '#FFFFFF'],
       });
+
+      repeatUntilEnd(() => {
+        myConfetti({
+          particleCount: 10,
+          angle: 270,
+          spread: 65,
+          startVelocity: 8,
+          gravity: 0.45,
+          drift: (Math.random() - 0.5) * 0.8,
+          ticks: 240,
+          scalar: 0.9 + Math.random() * 0.35,
+          origin: { x: 0.1 + Math.random() * 0.8, y: -0.04 },
+          shapes: ['star'],
+          colors: ['#F59E0B', '#FBBF24', '#FDE68A', '#FFFFFF'],
+        });
+      }, 320);
+    } else {
+      const fireSideCannon = (fromLeft: boolean) => {
+        myConfetti({
+          particleCount: 58,
+          angle: fromLeft ? 56 : 124,
+          spread: 68,
+          startVelocity: 48,
+          gravity: 0.88,
+          decay: 0.93,
+          ticks: 190,
+          scalar: 0.98,
+          origin: { x: fromLeft ? 0.04 : 0.96, y: 0.76 },
+          colors: celebrationColors,
+        });
+      };
+
+      fireSideCannon(true);
+      fireSideCannon(false);
+      repeatUntilEnd(() => {
+        fireSideCannon(Math.random() > 0.5);
+      }, 720);
     }
   }, []);
 
@@ -486,7 +507,10 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
   };
 
   return (
-    <div className="hk-game-view !min-h-[100dvh] !h-[100dvh] !max-h-[100dvh] w-full overflow-hidden flex flex-col justify-between bg-[#050912] text-white select-none relative">
+    <div className="hk-game-view min-h-dvh w-full overflow-x-hidden overflow-y-auto flex flex-col justify-between bg-[#050912] text-white select-none relative">
+      {/* Hide floating WhatsApp widget on dedicated winner draw page */}
+      <style>{`.wa-float { display: none !important; }`}</style>
+
       {/* Ambient Radial Lighting in Center Behind Wheel */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(94vw,94vh,700px)] h-[min(94vw,94vh,700px)] rounded-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12)_0%,rgba(14,34,61,0.06)_45%,transparent_70%)] pointer-events-none blur-3xl z-0"
@@ -494,49 +518,53 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
       />
 
       {/* Top Header HUD Bar */}
-      <header className="h-16 px-4 sm:px-8 flex items-center justify-between border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-md z-30 shrink-0">
+      <header className="hk-draw-toolbar min-h-[68px] grid grid-cols-[minmax(44px,1fr)_auto_minmax(132px,1fr)] items-center gap-2 sm:gap-4 border-b border-slate-800/70 bg-slate-950/80 backdrop-blur-md z-30 shrink-0">
         {/* Back to Competitions Button */}
         <Link
           href={isRtl ? '/competitions' : '/en/competitions'}
-          className="h-10 px-3.5 sm:px-4 rounded-xl bg-slate-900/90 border border-slate-700/70 hover:border-slate-500 hover:bg-slate-800/90 text-slate-200 hover:text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm group"
+          aria-label={isRtl ? 'العودة للمسابقات' : 'Back to Competitions'}
+          className="hk-draw-back justify-self-start inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/55 text-xs font-bold text-slate-300 transition-[color,background-color,border-color,transform] hover:border-slate-500 hover:bg-slate-800/90 hover:text-white active:scale-[0.97] sm:text-sm"
         >
-          <ArrowIcon className="size-4 text-slate-400 group-hover:text-white transition-colors" />
-          <span>{isRtl ? 'العودة للمسابقات' : 'Back to Competitions'}</span>
+          <ArrowIcon className="size-4 shrink-0" />
+          <span className="hidden md:inline">
+            {isRtl ? 'العودة للمسابقات' : 'Back to Competitions'}
+          </span>
         </Link>
 
-        {/* Center Mode / Target Prize Badge */}
-        <div className="flex items-center gap-2 max-w-[50%] sm:max-w-[60%] overflow-hidden">
-          <div className="h-10 px-4 sm:px-5 rounded-full bg-slate-900/95 border border-sky-500/35 text-sky-300 text-xs sm:text-sm font-bold flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.15)] truncate backdrop-blur-md">
+        {/* Center Mode / Target Prize Heading */}
+        <div className="min-w-0 justify-self-center overflow-hidden text-center sm:max-w-[48vw]">
+          <h1 className="my-0 flex w-full min-w-0 items-center justify-center gap-2 text-sm font-extrabold text-white sm:text-base">
             {state.isPrizeMode ? (
-              <Gift className="size-4 text-amber-400 shrink-0" />
+              <Gift className="size-4.5 shrink-0 text-amber-400" />
             ) : (
-              <Trophy className="size-4 text-amber-400 shrink-0" />
+              <Trophy className="size-4.5 shrink-0 text-amber-400" />
             )}
-            <span className="truncate">{currentTitle}</span>
+            <span className="hidden min-w-0 truncate sm:inline">{currentTitle}</span>
             {!state.isPrizeMode && state.targetPrize && (
-              <span className="text-amber-300 font-extrabold hidden md:inline shrink-0">
+              <span className="text-amber-300 font-bold hidden lg:inline shrink-0">
                 • {isRtl ? 'الجائزة:' : 'Prize:'} {state.targetPrize}
               </span>
             )}
-          </div>
+          </h1>
         </div>
 
         {/* Controls: Winners Drawer + Sound + Fullscreen */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="hk-draw-controls justify-self-end flex shrink-0 items-center gap-1 rounded-xl border border-slate-800/80 bg-slate-900/55">
           {/* Winners Archive Trigger */}
           <button
+            type="button"
             onClick={() => {
               soundManager.playClick();
               setShowWinnersDrawer(true);
             }}
-            className="h-10 px-3 sm:px-3.5 rounded-xl bg-slate-900/90 border border-slate-700/70 hover:border-amber-500/60 hover:bg-slate-800/90 text-slate-200 hover:text-amber-300 text-xs sm:text-sm font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm group"
+            className="hk-draw-winners-trigger group flex h-10 min-w-10 shrink-0 items-center justify-center gap-2 rounded-lg text-xs font-bold text-slate-200 transition-[color,background-color,transform] hover:bg-white/[0.06] hover:text-amber-200 active:scale-[0.96] sm:text-sm"
             aria-label={isRtl ? 'عرض سجل الفائزين' : 'View winners archive'}
             title={isRtl ? 'سجل الفائزين' : 'Winners History'}
           >
-            <Trophy className="size-4 text-amber-400 shrink-0 transition-transform group-hover:scale-110" />
-            <span className="hidden sm:inline">{isRtl ? 'الفائزون' : 'Winners'}</span>
+            <Trophy className="size-4 shrink-0 text-amber-400" />
+            <span className="hidden lg:inline">{isRtl ? 'الفائزون' : 'Winners'}</span>
             {sessionWinners.length > 0 && (
-              <span className="px-1.5 py-0.5 min-w-[20px] h-5 rounded-full bg-amber-500 text-slate-950 text-[11px] font-black flex items-center justify-center leading-none">
+              <span className="flex size-5 items-center justify-center rounded-full bg-amber-400 text-[11px] font-black leading-none text-black">
                 {sessionWinners.length}
               </span>
             )}
@@ -544,11 +572,12 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
 
           {/* Sound Toggle */}
           <button
+            type="button"
             onClick={toggleSound}
-            className={`size-10 rounded-xl flex items-center justify-center transition-all active:scale-95 shadow-sm ${
+            className={`flex size-10 shrink-0 items-center justify-center rounded-lg transition-[color,background-color,transform] active:scale-[0.96] ${
               isMuted
-                ? 'bg-rose-500/15 border border-rose-500/50 text-rose-400 hover:bg-rose-500/25'
-                : 'bg-slate-900/90 border border-slate-700/70 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800/90'
+                ? 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25'
+                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
             }`}
             aria-label={
               isMuted
@@ -566,8 +595,9 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
 
           {/* Fullscreen Toggle */}
           <button
+            type="button"
             onClick={toggleFullscreen}
-            className="size-10 rounded-xl bg-slate-900/90 border border-slate-700/70 hover:border-slate-500 hover:bg-slate-800/90 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-95 shadow-sm"
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-[color,background-color,transform] hover:bg-slate-800 hover:text-white active:scale-[0.96]"
             aria-label={
               isFullscreen
                 ? isRtl
@@ -588,9 +618,9 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
         </div>
       </header>
 
-      {/* Main Wheel Center Stage (100% Mathematically Centered Across All Viewports) */}
-      <main className="flex-1 w-full flex items-center justify-center relative p-2 sm:p-4 overflow-hidden z-10">
-        <div className="relative w-[min(88vw,calc(100dvh-135px),580px)] h-[min(88vw,calc(100dvh-135px),580px)] flex items-center justify-center">
+      {/* Main Wheel Center Stage */}
+      <main className="flex-1 w-full flex flex-col items-center justify-center relative p-3 sm:p-4 z-10">
+        <div className="relative w-[min(84vw,calc(100dvh-240px),520px)] h-[min(84vw,calc(100dvh-240px),520px)] flex items-center justify-center">
           {/* Wheel Canvas */}
           <canvas
             ref={canvasRef}
@@ -599,11 +629,11 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
             aria-label={isRtl ? 'عجلة السحب التفاعلية' : 'Interactive draw wheel'}
           />
 
-          {/* The Haverkamp Brand Center Hub Spin Button */}
+          {/* Haverkamp logo is the single spin control at the center of the wheel. */}
           <button
             type="button"
             onClick={spin}
-            disabled={isSpinning || !activeItems.length}
+            disabled={isSpinning || !activeItems.length || showWinnerModal}
             aria-label={
               isSpinning
                 ? isRtl
@@ -623,9 +653,9 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                 : 'Click to start spin'
             }
             className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 
-              w-[27%] h-[27%] rounded-full select-none
-              flex items-center justify-center
-              transition-all duration-200
+              w-[20%] h-[20%] min-w-[52px] min-h-[52px] rounded-full select-none
+              flex flex-col items-center justify-center gap-0.5
+              transition-[transform,border-color,box-shadow,opacity] duration-200
               border border-white/20
               bg-gradient-to-b from-[#0e1f38] via-[#081324] to-[#040a14]
               shadow-[0_10px_35px_rgba(0,0,0,0.85),inset_0_2px_8px_rgba(255,255,255,0.15)]
@@ -640,7 +670,7 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
             {/* Outer Spinning Energy Halo during spin */}
             {isSpinning && (
               <span
-                className="absolute inset-[-4px] rounded-full border-2 border-transparent border-t-sky-400 border-r-white/80 animate-spin"
+                className="hk-wheel-spin-halo absolute inset-[-3px] animate-spin rounded-full border-2 border-transparent border-r-white/80 border-t-sky-400"
                 aria-hidden="true"
               />
             )}
@@ -648,17 +678,26 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
             {/* Subtle Idle Breathing Aura */}
             {!isSpinning && activeItems.length > 0 && (
               <span
-                className="absolute inset-[-5px] rounded-full border border-sky-400/20 group-hover:border-sky-400/40 animate-pulse pointer-events-none"
+                className="hk-wheel-idle-aura pointer-events-none absolute inset-[-4px] animate-pulse rounded-full border border-sky-400/20 group-hover:border-sky-400/40"
                 aria-hidden="true"
               />
             )}
 
-            {/* Haverkamp Brand Emblem Only (Pure White, Enlarged, Centered, No Words) */}
-            <div className="relative flex items-center justify-center w-[64%] h-[64%] pointer-events-none">
-              <HaverkampEmblem className="w-full h-full text-white fill-current filter drop-shadow-[0_2px_14px_rgba(255,255,255,0.65)] transition-transform duration-200 group-hover:scale-110" />
+            <div className="relative flex w-[82%] flex-col items-center justify-center pointer-events-none">
+              <Image
+                src="/assets/logo.png"
+                alt=""
+                width={245}
+                height={42}
+                className="h-auto w-full brightness-0 invert drop-shadow-[0_1px_4px_rgba(255,255,255,0.42)]"
+              />
+              <span className="mt-1 text-[9px] font-black leading-none text-sky-200 drop-shadow sm:text-[10px]">
+                {isSpinning ? (isRtl ? 'جاري...' : 'Spinning...') : isRtl ? 'ابدأ' : 'Spin'}
+              </span>
             </div>
           </button>
         </div>
+
       </main>
 
       {/* Bottom Minimal HUD Bar */}
@@ -708,78 +747,101 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-end p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in"
+          aria-labelledby="session-winners-title"
+          className="fixed inset-0 z-50 flex items-center justify-end bg-slate-950/75 p-0 backdrop-blur-sm animate-fade-in sm:p-4"
           onClick={() => setShowWinnersDrawer(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-md h-full sm:h-auto sm:max-h-[85vh] sm:rounded-3xl bg-[#0a1424] border border-slate-800 shadow-2xl flex flex-col p-6 overflow-hidden"
+            className="flex h-full w-full flex-col overflow-hidden border-slate-800 bg-[#081322] shadow-[0_24px_80px_-24px_rgba(0,0,0,0.9)] sm:h-[calc(100dvh-2rem)] sm:max-h-[760px] sm:w-[420px] sm:rounded-2xl sm:border"
           >
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-white font-bold text-base">
-                <Trophy className="size-5 text-amber-400" />
-                <span>{isRtl ? 'سجل فائزو الجلسة' : 'Session Winners History'}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold">
-                  {sessionWinners.length}
+            <div className="hk-winners-panel-header flex items-center justify-between gap-4 border-b border-slate-800">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/10 text-amber-300">
+                  <Trophy className="size-5" />
                 </span>
+                <div className="hk-winners-heading-copy flex min-w-0 flex-col">
+                  <h2 id="session-winners-title" className="truncate text-base font-extrabold text-white">
+                    {isRtl ? 'سجل فائزي الجلسة' : 'Session Winners'}
+                  </h2>
+                  <p className="text-xs font-medium text-slate-400">
+                    {isRtl
+                      ? `${sessionWinners.length} فائز في هذه الجلسة`
+                      : `${sessionWinners.length} winners this session`}
+                  </p>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowWinnersDrawer(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
                 aria-label={isRtl ? 'إغلاق السجل' : 'Close history'}
               >
                 <X className="size-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto py-4 space-y-2.5 max-h-[60vh]">
+            <div className="hk-winners-list min-h-0 flex-1 overflow-y-auto">
               {sessionWinners.length === 0 ? (
-                <p className="text-center text-sm text-slate-400 py-12">
-                  {isRtl ? 'لم يتم إجراء أي سحب بعد في هذه الجلسة' : 'No winners yet in this session'}
-                </p>
+                <div className="hk-winners-empty flex h-full min-h-72 flex-col items-center justify-center text-center">
+                  <span className="flex size-14 items-center justify-center rounded-2xl bg-slate-900 text-slate-500">
+                    <Trophy className="size-6" />
+                  </span>
+                  <p className="text-base font-bold text-slate-200">
+                    {isRtl ? 'لا يوجد فائزون حتى الآن' : 'No winners yet'}
+                  </p>
+                  <p className="max-w-64 text-sm leading-6 text-slate-400">
+                    {isRtl
+                      ? 'سيظهر هنا سجل الفائزين والجوائز بعد أول عملية سحب.'
+                      : 'Winner names and prizes will appear here after the first draw.'}
+                  </p>
+                </div>
               ) : (
-                sessionWinners.map((w, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-3 shadow-sm"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0">
-                        #{sessionWinners.length - idx}
+                <ol className="divide-y divide-slate-800/90">
+                  {sessionWinners.map((w, idx) => (
+                    <li key={idx} className="hk-winners-row grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-amber-400/10 text-xs font-black text-amber-300">
+                        {sessionWinners.length - idx}
                       </span>
-                      <div>
-                        <div className="text-sm font-bold text-white">{w.name}</div>
-                        {w.prize && <div className="text-xs text-amber-300/90">{w.prize}</div>}
+                      <div className="hk-winners-row-copy flex min-w-0 flex-col">
+                        <div className="truncate text-sm font-bold text-white">{w.name}</div>
+                        {w.prize && <div className="truncate text-xs text-amber-200/90">{w.prize}</div>}
                       </div>
-                    </div>
-                    <div className="text-[11px] font-mono text-slate-400 shrink-0">{w.time}</div>
-                  </div>
-                ))
+                      <time className="shrink-0 text-[11px] font-medium tabular-nums text-slate-500">
+                        {w.time}
+                      </time>
+                    </li>
+                  ))}
+                </ol>
               )}
             </div>
 
-            {sessionWinners.length > 0 && (
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+            <div className="hk-winners-panel-footer flex items-center justify-between gap-3 border-t border-slate-800">
+              {sessionWinners.length > 0 ? (
                 <button
+                  type="button"
                   onClick={handleClearWinners}
-                  className="text-xs font-semibold text-rose-400 hover:text-rose-300 py-2 px-3 rounded-xl hover:bg-rose-500/10 transition-colors flex items-center gap-1.5"
+                  className="hk-winners-clear inline-flex min-h-11 items-center gap-2 rounded-xl text-xs font-bold text-rose-300 transition-colors hover:bg-rose-500/10 hover:text-rose-200"
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-4" />
                   <span>{isRtl ? 'مسح السجل' : 'Clear History'}</span>
                 </button>
-                <button
-                  onClick={() => setShowWinnersDrawer(false)}
-                  className="text-xs font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 py-2 px-4 rounded-xl transition-colors"
-                >
-                  {isRtl ? 'إغلاق' : 'Close'}
-                </button>
-              </div>
-            )}
+              ) : (
+                <span />
+              )}
+              <button
+                type="button"
+                onClick={() => setShowWinnersDrawer(false)}
+                className="hk-winners-close inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-100 text-xs font-extrabold text-slate-950 transition-colors hover:bg-white"
+              >
+                {isRtl ? 'إغلاق' : 'Close'}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Winner Celebration Modal (Exact Replica of Reference Design Image 2) */}
+      {/* Winner Celebration */}
       {showWinnerModal && activeWinner && (
         <div
           role="dialog"
@@ -788,43 +850,48 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
           onClick={(e) => {
             if (e.target === e.currentTarget) closeWinnerModal();
           }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in cursor-pointer"
+          className="hk-winner-celebration fixed inset-0 z-50 flex cursor-pointer items-center justify-center bg-black/85 p-4 backdrop-blur-md"
         >
           <canvas
             ref={modalCanvasRef}
             className="fixed inset-0 pointer-events-none w-full h-full"
           />
 
-          {/* Winner Card Container (Tall Portrait matching reference design) */}
           <div
             ref={modalDialogRef}
             onClick={(e) => e.stopPropagation()}
-            style={{ paddingTop: '32px', paddingBottom: '68px' }}
-            className="relative w-[min(92vw,500px)] h-[min(92vh,780px)] my-auto bg-[#0a101d] border-2 border-[#b8860b]/85 rounded-[2.5rem] sm:rounded-[3rem] px-5 sm:px-8 text-center shadow-[0_0_80px_rgba(184,134,11,0.25),0_30px_90px_rgba(0,0,0,0.95)] z-10 flex flex-col justify-between items-center cursor-default overflow-hidden"
+            className="hk-winner-card relative z-10 my-auto flex h-[min(92vh,780px)] w-[min(92vw,500px)] cursor-default flex-col items-center justify-between overflow-hidden rounded-[2.5rem] border-2 border-[#b8860b]/85 bg-[#0a101d] px-5 text-center shadow-[0_0_80px_rgba(184,134,11,0.25),0_30px_90px_rgba(0,0,0,0.95)] sm:rounded-[3rem] sm:px-8"
           >
+            <div className="hk-winner-card-light" aria-hidden="true" />
+
             {/* Circular Close Button (Top-Left in Reference Design) */}
             <button
               ref={modalCloseBtnRef}
+              type="button"
               onClick={closeWinnerModal}
-              className="absolute top-5 left-5 sm:top-6 sm:left-6 w-11 h-11 rounded-full border-2 border-[#38bdf8] bg-[#0c1527] text-[#38bdf8] flex items-center justify-center hover:bg-[#131f38] hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-lg z-20"
+              className="absolute left-5 top-5 z-20 flex size-11 cursor-pointer items-center justify-center rounded-full border-2 border-[#38bdf8] bg-[#0c1527] text-[#38bdf8] shadow-lg transition-[transform,background-color,border-color] duration-150 hover:bg-[#131f38] hover:scale-105 active:scale-95 sm:left-6 sm:top-6"
               aria-label={isRtl ? 'إغلاق النافذة' : 'Close window'}
             >
               <X className="size-5 text-[#38bdf8] stroke-[2.5]" />
             </button>
 
-            {/* 1. TOP HEADER: 3D Gold Trophy + Title + Emoji */}
-            <div className="flex flex-col items-center w-full">
-              <div className="flex items-center justify-center pointer-events-none">
-                <img
+            <div className="hk-winner-hero flex w-full flex-col items-center">
+              <div className="hk-winner-trophy-stage pointer-events-none relative flex items-center justify-center">
+                <span className="hk-winner-trophy-ring" aria-hidden="true" />
+                <Sparkles className="hk-winner-spark hk-winner-spark-start absolute size-6 text-amber-300" aria-hidden="true" />
+                <Sparkles className="hk-winner-spark hk-winner-spark-end absolute size-5 text-sky-300" aria-hidden="true" />
+                <Image
                   src="/assets/trophy-3d.png"
-                  alt="Trophy"
-                  className="h-32 sm:h-36 md:h-40 w-auto object-contain drop-shadow-[0_12px_28px_rgba(251,191,36,0.4)] pointer-events-none select-none"
+                  alt={isRtl ? 'كأس الفوز' : 'Winner trophy'}
+                  width={320}
+                  height={320}
+                  className="hk-winner-trophy h-28 w-auto select-none object-contain drop-shadow-[0_14px_28px_rgba(251,191,36,0.38)] sm:h-32 md:h-36"
                 />
               </div>
 
               <h3
                 id="winner-card-title"
-                className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug px-2 mt-2 mb-1"
+                className="mt-2 px-2 text-xl font-black leading-snug tracking-tight text-white sm:text-2xl"
               >
                 {state.isPrizeMode
                   ? isRtl
@@ -839,26 +906,27 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                   : 'Congratulations on the Lucky Draw!'}
               </h3>
 
-              <div className="text-2xl sm:text-3xl my-0.5" aria-hidden="true">
-                🎉
+              <div className="hk-winner-flourish mt-3 flex items-center justify-center gap-2 text-amber-300" aria-hidden="true">
+                <span />
+                <Sparkles className="size-4" />
+                <span />
               </div>
             </div>
 
-            {/* 2. WINNER NAME / PRIZE */}
-            <div className="text-3xl sm:text-4xl md:text-5xl font-black text-[#FACC15] drop-shadow-[0_2px_16px_rgba(250,204,21,0.55)] leading-tight px-1 break-words max-w-full">
+            <div className="hk-winner-name max-w-full break-words px-1 text-3xl font-black leading-tight text-[#FACC15] drop-shadow-[0_2px_16px_rgba(250,204,21,0.55)] sm:text-4xl md:text-5xl">
               {activeWinner.name}
             </div>
 
-            {/* 3. PRIZE PILL BADGE */}
-            <div className="inline-flex items-center justify-center px-6 sm:px-7 py-2 sm:py-2.5 rounded-full bg-[#1c150e] border border-[#b8860b]/75 shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] max-w-[90%]">
+            <div className="hk-winner-prize inline-flex max-w-[90%] items-center justify-center gap-2 rounded-full border border-[#b8860b]/75 bg-[#1c150e] px-6 py-2 shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] sm:px-7 sm:py-2.5">
+              <Gift className="size-4 shrink-0 text-amber-300" aria-hidden="true" />
               <span className="text-[#FACC15] text-sm sm:text-base md:text-lg font-bold truncate">
                 {state.isPrizeMode
                   ? isRtl
-                    ? '🎁 جائزة فورية معتمدة من هافركامب'
-                    : '🎁 Haverkamp Certified Instant Prize'
+                    ? 'جائزة فورية معتمدة من هافركامب'
+                    : 'Haverkamp Certified Instant Prize'
                   : isRtl
-                  ? `🎁 الجائزة: ${activeWinner.prize || 'جائزة هافركامب'}`
-                  : `🎁 Prize: ${activeWinner.prize || 'Haverkamp Prize'}`}
+                  ? `الجائزة: ${activeWinner.prize || 'جائزة هافركامب'}`
+                  : `Prize: ${activeWinner.prize || 'Haverkamp Prize'}`}
               </span>
             </div>
 
@@ -895,14 +963,14 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                     state.isPrizeMode
                   )
                 }
-                className="w-full py-3 px-4 rounded-xl sm:rounded-2xl border border-[#b8860b]/75 bg-[#151b27]/90 hover:bg-[#1e2638] active:scale-[0.98] text-[#FACC15] font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                className="hk-winner-download flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#b8860b]/75 bg-[#151b27]/90 px-4 py-3 text-sm font-bold text-[#FACC15] shadow-sm transition-[transform,background-color,border-color] duration-150 hover:bg-[#1e2638] active:scale-[0.98] sm:rounded-2xl sm:text-base"
               >
+                <Camera className="size-4.5 shrink-0" aria-hidden="true" />
                 <span>
                   {isRtl
                     ? 'تحميل بطاقة الفوز (لإنستغرام وواتساب)'
                     : 'Download Winner Card (Instagram & WhatsApp)'}
                 </span>
-                <span className="text-base sm:text-lg">📸</span>
               </button>
 
               {/* Two Action Buttons Row: Left Green, Right Burgundy */}
@@ -911,8 +979,9 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                 <button
                   type="button"
                   onClick={closeWinnerModal}
-                  className="flex-1 py-3 px-3 rounded-xl sm:rounded-2xl bg-[#059669] hover:bg-[#047857] active:scale-95 text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                  className="hk-winner-action flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#059669] px-3 py-3 text-sm font-black text-white shadow-md transition-[transform,background-color] duration-150 hover:bg-[#047857] active:scale-95 sm:rounded-2xl sm:text-base"
                 >
+                  <CheckCircle2 className="size-4.5 shrink-0" aria-hidden="true" />
                   <span>
                     {isRtl
                       ? state.isPrizeMode
@@ -920,7 +989,6 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                         : 'إبقاء الفائز'
                       : 'Keep Winner'}
                   </span>
-                  <span className="text-base sm:text-lg">✅</span>
                 </button>
 
                 {/* Right: Dark Burgundy / Red Button */}
@@ -931,19 +999,19 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
                       excludeWinner(activeWinner.index);
                       closeWinnerModal();
                     }}
-                    className="flex-1 py-3 px-3 rounded-xl sm:rounded-2xl bg-[#2a131b] hover:bg-[#381a24] border border-[#e11d48]/50 active:scale-95 text-[#fb7185] hover:text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                    className="hk-winner-action flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#e11d48]/50 bg-[#2a131b] px-3 py-3 text-sm font-black text-[#fb7185] shadow-md transition-[transform,background-color,color] duration-150 hover:bg-[#381a24] hover:text-white active:scale-95 sm:rounded-2xl sm:text-base"
                   >
+                    <UserMinus className="size-4.5 shrink-0" aria-hidden="true" />
                     <span>{isRtl ? 'استبعاد الفائز' : 'Exclude Winner'}</span>
-                    <span className="text-base sm:text-lg">❌</span>
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={closeWinnerModal}
-                    className="flex-1 py-3 px-3 rounded-xl sm:rounded-2xl bg-[#2a131b] hover:bg-[#381a24] border border-[#e11d48]/50 active:scale-95 text-[#fb7185] hover:text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                    className="hk-winner-action flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#e11d48]/50 bg-[#2a131b] px-3 py-3 text-sm font-black text-[#fb7185] shadow-md transition-[transform,background-color,color] duration-150 hover:bg-[#381a24] hover:text-white active:scale-95 sm:rounded-2xl sm:text-base"
                   >
+                    <X className="size-4.5 shrink-0" aria-hidden="true" />
                     <span>{isRtl ? 'إغلاق النافذة' : 'Close Window'}</span>
-                    <span className="text-base sm:text-lg">❌</span>
                   </button>
                 )}
               </div>
@@ -954,4 +1022,3 @@ export function WinnerDrawPublicView({ locale }: { locale: Locale }) {
     </div>
   );
 }
-

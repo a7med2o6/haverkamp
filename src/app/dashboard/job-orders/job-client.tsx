@@ -3,7 +3,18 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { FileText, Loader2, Pencil, Plus, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
+import {
+  FileText,
+  Loader2,
+  Palette,
+  Pencil,
+  Plus,
+  ShieldCheck,
+  Tag,
+  Trash2,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
@@ -12,13 +23,19 @@ import { cn } from '@/lib/utils';
 import {
   BODY_PARTS,
   GLASS_PARTS,
+  PAINT_FINISHES,
+  PAINT_PARTS,
+  PRICE_APPROVAL_METHODS,
   SERVICES,
   TINT_GRADES,
   WARRANTY_SUBJECTS,
   optionParts,
   serviceDef,
   warrantyHasParts,
+  warrantyPartLabels,
   warrantySubject,
+  type PaintFinish,
+  type PriceApprovalMethod,
 } from '@/lib/intake';
 import {
   createInvoiceFromJob,
@@ -26,9 +43,12 @@ import {
   issueWarranty,
   addJobLine,
   setItemAssignees,
+  setItemPrice,
   setJobStatus,
   updateJobOrder,
+  updatePaintDetail,
 } from './actions';
+import { BLANK_PAINT, ChoiceChips, PaintFields, paintBlocker, paintPayload } from './paint-fields';
 
 export function JobStatusSelect({ id, status }: { id: string; status: string }) {
   const router = useRouter();
@@ -71,6 +91,7 @@ const EMPTY_ITEM = {
   brandName: '',
   price: '',
   grades: {} as Record<string, string>,
+  paint: BLANK_PAINT,
 };
 
 /**
@@ -83,9 +104,12 @@ const EMPTY_ITEM = {
 export function JobItemForm({
   jobOrderId,
   brands,
+  vehiclePaintCode = null,
 }: {
   jobOrderId: string;
   brands: Array<{ id: string; name: string; packages: Array<{ name: string; price: number }> }>;
+  /** كود لون سيارة الأمر — يُعبّأ في بند الصبغ */
+  vehiclePaintCode?: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -110,6 +134,7 @@ export function JobItemForm({
         }))
       : service?.bodyParts
         ? optionParts(service, values.options).map((p) => ({
+            key: p.key,
             label: p.label,
             spec: p.spec,
             employeeIds: [],
@@ -125,7 +150,9 @@ export function JobItemForm({
           brand: values.brand || null,
           brandName: values.brandName || null,
           price: values.price || 0,
+          unpriced: Boolean(service?.paint) && !values.price,
           parts,
+          paint: service?.paint ? paintPayload(values.paint) : null,
         },
       });
 
@@ -160,7 +187,9 @@ export function JobItemForm({
               <Button
                 type="submit"
                 form="job-item-form"
-                disabled={pending || !values.serviceKey}
+                disabled={
+                  pending || !values.serviceKey || Boolean(service?.paint && paintBlocker(values.paint))
+                }
               >
                 {pending && <Loader2 className="animate-spin" />}
                 إضافة
@@ -174,7 +203,14 @@ export function JobItemForm({
                 value={values.serviceKey}
                 onChange={(e) =>
                   // تغيير الخدمة يُسقط خياراتها: كلٌّ منها يخصّ خدمته
-                  setValues({ ...EMPTY_ITEM, serviceKey: e.target.value })
+                  setValues({
+                    ...EMPTY_ITEM,
+                    serviceKey: e.target.value,
+                    paint: {
+                      ...BLANK_PAINT,
+                      paintCode: serviceDef(e.target.value)?.paint ? (vehiclePaintCode ?? '') : '',
+                    },
+                  })
                 }
               >
                 <option value="">— اختر الخدمة —</option>
@@ -303,7 +339,22 @@ export function JobItemForm({
               </p>
             )}
 
-            <Field label="السعر (د.ك)" hint="اتركه صفراً إن كان ضمن الباقة">
+            {service?.paint && (
+              <PaintFields
+                value={values.paint}
+                onChange={(paint) => setValues((v) => ({ ...v, paint }))}
+                vehiclePaintCode={vehiclePaintCode}
+              />
+            )}
+
+            <Field
+              label="السعر (د.ك)"
+              hint={
+                service?.paint
+                  ? 'اتركه فارغاً إن لم يُعاين بعد — يُسعَّر لاحقاً'
+                  : 'اتركه صفراً إن كان ضمن الباقة'
+              }
+            >
               <Input
                 type="number"
                 min="0"
@@ -558,14 +609,31 @@ export function CreateInvoiceButton({ jobOrderId }: { jobOrderId: string }) {
   );
 }
 
-export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
+export function IssueWarrantyButton({
+  jobOrderId,
+  paintParts = [],
+}: {
+  jobOrderId: string;
+  /** لوحات الصبغ الدائم ورنقاته في هذا الأمر — تُعلَّم سلفاً في كفالته */
+  paintParts?: string[];
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState({ subject: '', months: '12', terms: '' });
-  /** أجزاء البدي المكفولة — فارغة تعني البدي كلّه */
+  /** الأجزاء المكفولة — فارغة تعني الموضوع كلّه */
   const [parts, setParts] = useState<string[]>([]);
   const byParts = warrantyHasParts(values.subject);
+  const paintSubject = values.subject === 'صبغ دائم';
+  // خيارات الأجزاء تتبع الموضوع: قطع الحماية للحماية، ولوحات الصبغ ورنقاته للصبغ
+  const partOptions: Array<{ key: string; label: string }> = paintSubject
+    ? [
+        ...PAINT_PARTS.map((p) => ({ key: p.key, label: p.label })),
+        ...paintParts
+          .filter((k) => k.startsWith('rims:'))
+          .map((k) => ({ key: k, label: warrantyPartLabels([k])[0] })),
+      ]
+    : BODY_PARTS.map((p) => ({ key: p.key, label: p.label }));
 
   function togglePart(key: string) {
     setParts((p) => (p.includes(key) ? p.filter((x) => x !== key) : [...p, key]));
@@ -622,8 +690,8 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
                     subject: e.target.value,
                     months: def ? String(def.months) : v.months,
                   }));
-                  // أجزاءُ موضوعٍ لا تخصّ غيره
-                  setParts([]);
+                  // أجزاءُ موضوعٍ لا تخصّ غيره — والصبغ يبدأ بما صُبغ فعلاً في الأمر
+                  setParts(e.target.value === 'صبغ دائم' ? paintParts : []);
                 }}
               >
                 <option value="">— اختر —</option>
@@ -646,12 +714,14 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
                 label="الأجزاء المكفولة"
                 hint={
                   parts.length === 0
-                    ? 'بلا تحديد = البدي كلّه'
-                    : `${parts.length} من ${BODY_PARTS.length}`
+                    ? paintSubject
+                      ? 'بلا تحديد = السيارة كلّها'
+                      : 'بلا تحديد = البدي كلّه'
+                    : `${parts.length} من ${partOptions.length}`
                 }
               >
                 <div className="flex flex-wrap gap-1.5">
-                  {BODY_PARTS.map((part) => {
+                  {partOptions.map((part) => {
                     const on = parts.includes(part.key);
                     return (
                       <button
@@ -676,7 +746,7 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
                     onClick={() => setParts([])}
                     className="mt-2 text-[12px] text-accent hover:underline"
                   >
-                    إلغاء التحديد — كفالة البدي كلّه
+                    {paintSubject ? 'إلغاء التحديد — كفالة السيارة كلّها' : 'إلغاء التحديد — كفالة البدي كلّه'}
                   </button>
                 )}
               </Field>
@@ -709,6 +779,273 @@ export function IssueWarrantyButton({ jobOrderId }: { jobOrderId: string }) {
   );
 }
 
+
+/**
+ * «تسعير البند» — بعد المعاينة، أو تصحيح سعرٍ قبل الفاتورة.
+ * موافقة العميل اختيارية وتُسجَّل شاهداً؛ لا تمنع الشغل.
+ */
+export function PriceItemButton({
+  itemId,
+  jobOrderId,
+  label,
+  price,
+  isPriced,
+}: {
+  itemId: string;
+  jobOrderId: string;
+  label: string;
+  price: number;
+  isPriced: boolean;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
+  const initial = {
+    price: isPriced ? String(price) : '',
+    approved: false,
+    method: 'WHATSAPP' as PriceApprovalMethod,
+    note: '',
+  };
+  const [values, setValues] = useState(initial);
+
+  function submit() {
+    startTransition(async () => {
+      const res = await setItemPrice({
+        itemId,
+        jobOrderId,
+        price: values.price,
+        approved: values.approved,
+        method: values.approved ? values.method : null,
+        note: values.note,
+      });
+      if (res.ok) {
+        toast.success(res.message ?? 'تم');
+        setOpen(false);
+        router.refresh();
+      } else toast.error(res.error);
+    });
+  }
+
+  return (
+    <>
+      {isPriced ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="تعديل السعر"
+          title="تعديل السعر"
+          onClick={() => {
+            setValues(initial);
+            setOpen(true);
+          }}
+        >
+          <Pencil />
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            setValues(initial);
+            setOpen(true);
+          }}
+        >
+          <Tag />
+          تسعير
+        </Button>
+      )}
+
+      {open && (
+        <Modal
+          open
+          onClose={() => setOpen(false)}
+          title="تسعير البند"
+          description={label}
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button onClick={submit} disabled={pending || values.price === ''}>
+                {pending && <Loader2 className="animate-spin" />}
+                حفظ السعر
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <Field label="السعر (د.ك)" hint={isPriced ? 'إعادة التسعير تمسح موافقة العميل السابقة' : undefined}>
+              <Input
+                type="number"
+                min="0"
+                step="0.001"
+                autoFocus
+                dir="ltr"
+                className="tnum max-w-40 text-start"
+                value={values.price}
+                onChange={(e) => setValues((v) => ({ ...v, price: e.target.value }))}
+              />
+            </Field>
+
+            <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-[var(--text-1)]">
+              <input
+                type="checkbox"
+                checked={values.approved}
+                className="size-4 accent-[var(--color-accent)]"
+                onChange={(e) => setValues((v) => ({ ...v, approved: e.target.checked }))}
+              />
+              وافق العميل على هذا السعر
+            </label>
+
+            {values.approved && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="كيف وافق">
+                  <Select
+                    value={values.method}
+                    onChange={(e) =>
+                      setValues((v) => ({ ...v, method: e.target.value as PriceApprovalMethod }))
+                    }
+                  >
+                    {(Object.entries(PRICE_APPROVAL_METHODS) as [PriceApprovalMethod, string][]).map(
+                      ([key, text]) => (
+                        <option key={key} value={key}>
+                          {text}
+                        </option>
+                      )
+                    )}
+                  </Select>
+                </Field>
+                <Field label="ملاحظة" hint="مع من، أو وقت الرسالة">
+                  <Input
+                    value={values.note}
+                    onChange={(e) => setValues((v) => ({ ...v, note: e.target.value }))}
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/** تصحيح سجلّ الصبغ حتى التسليم — الكود والخلطة تُعرف غالباً عند الخلط لا عند الاستلام */
+export function EditPaintButton({
+  itemId,
+  jobOrderId,
+  detail,
+}: {
+  itemId: string;
+  jobOrderId: string;
+  detail: {
+    finish: PaintFinish;
+    colorName: string | null;
+    paintCode: string | null;
+    formula: string | null;
+    repairNotes: string | null;
+  };
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
+  const initial = {
+    finish: detail.finish,
+    colorName: detail.colorName ?? '',
+    paintCode: detail.paintCode ?? '',
+    formula: detail.formula ?? '',
+    repairNotes: detail.repairNotes ?? '',
+  };
+  const [values, setValues] = useState(initial);
+
+  function submit() {
+    startTransition(async () => {
+      const res = await updatePaintDetail({ itemId, jobOrderId, ...values });
+      if (res.ok) {
+        toast.success(res.message ?? 'تم');
+        setOpen(false);
+        router.refresh();
+      } else toast.error(res.error);
+    });
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setValues(initial);
+          setOpen(true);
+        }}
+        className="inline-flex items-center gap-1 text-[11px] font-medium text-accent hover:underline"
+      >
+        <Palette className="size-3.5" />
+        تعديل سجلّ الصبغ
+      </button>
+
+      {open && (
+        <Modal
+          open
+          onClose={() => setOpen(false)}
+          title="سجلّ الصبغ"
+          size="md"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button onClick={submit} disabled={pending}>
+                {pending && <Loader2 className="animate-spin" />}
+                حفظ
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <ChoiceChips
+              label="التشطيب"
+              options={PAINT_FINISHES}
+              value={values.finish}
+              onPick={(finish) => setValues((v) => ({ ...v, finish }))}
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="اسم اللون">
+                <Input
+                  value={values.colorName}
+                  onChange={(e) => setValues((v) => ({ ...v, colorName: e.target.value }))}
+                />
+              </Field>
+              <Field label="كود اللون">
+                <Input
+                  value={values.paintCode}
+                  onChange={(e) => setValues((v) => ({ ...v, paintCode: e.target.value }))}
+                  dir="ltr"
+                  className="tnum text-start"
+                />
+              </Field>
+              <Field label="خلطة Glasurit">
+                <Input
+                  value={values.formula}
+                  onChange={(e) => setValues((v) => ({ ...v, formula: e.target.value }))}
+                  dir="ltr"
+                  className="tnum text-start"
+                />
+              </Field>
+            </div>
+            <Field label="الدعمات والخدوش">
+              <Textarea
+                rows={2}
+                value={values.repairNotes}
+                onChange={(e) => setValues((v) => ({ ...v, repairNotes: e.target.value }))}
+              />
+            </Field>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
 
 /**
  * فنيّو القطعة.

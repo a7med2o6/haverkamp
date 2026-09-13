@@ -104,6 +104,7 @@ export default async function VehicleDetailPage({
         model: true,
         year: true,
         color: true,
+        paintCode: true,
         plateNo: true,
         notes: true,
         // المالك الحالي من حقل السيارة نفسه؛ سجلّ الملكية تاريخٌ يُعرض لا مصدرٌ يُخمَّن منه
@@ -235,6 +236,15 @@ export default async function VehicleDetailPage({
                 <p className="mt-1 text-[12px] text-[var(--text-2)]">
                   {[vehicle.year, vehicle.color].filter(Boolean).join(' · ') || '—'}
                 </p>
+                {/* كود اللون يُقرأ من البطاقة يوم تعود السيارة لصبغ — لا من فاتورةٍ قديمة */}
+                {vehicle.paintCode && (
+                  <p className="mt-0.5 text-[12px] text-[var(--text-2)]">
+                    كود اللون{' '}
+                    <span className="tnum font-semibold text-[var(--text-0)]" dir="ltr">
+                      {vehicle.paintCode}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -316,6 +326,7 @@ export default async function VehicleDetailPage({
                       model: vehicle.model,
                       year: vehicle.year,
                       color: vehicle.color,
+                      paintCode: vehicle.paintCode,
                       plateNo: vehicle.plateNo,
                       notes: vehicle.notes,
                     }}

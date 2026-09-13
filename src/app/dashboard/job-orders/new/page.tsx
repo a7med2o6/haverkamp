@@ -102,7 +102,7 @@ export default async function NewIntakePage({
     ? await db.vehicle.findMany({
         where: { customerId: seededCustomerId },
         orderBy: { createdAt: 'desc' },
-        select: { id: true, make: true, model: true, year: true, plateNo: true },
+        select: { id: true, make: true, model: true, year: true, plateNo: true, paintCode: true },
       })
     : [];
 
@@ -137,6 +137,7 @@ export default async function NewIntakePage({
           id: v.id,
           label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,
           plateNo: v.plateNo,
+          paintCode: v.paintCode,
         }))}
         customers={customers}
         brands={brands.map((b) => ({

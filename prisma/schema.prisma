@@ -363,6 +363,9 @@ model Vehicle {
   model      String
   year       Int?
   color      String?
+  /// كود لون السيارة اليوم — منه تُخلط الصبغة إن عادت. يتغيّر بصبغها كاملةً
+  /// بلونٍ جديد عند التسليم؛ وما طُبّق فعلاً في كل مرّة محفوظ في PaintDetail
+  paintCode  String?
   /// هوية السيارة — فريد حيث وُجد
   plateNo    String?  @unique
   notes      String?
@@ -1029,6 +1032,17 @@ model JobOrderItem {
   total      Decimal  @db.Decimal(14, 3)
   isDone     Boolean  @default(false)
 
+  /// صفرُ «ضمن الباقة» غيرُ صفرِ «لم يُسعَّر بعد»: الصبغ يُستلم قبل معاينته،
+  /// فيبقى سعره صفراً وهذا الحقل false حتى يُسعَّر — والفاتورة لا تصدر قبله
+  isPriced            Boolean              @default(true)
+  /// موافقة العميل على السعر تُسجَّل ولا تمنع الشغل — شاهدٌ عند الخلاف،
+  /// وتُمسح بإعادة التسعير لأنها موافقةٌ على سعرٍ بعينه
+  priceApprovedAt     DateTime?
+  priceApprovalMethod PriceApprovalMethod?
+  priceApprovalNote   String?
+  /// مفتاح القطعة للأبناء — الكفالة والإسناد يقرآنه بدل مطابقة الاسم
+  partKey             String?
+
   // بنود الباقة: البند الأب يحمل السعر، وأبناؤه محتويات الباقة بصفر
   // يعلّم عليها الفني أولاً بأول. الفاتورة تأخذ الآباء فقط.
   parentId String?
@@ -1036,6 +1050,7 @@ model JobOrderItem {
   children JobOrderItem[] @relation("JobItemChildren")
 
   assignees JobOrderItemAssignee[]
+  paint     PaintDetail?
 
   @@index([parentId])
   @@map("job_order_items")
@@ -1059,6 +1074,57 @@ model JobOrderItemAssignee {
   @@id([itemId, employeeId])
   @@index([employeeId])
   @@map("job_order_item_assignees")
+}
+
+enum PriceApprovalMethod {
+  CALL // اتصال
+  WHATSAPP // واتساب
+  IN_PERSON // حضوري
+}
+
+enum PaintScope {
+  PARTS // قطع بدي
+  RIMS // رنقات
+  FULL // سيارة كاملة — تغيير لون
+}
+
+enum PaintType {
+  PERMANENT // دائم
+  REMOVABLE // قابل للإزالة
+}
+
+enum PaintFinish {
+  GLOSS // لامع
+  MATTE // مطفي
+  SATIN // ساتان
+}
+
+/**
+ * ما طُبّق فعلاً في بند صبغ.
+ *
+ * السيارة تعود بعد سنة بخدشٍ في بابٍ صُبغ عندنا، والمطلوب يومها الخلطة
+ * نفسها لا تقريبها بالعين — فتُحفظ هنا مسجّلةً لا نصّاً في مواصفة البند.
+ * تُصحَّح حتى تسليم السيارة، ثم تبقى شاهدةً على ما كان.
+ */
+model PaintDetail {
+  id          String       @id @default(cuid())
+  itemId      String       @unique
+  item        JobOrderItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  scope       PaintScope
+  type        PaintType
+  finish      PaintFinish
+  colorName   String?
+  paintCode   String?
+  /// رقم خلطة Glasurit أو تركيبتها كما خُلطت
+  formula     String?
+  /// الرنقات المصبوغة — من 1 إلى 4
+  rimCount    Int?
+  /// الدعمات والخدوش ومعجونها — ما يفسّر السعر بعد المعاينة
+  repairNotes String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("paint_details")
 }
 
 // ═══════════════════════════════════════════════════════════

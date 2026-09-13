@@ -43,6 +43,7 @@ export async function CarsTab({
         model: true,
         year: true,
         color: true,
+        paintCode: true,
         plateNo: true,
         notes: true,
         services: { orderBy: { visitedAt: 'desc' }, take: 3, select: { id: true, visitedAt: true } },
@@ -143,6 +144,7 @@ export async function CarsTab({
                       model: vehicle.model,
                       year: vehicle.year,
                       color: vehicle.color,
+                      paintCode: vehicle.paintCode,
                       plateNo: vehicle.plateNo,
                       notes: vehicle.notes,
                     }}

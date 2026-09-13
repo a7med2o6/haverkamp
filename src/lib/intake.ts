@@ -51,6 +51,8 @@ export interface IntakeService {
   glassParts?: boolean;
   /** قطعه تُشتقّ من مستوى التغطية المختار لا يعلّمها الموظف */
   bodyParts?: boolean;
+  /** صبغ: نطاقه ونوعه وتشطيبه وخلطته في PaintDetail، ويُسعَّر بعد المعاينة */
+  paint?: boolean;
 }
 
 /** درجات العزل — كلها بكفالة خمس سنوات، فالدرجة لا تغيّر مدة الكفالة */
@@ -113,6 +115,84 @@ export const BODY_PARTS = [
 ] as const;
 
 export type BodyPartKey = (typeof BODY_PARTS)[number]['key'];
+
+/**
+ * قطع الصبغ — لوحةً لوحة.
+ *
+ * ليست قطع الحماية: هناك تُجمع الأبواب بالجهة لأن فني الفيلم يأخذ الجهة
+ * كلّها، وفيها «أطراف الأبواب» و«بداية السقف» وهي مساحاتٌ لا لوحات. أمّا
+ * الصبغ فيقع على لوحةٍ بعينها بعد حادث — بابٌ واحد لا جهةٌ كاملة —
+ * وشهادتُه تذكر ذلك الباب وحده.
+ */
+export const PAINT_PARTS = [
+  { key: 'hood', label: 'الكبوت' },
+  { key: 'roof', label: 'السقف' },
+  { key: 'trunk', label: 'الدبّة' },
+  { key: 'front_bumper', label: 'الدعامية الأمامية' },
+  { key: 'rear_bumper', label: 'الدعامية الخلفية' },
+  { key: 'fender_fr', label: 'المدقر الأمامي — يمين' },
+  { key: 'fender_fl', label: 'المدقر الأمامي — يسار' },
+  { key: 'fender_rr', label: 'المدقر الخلفي — يمين' },
+  { key: 'fender_rl', label: 'المدقر الخلفي — يسار' },
+  { key: 'door_fr', label: 'الباب الأمامي — يمين' },
+  { key: 'door_fl', label: 'الباب الأمامي — يسار' },
+  { key: 'door_rr', label: 'الباب الخلفي — يمين' },
+  { key: 'door_rl', label: 'الباب الخلفي — يسار' },
+  { key: 'mirror_r', label: 'المرآة — يمين' },
+  { key: 'mirror_l', label: 'المرآة — يسار' },
+  { key: 'skirt_r', label: 'العتبة الجانبية — يمين' },
+  { key: 'skirt_l', label: 'العتبة الجانبية — يسار' },
+] as const;
+
+/** الرنقات قطعةٌ واحدة بعددها — لا تُفرد رنقةً رنقة ما دام فنيّها واحداً */
+export const RIMS_PART_KEY = 'rims';
+
+export type PaintScope = 'PARTS' | 'RIMS' | 'FULL';
+export type PaintType = 'PERMANENT' | 'REMOVABLE';
+export type PaintFinish = 'GLOSS' | 'MATTE' | 'SATIN';
+export type PriceApprovalMethod = 'CALL' | 'WHATSAPP' | 'IN_PERSON';
+
+export const PAINT_SCOPES: Record<PaintScope, string> = {
+  PARTS: 'قطع بدي',
+  RIMS: 'رنقات',
+  FULL: 'سيارة كاملة',
+};
+
+export const PAINT_TYPES: Record<PaintType, string> = {
+  PERMANENT: 'دائم',
+  REMOVABLE: 'قابل للإزالة',
+};
+
+export const PAINT_FINISHES: Record<PaintFinish, string> = {
+  GLOSS: 'لامع',
+  MATTE: 'مطفي',
+  SATIN: 'ساتان',
+};
+
+export const PRICE_APPROVAL_METHODS: Record<PriceApprovalMethod, string> = {
+  CALL: 'اتصال',
+  WHATSAPP: 'واتساب',
+  IN_PERSON: 'حضوري',
+};
+
+/** اسم بند الصبغ كما يُقرأ في الأمر والفاتورة: «صبغ دائم — قطع بدي» */
+export function paintLabel(type: PaintType, scope: PaintScope) {
+  return `صبغ ${PAINT_TYPES[type]} — ${PAINT_SCOPES[scope]}`;
+}
+
+/** مواصفة البند القصيرة — التشطيب والكود — تُقرأ في الجدول وعلى الفاتورة */
+export function paintSpec(finish: PaintFinish, paintCode?: string | null) {
+  return [PAINT_FINISHES[finish], paintCode ? `كود ${paintCode}` : null].filter(Boolean).join(' · ');
+}
+
+export function paintPartLabel(key: string) {
+  return PAINT_PARTS.find((p) => p.key === key)?.label ?? key;
+}
+
+/** جزء الكفالة للرنقات يحمل عددها: «rims:4» — فالشهادة تذكر كم رنقة صُبغت */
+export function rimsWarrantyKey(count: number) {
+  return `${RIMS_PART_KEY}:${count}`;
+}
 
 /**
  * ماركات أفلام الحماية — تُقرأ من جدول الخدمات لأنها تحمل الأسعار
@@ -230,7 +310,8 @@ export const SERVICES: IntakeService[] = [
   },
   { key: 'mats', label: 'تلبيس الدواسات' },
   { key: 'rims', label: 'حماية الرنقات' },
-  { key: 'paint', label: 'صبغ رنقات', slug: 'paint' },
+  // الصبغ كلّه خدمةٌ واحدة: قطعٌ أو رنقات أو سيارة كاملة، دائمٌ أو قابل للإزالة
+  { key: 'paint', label: 'صبغ', slug: 'paint', paint: true },
   {
     key: 'nano',
     label: 'نانو للمقاعد والرنقات',
@@ -401,19 +482,37 @@ export function warrantySubject(label: string | null | undefined) {
 /**
  * مواضيع تُكفَل بأجزاء — لا بالسيارة كلّها دفعةً واحدة.
  *
- * حماية البدي وحدها: تُركَّب قطعةً قطعة، وقطعةٌ تُستبدل بعد حادث دون
- * أخواتها. أمّا العازل والصبغ فيُكفلان جملةً.
+ * حماية البدي تُركَّب قطعةً قطعة، وقطعةٌ تُستبدل بعد حادث دون أخواتها.
+ * والصبغ الدائم مثلها: بابٌ يُصبغ اليوم ويُصبغ جاره بعد سنة، ولكلٍّ شهادته.
+ * أمّا العازل والصبغ القابل للإزالة فيُكفلان جملةً.
  */
-export const PART_WARRANTY_SUBJECTS = ['حماية البدي'];
+export const PART_WARRANTY_SUBJECTS = ['حماية البدي', 'صبغ دائم'];
 
 export function warrantyHasParts(subject: string | null | undefined) {
   return !!subject && PART_WARRANTY_SUBJECTS.includes(subject);
 }
 
+const RIMS_WARRANTY_KEY = /^rims:([1-4])$/;
+
+/** جزءٌ يصحّ لموضوعه — قطع الحماية للحماية، ولوحات الصبغ ورنقاته للصبغ */
+export function warrantyPartValid(subject: string, key: string) {
+  if (subject === 'حماية البدي') return BODY_PARTS.some((p) => p.key === key);
+  if (subject === 'صبغ دائم') {
+    return PAINT_PARTS.some((p) => p.key === key) || RIMS_WARRANTY_KEY.test(key);
+  }
+  return false;
+}
+
 /** أسماء أجزاء الشهادة — الفارغة تعني الموضوع كلّه */
 export function warrantyPartLabels(parts: string[] | null | undefined): string[] {
   if (!parts || parts.length === 0) return [];
-  return parts.map((k) => BODY_PARTS.find((p) => p.key === k)?.label ?? k);
+  return parts.map((k) => {
+    const rims = RIMS_WARRANTY_KEY.exec(k);
+    if (rims) return `الرنقات (${rims[1]})`;
+    return (
+      BODY_PARTS.find((p) => p.key === k)?.label ?? PAINT_PARTS.find((p) => p.key === k)?.label ?? k
+    );
+  });
 }
 
 /**

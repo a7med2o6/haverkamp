@@ -9,12 +9,20 @@ import { AppError, action, optionalString, phoneSchema } from '@/lib/action-util
 import { normalizePlate } from '@/lib/search';
 import { vehicleIdsByPlate } from '@/lib/search-db';
 import {
-  BODY_PARTS,
+  PAINT_PARTS,
+  RIMS_PART_KEY,
   intakeLabel,
+  paintLabel,
+  paintPartLabel,
+  paintSpec,
   serviceDef,
   warrantyHasParts,
+  warrantyPartValid,
   warrantySubject,
+  type IntakeService,
 } from '@/lib/intake';
+
+const PAINT_PART_KEYS = new Set<string>(PAINT_PARTS.map((part) => part.key));
 
 function fils(n: number) {
   return Math.round(n * 1000) / 1000;
@@ -120,10 +128,28 @@ export const setJobStatus = action({
         completedAt: true,
         deliveredAt: true,
         bookingId: true,
+        vehicleId: true,
         order: { select: { number: true, status: true, total: true, paidAmount: true } },
       },
     });
     if (!job) throw new AppError('أمر الشغل غير موجود');
+
+    /*
+      الصبغ الدائم لا يخرج بلا كود لونه — قاعدة الفرع كقاعدة الفاتورة: السيارة
+      تعود بعد سنة بخدشٍ في الباب نفسه، وبلا كودٍ تُطابَق بالعين فيختلف اللون.
+      والقابل للإزالة يُستثنى: يُنزع ولا يُطابَق عليه.
+    */
+    if (status === 'DELIVERED') {
+      const uncoded = await db.paintDetail.findFirst({
+        where: { item: { jobOrderId: id }, type: 'PERMANENT', paintCode: null },
+        select: { item: { select: { label: true } } },
+      });
+      if (uncoded) {
+        throw new AppError(
+          `«${uncoded.item.label}» بلا كود لون — سجّله قبل التسليم، فالسيارة إن عادت تُخلط لها الخلطة نفسها`
+        );
+      }
+    }
 
     /*
       السيارة لا تخرج قبل سداد فاتورتها — قاعدة الفرع، فتُحرَس على الخادم
@@ -195,6 +221,27 @@ export const setJobStatus = action({
           data: { status: bookingStatus },
         });
       }
+
+      /*
+        تغيير اللون يصير لون السيارة لحظة تسليمها — في الحفظة نفسها، فلا
+        تخرج السيارة بلونٍ ويبقى ملفّها على القديم.
+      */
+      if (status === 'DELIVERED' && job.vehicleId) {
+        const recolor = await tx.paintDetail.findFirst({
+          where: { item: { jobOrderId: id }, scope: 'FULL' },
+          orderBy: { createdAt: 'desc' },
+          select: { colorName: true, paintCode: true },
+        });
+        if (recolor && (recolor.colorName || recolor.paintCode)) {
+          await tx.vehicle.update({
+            where: { id: job.vehicleId },
+            data: {
+              ...(recolor.colorName ? { color: recolor.colorName } : {}),
+              ...(recolor.paintCode ? { paintCode: recolor.paintCode } : {}),
+            },
+          });
+        }
+      }
     });
 
     revalidatePath('/dashboard/job-orders');
@@ -226,12 +273,21 @@ export const createInvoiceFromJob = action({
     const job = await db.jobOrder.findUnique({
       where: { id: jobOrderId },
       // محتويات الباقات بنود متابعة داخلية بصفر — الفاتورة تأخذ الآباء فقط
-      include: { items: { where: { parentId: null } }, order: true },
+      include: {
+        items: { where: { parentId: null }, include: { paint: { select: { id: true } } } },
+        order: true,
+      },
     });
 
     if (!job) throw new AppError('أمر الشغل غير موجود');
     if (job.order) throw new AppError('توجد فاتورة مرتبطة بأمر الشغل بالفعل');
     if (job.items.length === 0) throw new AppError('لا يمكن إصدار فاتورة بدون بنود');
+
+    // صفرُ بندٍ لم يُسعَّر ليس مجاناً — فاتورةٌ به تُسقط ثمن الشغل بصمت
+    const unpriced = job.items.find((i) => !i.isPriced);
+    if (unpriced) {
+      throw new AppError(`«${unpriced.label}» بانتظار التسعير — سعّره قبل إصدار الفاتورة`);
+    }
 
     const subtotal = fils(job.items.reduce((sum, i) => sum + Number(i.total), 0));
 
@@ -248,7 +304,8 @@ export const createInvoiceFromJob = action({
         items: {
           create: job.items.map((i) => ({
             productId: i.productId,
-            label: i.label,
+            // الصبغ يحمل تشطيبه وكوده إلى الفاتورة: «صبغ دائم — قطع بدي · مطفي · كود LY9T»
+            label: i.paint && i.spec ? `${i.label} · ${i.spec}` : i.label,
             qty: i.qty,
             unitPrice: i.unitPrice,
             total: i.total,
@@ -271,7 +328,7 @@ export const issueWarranty = action({
     /** موضوع الكفالة من قائمتها — أدقّ من الخدمة */
     subject: z.string().min(1, 'اختر موضوع الكفالة'),
     months: z.union([z.string(), z.number()]).transform(Number),
-    /** أجزاء البدي المكفولة — فارغة تعني الموضوع كلّه */
+    /** الأجزاء المكفولة — قطع الحماية أو لوحات الصبغ ورنقاته؛ فارغة تعني الموضوع كلّه */
     parts: z.array(z.string()).default([]),
     terms: optionalString,
   }),
@@ -283,9 +340,10 @@ export const issueWarranty = action({
     if (!def) throw new AppError('موضوع كفالة غير معروف');
 
     // الأجزاء لا معنى لها إلا حيث تُركَّب قطعةً قطعة
-    const covered = warrantyHasParts(subject) ? parts : [];
-    const unknown = covered.filter((k) => !BODY_PARTS.some((p) => p.key === k));
-    if (unknown.length > 0) throw new AppError('جزء غير معروف في قائمة الأجزاء');
+    const covered = warrantyHasParts(subject) ? [...new Set(parts)] : [];
+    if (covered.some((k) => !warrantyPartValid(subject, k))) {
+      throw new AppError('جزء غير معروف في قائمة الأجزاء');
+    }
 
     /*
       نستنبط الخدمة من سلَق الموضوع لا نأخذها من الطلب: «تبديل الجام»
@@ -400,19 +458,161 @@ const intakeLineSchema = z.object({
   /** ماركة تُذكر بالاسم: فيلم العزل أو حماية الجام */
   brandName: optionalString,
   price: z.union([z.string(), z.number()]).transform(Number),
-  /** القطع: اسمها ومواصفتها (درجة العازل) ومن يشتغل عليها */
+  /** لم يُسعَّر بعد — الصبغ وحده يُستلم قبل معاينته */
+  unpriced: z.boolean().default(false),
+  /** القطع: اسمها ومفتاحها ومواصفتها (درجة العازل) ومن يشتغل عليها */
   parts: z
     .array(
       z.object({
+        key: optionalString,
         label: z.string().min(1),
         spec: optionalString,
         employeeIds: z.array(z.string()).default([]),
       })
     )
     .default([]),
+  /** بند الصبغ: ما يُقرأ عند عودة السيارة — يُحفظ في PaintDetail لا نصّاً */
+  paint: z
+    .object({
+      scope: z.enum(['PARTS', 'RIMS', 'FULL']),
+      type: z.enum(['PERMANENT', 'REMOVABLE']),
+      finish: z.enum(['GLOSS', 'MATTE', 'SATIN']),
+      parts: z.array(z.string()).default([]),
+      rimCount: z.union([z.string(), z.number()]).nullish(),
+      colorName: optionalString,
+      paintCode: optionalString,
+      formula: optionalString,
+      repairNotes: optionalString,
+    })
+    .nullish(),
 });
 
 type IntakeLine = z.infer<typeof intakeLineSchema>;
+
+/** السعر صالح — أو غائبٌ عمداً في بندٍ بانتظار التسعير */
+function assertLinePrice(line: IntakeLine) {
+  if (line.unpriced) return;
+  if (!Number.isFinite(line.price) || line.price < 0) {
+    throw new AppError('سعر غير صالح — الصفر يعني «ضمن الباقة»');
+  }
+}
+
+/**
+ * بند الصبغ وقطعه.
+ *
+ * القطع تُشتقّ على الخادم من النطاق لا تُقبل من الطلب: «سيارة كاملة» تعني
+ * اللوحات كلّها، و«رنقات» قطعةٌ واحدة بعددها. والبند يُربط بخدمة الصبغ
+ * في جدول الخدمات — كان يُترك بلا خدمة لأن الربط كان للماركات وحدها.
+ */
+async function createPaintLine(
+  tx: Prisma.TransactionClient,
+  jobOrderId: string,
+  service: IntakeService,
+  line: IntakeLine
+) {
+  const paint = line.paint;
+  if (!paint) throw new AppError('حدّد نطاق الصبغ ونوعه');
+
+  const parts =
+    paint.scope === 'FULL'
+      ? PAINT_PARTS.map((part) => part.key as string)
+      : paint.scope === 'PARTS'
+        ? [...new Set(paint.parts)]
+        : [];
+  if (paint.scope === 'PARTS') {
+    if (parts.length === 0) throw new AppError('اختر القطع المصبوغة');
+    if (parts.some((key) => !PAINT_PART_KEYS.has(key))) {
+      throw new AppError('قطعة غير معروفة في قطع الصبغ');
+    }
+  }
+
+  const rimCount = paint.scope === 'RIMS' ? Number(paint.rimCount) : null;
+  if (
+    paint.scope === 'RIMS' &&
+    !(rimCount !== null && Number.isInteger(rimCount) && rimCount >= 1 && rimCount <= 4)
+  ) {
+    throw new AppError('عدد الرنقات من 1 إلى 4');
+  }
+
+  const paintService = service.slug
+    ? await tx.service.findUnique({ where: { slug: service.slug }, select: { id: true } })
+    : null;
+  const price = line.unpriced ? 0 : fils(line.price);
+
+  const parent = await tx.jobOrderItem.create({
+    data: {
+      jobOrderId,
+      label: paintLabel(paint.type, paint.scope),
+      serviceId: paintService?.id ?? null,
+      spec: paintSpec(paint.finish, paint.paintCode) || null,
+      qty: 1,
+      unitPrice: price,
+      total: price,
+      isPriced: !line.unpriced,
+      paint: {
+        create: {
+          scope: paint.scope,
+          type: paint.type,
+          finish: paint.finish,
+          colorName: paint.colorName ?? null,
+          paintCode: paint.paintCode ?? null,
+          formula: paint.formula ?? null,
+          rimCount,
+          repairNotes: paint.repairNotes ?? null,
+        },
+      },
+    },
+  });
+
+  if (paint.scope === 'RIMS' && rimCount !== null) {
+    await tx.jobOrderItem.create({
+      data: {
+        jobOrderId,
+        parentId: parent.id,
+        label: `الرنقات (${rimCount})`,
+        partKey: RIMS_PART_KEY,
+        qty: rimCount,
+        unitPrice: 0,
+        total: 0,
+      },
+    });
+  } else {
+    await tx.jobOrderItem.createMany({
+      data: parts.map((key) => ({
+        jobOrderId,
+        parentId: parent.id,
+        label: paintPartLabel(key),
+        partKey: key,
+        qty: 1,
+        unitPrice: 0,
+        total: 0,
+      })),
+    });
+  }
+
+  return parent;
+}
+
+/**
+ * كود اللون يُحفظ على السيارة أول ما يُعرف — من صبغ قطعةٍ طابقت لونها.
+ * الصبغ الكامل لا يُعتمد هنا: لونه الجديد لم يُطبَّق بعد، ويُكتب عند التسليم.
+ */
+async function adoptPaintCode(tx: Prisma.TransactionClient, jobOrderId: string) {
+  const job = await tx.jobOrder.findUnique({
+    where: { id: jobOrderId },
+    select: { vehicleId: true, vehicle: { select: { paintCode: true } } },
+  });
+  if (!job?.vehicleId || job.vehicle?.paintCode) return;
+
+  const detail = await tx.paintDetail.findFirst({
+    where: { item: { jobOrderId }, scope: { not: 'FULL' }, paintCode: { not: null } },
+    orderBy: { createdAt: 'asc' },
+    select: { paintCode: true },
+  });
+  if (detail?.paintCode) {
+    await tx.vehicle.update({ where: { id: job.vehicleId }, data: { paintCode: detail.paintCode } });
+  }
+}
 
 /**
  * ينشئ خدمةً وقطعها داخل أمر شغل.
@@ -428,6 +628,8 @@ async function createJobLine(
 ) {
   const service = serviceDef(line.key);
   if (!service) throw new AppError('خدمة غير معروفة في بيان التشغيل');
+  if (service.paint) return createPaintLine(tx, jobOrderId, service, line);
+  if (line.unpriced) throw new AppError('التسعير بعد المعاينة للصبغ وحده — اكتب سعر البند');
 
   /*
     الماركة تصل معرّفاً لأن القائمة تعرض خدمات قاعدة البيانات.
@@ -466,6 +668,7 @@ async function createJobLine(
         jobOrderId,
         parentId: parent.id,
         label: part.label,
+        partKey: part.key ?? null,
         spec: part.spec,
         qty: 1,
         unitPrice: 0,
@@ -490,16 +693,123 @@ export const addJobLine = action({
   schema: z.object({ jobOrderId: z.string(), line: intakeLineSchema }),
   audit: { entity: 'JobOrderItem', action: 'ADD_LINE' },
   handler: async ({ jobOrderId, line }) => {
-    if (!Number.isFinite(line.price) || line.price < 0) {
-      throw new AppError('سعر غير صالح — الصفر يعني «ضمن الباقة»');
-    }
+    assertLinePrice(line);
     const job = await db.jobOrder.findUnique({ where: { id: jobOrderId }, select: { id: true } });
     if (!job) throw new AppError('أمر الشغل غير موجود');
 
-    await db.$transaction((tx) => createJobLine(tx, jobOrderId, line));
+    await db.$transaction(async (tx) => {
+      await createJobLine(tx, jobOrderId, line);
+      await adoptPaintCode(tx, jobOrderId);
+    });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
     return { id: jobOrderId, message: 'تمت إضافة البند' };
+  },
+});
+
+/**
+ * «تسعير البند» — بعد المعاينة، أو تصحيح سعرٍ قبل الفاتورة.
+ *
+ * بعد صدور الفاتورة لا يُمسّ سعر البند: الفاتورة نسخت أسعارها ساعة صدورها،
+ * وتعديلُ البند وحده يجعل الأمر يقول رقماً والفاتورة رقماً آخر.
+ *
+ * وموافقة العميل تُسجَّل ولا تمنع — وإعادة التسعير تمسحها، فالموافقة على
+ * سعرٍ لا تنتقل إلى سعرٍ غيره.
+ */
+export const setItemPrice = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    itemId: z.string(),
+    jobOrderId: z.string(),
+    price: z.union([z.string(), z.number()]).transform(Number),
+    approved: z.boolean().default(false),
+    method: z.enum(['CALL', 'WHATSAPP', 'IN_PERSON']).nullish(),
+    note: optionalString,
+  }),
+  audit: { entity: 'JobOrderItem', action: 'PRICE' },
+  handler: async ({ itemId, jobOrderId, price, approved, method, note }) => {
+    if (!Number.isFinite(price) || price < 0) throw new AppError('سعر غير صالح');
+    if (approved && !method) throw new AppError('اختر كيف وافق العميل');
+
+    await assertItemInJob(itemId, jobOrderId);
+    const item = await db.jobOrderItem.findUnique({
+      where: { id: itemId },
+      select: { parentId: true, jobOrder: { select: { order: { select: { number: true } } } } },
+    });
+    if (!item) throw new AppError('البند غير موجود');
+    if (item.parentId) throw new AppError('السعر للبند لا لقطعه');
+    if (item.jobOrder.order) {
+      throw new AppError(`صدرت الفاتورة ${item.jobOrder.order.number} — عدّل السعر عليها لا على البند`);
+    }
+
+    const value = fils(price);
+    await db.jobOrderItem.update({
+      where: { id: itemId },
+      data: {
+        unitPrice: value,
+        total: value,
+        isPriced: true,
+        priceApprovedAt: approved ? new Date() : null,
+        priceApprovalMethod: approved ? method : null,
+        priceApprovalNote: approved ? (note ?? null) : null,
+      },
+    });
+
+    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    return { id: itemId, message: 'تم تسعير البند' };
+  },
+});
+
+/**
+ * تصحيح سجلّ الصبغ — حتى تسليم السيارة.
+ *
+ * الكود والخلطة كثيراً ما تُعرف بعد الاستلام، عند خلط اللون فعلاً. وبعد
+ * التسليم يصير السجلّ تاريخاً: ما خُلط للسيارة يومها لا يُعاد كتابته.
+ * والنطاق والنوع لا يُصحَّحان هنا — هما شكل البند وقطعه، ويُصحَّحان بحذفه.
+ */
+export const updatePaintDetail = action({
+  permission: 'workshop:write',
+  schema: z.object({
+    itemId: z.string(),
+    jobOrderId: z.string(),
+    finish: z.enum(['GLOSS', 'MATTE', 'SATIN']),
+    colorName: optionalString,
+    paintCode: optionalString,
+    formula: optionalString,
+    repairNotes: optionalString,
+  }),
+  audit: { entity: 'PaintDetail', action: 'UPDATE' },
+  handler: async ({ itemId, jobOrderId, finish, colorName, paintCode, formula, repairNotes }) => {
+    await assertItemInJob(itemId, jobOrderId);
+    const item = await db.jobOrderItem.findUnique({
+      where: { id: itemId },
+      select: { paint: { select: { id: true } }, jobOrder: { select: { status: true } } },
+    });
+    if (!item?.paint) throw new AppError('البند ليس بند صبغ');
+    if (item.jobOrder.status === 'DELIVERED') {
+      throw new AppError('سُلّمت السيارة — سجلّ الصبغ صار تاريخاً لا يُعدَّل');
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.paintDetail.update({
+        where: { itemId },
+        data: {
+          finish,
+          colorName: colorName ?? null,
+          paintCode: paintCode ?? null,
+          formula: formula ?? null,
+          repairNotes: repairNotes ?? null,
+        },
+      });
+      await tx.jobOrderItem.update({
+        where: { id: itemId },
+        data: { spec: paintSpec(finish, paintCode) || null },
+      });
+      await adoptPaintCode(tx, jobOrderId);
+    });
+
+    revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    return { id: itemId, message: 'تم حفظ سجلّ الصبغ' };
   },
 });
 
@@ -546,11 +856,7 @@ export const createIntake = action({
       throw new AppError('اختر عميلاً مسجّلاً أو أدخل بيانات عميل جديد');
     }
 
-    for (const line of input.lines) {
-      if (!Number.isFinite(line.price) || line.price < 0) {
-        throw new AppError('سعر غير صالح — الصفر يعني «ضمن الباقة»');
-      }
-    }
+    for (const line of input.lines) assertLinePrice(line);
 
     // كل الفنيين المذكورين في النموذج — نتحقّق منهم مرة قبل فتح المعاملة
     const techIds = [
@@ -651,6 +957,7 @@ export const createIntake = action({
       for (const line of input.lines) {
         await createJobLine(tx, created.id, line);
       }
+      await adoptPaintCode(tx, created.id);
 
       // الحجز صار شغلاً — يخرج من قوائم الانتظار والتذكير
       if (input.bookingId) {
@@ -736,7 +1043,7 @@ export const customerVehicles = action({
     const vehicles = await db.vehicle.findMany({
       where: { customerId },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, make: true, model: true, year: true, plateNo: true },
+      select: { id: true, make: true, model: true, year: true, plateNo: true, paintCode: true },
     });
 
     return {
@@ -745,6 +1052,7 @@ export const customerVehicles = action({
           id: v.id,
           label: `${v.make} ${v.model}${v.year ? ` — ${v.year}` : ''}`,
           plateNo: v.plateNo,
+          paintCode: v.paintCode,
         })),
       },
     };

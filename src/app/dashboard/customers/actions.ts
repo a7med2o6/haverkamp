@@ -118,6 +118,7 @@ const vehicleSchema = z.object({
     .nullable()
     .optional(),
   color: optionalString,
+  paintCode: optionalString,
   plateNo: optionalString,
   notes: optionalString,
 });

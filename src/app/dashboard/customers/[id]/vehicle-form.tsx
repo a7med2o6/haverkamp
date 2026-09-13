@@ -16,6 +16,8 @@ export interface VehicleValues {
   model: string;
   year?: number | null;
   color?: string | null;
+  /** كود اللون — تُخلط منه الصبغة إن عادت السيارة */
+  paintCode?: string | null;
   plateNo?: string | null;
   notes?: string | null;
 }
@@ -58,6 +60,7 @@ export function VehicleFormButton({
               model: '',
               year: null,
               color: '',
+              paintCode: '',
               plateNo: '',
               notes: '',
             }
@@ -218,6 +221,19 @@ function VehicleModal({
         </Field>
         <Field label="اللون" error={errors.color?.[0]}>
           <Input value={values.color ?? ''} onChange={(e) => set('color', e.target.value)} />
+        </Field>
+        <Field
+          label="كود اللون"
+          hint="من ملصق السيارة أو آخر خلطة — يُعبّأ في الصبغ القادم"
+          error={errors.paintCode?.[0]}
+        >
+          <Input
+            value={values.paintCode ?? ''}
+            onChange={(e) => set('paintCode', e.target.value)}
+            dir="ltr"
+            className="tnum text-start"
+            placeholder="LY9T"
+          />
         </Field>
         <Field label="رقم اللوحة" error={errors.plateNo?.[0]}>
           <Input

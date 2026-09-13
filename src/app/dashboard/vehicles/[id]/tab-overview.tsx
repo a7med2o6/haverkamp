@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { CalendarDays, ShieldCheck, TimerReset, Wrench } from 'lucide-react';
+import { CalendarDays, Palette, ShieldCheck, TimerReset, Wrench } from 'lucide-react';
+import { PAINT_FINISHES, PAINT_SCOPES, PAINT_TYPES } from '@/lib/intake';
 import { db } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -47,13 +48,35 @@ export async function VehicleOverviewTab({
   perms: ProfilePerms;
   now: Date;
 }) {
-  const [jobs, bookings] = await Promise.all([
+  const [jobs, paints, bookings] = await Promise.all([
     perms.workshop
       ? db.jobOrder.findMany({
           where: { vehicleId },
           orderBy: [{ receivedAt: 'desc' }, { id: 'desc' }],
           take: 5,
           select: JOB_EVENT_SELECT,
+        })
+      : [],
+    /*
+      سجلّ الصبغ: ما خُلط لهذه السيارة في كل مرّة — يُقرأ يوم تعود لصبغٍ
+      جديد فتُخلط الخلطة نفسها. من أوامر الشغل، فيتبع صلاحية الورشة.
+    */
+    perms.workshop
+      ? db.paintDetail.findMany({
+          where: { item: { jobOrder: { vehicleId } } },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            scope: true,
+            type: true,
+            finish: true,
+            colorName: true,
+            paintCode: true,
+            formula: true,
+            createdAt: true,
+            item: { select: { jobOrder: { select: { id: true, number: true } } } },
+          },
         })
       : [],
     // الحجز القادم ليس نشاطاً وقع — مكانه «القادم» في قسم الشغل والحجوزات
@@ -195,6 +218,48 @@ export async function VehicleOverviewTab({
           )}
         </Panel>
       </div>
+
+      {paints.length > 0 && (
+        <Panel title="سجلّ الصبغ" icon={Palette} count={paints.length}>
+          <div className="divide-y divide-[var(--line)]">
+            {paints.map((paint) => (
+              <Link
+                key={paint.id}
+                href={withFrom(`/dashboard/job-orders/${paint.item.jobOrder.id}`, here)}
+                className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-[var(--glass)] sm:px-5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium text-[var(--text-0)]">
+                    صبغ {PAINT_TYPES[paint.type]} — {PAINT_SCOPES[paint.scope]} ·{' '}
+                    {PAINT_FINISHES[paint.finish]}
+                  </p>
+                  <p className="mt-0.5 text-[12px] text-[var(--text-1)]">
+                    {paint.colorName ?? 'بلا اسم لون'}
+                    {' · '}
+                    <span className="tnum font-semibold" dir="ltr">
+                      {paint.paintCode ?? 'بلا كود'}
+                    </span>
+                    {paint.formula && (
+                      <>
+                        {' · خلطة '}
+                        <span className="tnum" dir="ltr">
+                          {paint.formula}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div className="text-end">
+                  <p className="tnum text-[12px] font-semibold text-accent" dir="ltr">
+                    {paint.item.jobOrder.number}
+                  </p>
+                  <p className="tnum text-[11px] text-[var(--text-2)]">{formatDate(paint.createdAt)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }

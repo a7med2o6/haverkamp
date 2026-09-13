@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { backTo, withFrom } from '@/lib/back-link';
-import { PROTECTION_BRAND_SLUGS, warrantyLabel } from '@/lib/intake';
+import { PROTECTION_BRAND_SLUGS, RIMS_PART_KEY, rimsWarrantyKey, warrantyLabel } from '@/lib/intake';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +57,7 @@ export default async function JobOrderDetailPage({
           },
         },
         vehicle: true,
-        items: { orderBy: { id: 'asc' } },
+        items: { orderBy: { id: 'asc' }, include: { paint: true } },
         warranties: { include: { service: { include: { translations: { where: { locale: 'ar' } } } } } },
         order: {
           select: {
@@ -111,6 +111,25 @@ export default async function JobOrderDetailPage({
 
   const isActive = job.status !== 'DELIVERED' && job.status !== 'CANCELLED';
   const due = dueStatus(job.promisedAt, isActive);
+  const unpricedCount = job.items.filter((i) => !i.parentId && !i.isPriced).length;
+
+  /*
+    أجزاء كفالة الصبغ الدائم كما صُبغت في هذا الأمر: اللوحات بمفاتيحها،
+    والرنقات بعددها — فتُعلَّم سلفاً في نموذج الكفالة ولا تُختار من الذاكرة.
+  */
+  const paintWarrantyParts = [
+    ...new Set(
+      job.items
+        .filter((i) => i.paint?.type === 'PERMANENT')
+        .flatMap((parent) =>
+          job.items
+            .filter((c) => c.parentId === parent.id && c.partKey)
+            .map((c) =>
+              c.partKey === RIMS_PART_KEY ? rimsWarrantyKey(toNumber(c.qty)) : (c.partKey as string)
+            )
+        )
+    ),
+  ];
 
   return (
     <>
@@ -160,7 +179,7 @@ export default async function JobOrderDetailPage({
             <CreateInvoiceButton jobOrderId={job.id} />
           )}
           {canWarranty && job.vehicleId && (
-            <IssueWarrantyButton jobOrderId={job.id} />
+            <IssueWarrantyButton jobOrderId={job.id} paintParts={paintWarrantyParts} />
           )}
         </div>
       </div>
@@ -192,6 +211,13 @@ export default async function JobOrderDetailPage({
                   {job.vehicle.year ? ` — ${job.vehicle.year}` : ''}
                 </Info>
                 {job.vehicle.color && <Info label="اللون">{job.vehicle.color}</Info>}
+                {job.vehicle.paintCode && (
+                  <Info label="كود اللون">
+                    <span className="tnum" dir="ltr">
+                      {job.vehicle.paintCode}
+                    </span>
+                  </Info>
+                )}
                 {job.vehicle.plateNo && (
                   <Info label="رقم اللوحة">
                     <span className="tnum" dir="ltr">
@@ -237,10 +263,16 @@ export default async function JobOrderDetailPage({
                   {formatKWD(invoiceDiscount)})
                 </span>
               )}
+              {unpricedCount > 0 && (
+                <span className="ms-2 text-[12px] font-semibold text-warn">
+                  + {unpricedCount === 1 ? 'بند' : `${unpricedCount} بنود`} بانتظار التسعير
+                </span>
+              )}
             </CardTitle>
             {canWrite && (
               <JobItemForm
                 jobOrderId={job.id}
+                vehiclePaintCode={job.vehicle?.paintCode ?? null}
                 brands={brands.map((b) => ({
                   id: b.id,
                   name: b.translations[0]?.name ?? b.slug,
@@ -255,23 +287,42 @@ export default async function JobOrderDetailPage({
           <JobItems
             jobOrderId={job.id}
             canWrite={canWrite}
-            items={job.items.map((i) => ({
-              id: i.id,
-              parentId: i.parentId,
-              label: i.label,
-              spec: i.spec,
-              unitPrice: toNumber(i.unitPrice),
-              total: toNumber(i.total),
-              isDone: i.isDone,
-              // درجات قطع هذه الخدمة — يراها المستقبل بلا فتح شيء
-              grades: [
-                ...new Set(
-                  job.items
-                    .filter((c) => c.parentId === i.id && c.spec)
-                    .map((c) => c.spec as string)
-                ),
-              ],
-            }))}
+            hasInvoice={Boolean(job.order)}
+            delivered={job.status === 'DELIVERED'}
+            items={job.items.map((i) => {
+              const children = job.items.filter((c) => c.parentId === i.id);
+              return {
+                id: i.id,
+                parentId: i.parentId,
+                label: i.label,
+                spec: i.spec,
+                unitPrice: toNumber(i.unitPrice),
+                total: toNumber(i.total),
+                // درجات قطع هذه الخدمة — يراها المستقبل بلا فتح شيء
+                grades: i.paint
+                  ? []
+                  : [...new Set(children.filter((c) => c.spec).map((c) => c.spec as string))],
+                isPriced: i.isPriced,
+                approval: i.priceApprovedAt
+                  ? {
+                      at: i.priceApprovedAt,
+                      method: i.priceApprovalMethod,
+                      note: i.priceApprovalNote,
+                    }
+                  : null,
+                paint: i.paint
+                  ? {
+                      type: i.paint.type,
+                      finish: i.paint.finish,
+                      colorName: i.paint.colorName,
+                      paintCode: i.paint.paintCode,
+                      formula: i.paint.formula,
+                      repairNotes: i.paint.repairNotes,
+                    }
+                  : null,
+                partLabels: i.paint ? children.map((c) => c.label) : [],
+              };
+            })}
           />
         </Card>
 

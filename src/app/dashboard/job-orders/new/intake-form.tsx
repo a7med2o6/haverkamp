@@ -18,6 +18,7 @@ import {
   serviceDef,
 } from '@/lib/intake';
 import { createIntake, customerVehicles, lookupPlate } from '../actions';
+import { BLANK_PAINT, PaintFields, paintBlocker, paintPayload, type PaintState } from '../paint-fields';
 
 export interface Brand {
   id: string;
@@ -37,15 +38,27 @@ interface LineState {
   price: string;
   /** درجة العزل لكل قطعة زجاج */
   grades: Record<string, string>;
+  /** بند الصبغ — نطاقه ونوعه وخلطته */
+  paint: PaintState;
 }
 
-const BLANK: LineState = { on: false, options: [], brand: '', brandName: '', price: '', grades: {} };
+const BLANK: LineState = {
+  on: false,
+  options: [],
+  brand: '',
+  brandName: '',
+  price: '',
+  grades: {},
+  paint: BLANK_PAINT,
+};
 
 /** سيارة مسجّلة كما تُعرض في قائمة سيارات العميل */
 export interface OwnedVehicle {
   id: string;
   label: string;
   plateNo: string | null;
+  /** كود لونها المسجّل — يُقترح في بند الصبغ */
+  paintCode?: string | null;
 }
 
 const BLANK_CAR = { plateNo: '', make: '', model: '', year: '', color: '' };
@@ -175,6 +188,9 @@ export function IntakeForm({
   /** اللوحة لعميل آخر — الحفظ ينقل الملكية */
   const transfer = !!found && !!head.customerId && found.ownerId !== head.customerId;
 
+  /** كود لون السيارة المختارة — يُقترح في بند الصبغ فلا يُكتب من الذاكرة */
+  const vehiclePaintCode = owned.find((v) => v.id === head.vehicleId)?.paintCode ?? null;
+
   const total = useMemo(
     () =>
       Object.values(lines).reduce(
@@ -185,6 +201,15 @@ export function IntakeForm({
   );
 
   const chosen = Object.values(lines).filter((l) => l.on).length;
+
+  // الصبغ بلا سعر لا يُحسب صفراً في الإجمالي — يُذكر أنه بانتظار التسعير
+  const awaitingPrice = SERVICES.filter(
+    (s) => s.paint && lines[s.key].on && !lines[s.key].price
+  ).length;
+  const paintMissing =
+    SERVICES.filter((s) => s.paint && lines[s.key].on)
+      .map((s) => paintBlocker(lines[s.key].paint))
+      .find(Boolean) ?? null;
 
   /*
     ما ينقص الحفظ — نصّاً لا زرّاً ميّتاً.
@@ -209,7 +234,8 @@ export function IntakeForm({
           ? 'اكتب موديل السيارة'
           : null;
 
-  const blocker = missing ?? carMissing ?? (chosen === 0 ? 'اختر خدمة واحدة على الأقل' : null);
+  const blocker =
+    missing ?? carMissing ?? (chosen === 0 ? 'اختر خدمة واحدة على الأقل' : null) ?? paintMissing;
 
   function patch(key: string, next: Partial<LineState>) {
     setLines((prev) => ({ ...prev, [key]: { ...prev[key], ...next } }));
@@ -235,12 +261,14 @@ export function IntakeForm({
       const l = lines[s.key];
       const parts = s.glassParts
         ? GLASS_PARTS.filter((p) => l.grades[p.key]).map((p) => ({
+            key: p.key,
             label: p.label,
             spec: l.grades[p.key],
             employeeIds: [],
           }))
         : s.bodyParts
           ? optionParts(s, l.options).map((p) => ({
+              key: p.key,
               label: p.label,
               spec: p.spec,
               employeeIds: [],
@@ -253,7 +281,10 @@ export function IntakeForm({
         brand: l.brand || null,
         brandName: l.brandName || null,
         price: l.price || 0,
+        // الصبغ يُستلم قبل معاينته: سعرٌ فارغ يعني «بانتظار التسعير» لا صفراً
+        unpriced: Boolean(s.paint) && !l.price,
         parts,
+        paint: s.paint ? paintPayload(l.paint) : null,
       };
     });
 
@@ -534,7 +565,15 @@ export function IntakeForm({
                     type="checkbox"
                     checked={l.on}
                     className="size-4 accent-[var(--color-accent)]"
-                    onChange={(e) => patch(s.key, { on: e.target.checked })}
+                    onChange={(e) =>
+                      patch(
+                        s.key,
+                        // كود السيارة يُعبّأ حين يُختار الصبغ — ويبقى قابلاً للتغيير
+                        s.paint && e.target.checked && !l.paint.paintCode && vehiclePaintCode
+                          ? { on: true, paint: { ...l.paint, paintCode: vehiclePaintCode } }
+                          : { on: e.target.checked }
+                      )
+                    }
                   />
                   <span className="text-[14px] font-semibold text-[var(--text-0)]">
                     {s.label}
@@ -691,8 +730,23 @@ export function IntakeForm({
                       </p>
                     )}
 
+                    {s.paint && (
+                      <PaintFields
+                        value={l.paint}
+                        onChange={(paint) => patch(s.key, { paint })}
+                        vehiclePaintCode={vehiclePaintCode}
+                      />
+                    )}
+
                     {/* السعر */}
-                    <Field label="السعر (د.ك)" hint="اتركه صفراً إن كان ضمن الباقة">
+                    <Field
+                      label="السعر (د.ك)"
+                      hint={
+                        s.paint
+                          ? 'اتركه فارغاً إن لم يُعاين بعد — يُسعَّر من صفحة أمر الشغل'
+                          : 'اتركه صفراً إن كان ضمن الباقة'
+                      }
+                    >
                       <Input
                         type="number"
                         min="0"
@@ -732,6 +786,7 @@ export function IntakeForm({
           <div>
             <p className="text-[11px] text-[var(--text-2)]">
               {chosen} خدمة · المبلغ الإجمالي
+              {awaitingPrice > 0 && ' · والصبغ بانتظار التسعير'}
             </p>
             <p className="tnum text-lg font-bold text-[var(--text-0)]">{formatKWD(total)}</p>
           </div>

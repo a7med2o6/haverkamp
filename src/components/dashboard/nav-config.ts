@@ -31,6 +31,8 @@ export const NAV: NavGroup[] = [
       { href: '/dashboard/customers', label: 'العملاء', icon: 'Users', module: 'crm' },
       { href: '/dashboard/vehicles', label: 'السيارات', icon: 'Car', module: 'crm' },
       { href: '/dashboard/wash', label: 'اشتراكات الغسيل', icon: 'Droplets', module: 'wash', exact: true },
+      { href: '/dashboard/wash/today', label: 'جولة اليوم', icon: 'Route', module: 'wash' },
+      { href: '/dashboard/wash/coverage', label: 'تغطية الشهر', icon: 'CalendarCheck', module: 'wash' },
       { href: '/dashboard/wash/billing', label: 'تحصيل الاشتراكات', icon: 'Wallet', module: 'wash' },
       { href: '/dashboard/warranties', label: 'الكفالات', icon: 'ShieldCheck', module: 'crm' },
     ],

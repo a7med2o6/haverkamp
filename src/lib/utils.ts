@@ -62,6 +62,24 @@ export function todayDateOnly(): Date {
   return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
 }
 
+/**
+ * يوم الكويت الحالي عند منتصف ليل UTC.
+ * عمليات الغسيل تبدأ قبل أن يلحق خادم UTC بالتاريخ الكويتي، لذلك نقرأ
+ * أجزاء التقويم في Asia/Kuwait صراحةً ثم نعيدها بصيغة @db.Date المعتادة.
+ */
+export function todayInKuwait(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kuwait',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((item) => item.type === type)?.value);
+
+  return new Date(Date.UTC(part('year'), part('month') - 1, part('day')));
+}
+
 /** يحوّل قيمة <input type="date"> إلى Date عند منتصف ليل UTC */
 export function dateOnlyFromInput(value?: string | null): Date {
   if (!value) return todayDateOnly();

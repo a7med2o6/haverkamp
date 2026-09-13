@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { TriangleAlert } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/guard';
@@ -30,6 +31,7 @@ function dayBounds(d = new Date()) {
 export default async function DashboardHome() {
   const session = await requireAuth();
   const role = session.user.role;
+  if (role === 'WASHER') redirect('/dashboard/wash/today');
   const { start, end } = dayBounds();
   // عتبة تنبيه الإقامات — تشمل المنتهية بالفعل (بلا حدّ أدنى)
   const residencyDeadline = new Date(

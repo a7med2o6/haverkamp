@@ -51,28 +51,36 @@ export async function openWashMonthRecords(year: number, month: number) {
   const monthEnd = new Date(Date.UTC(year, month, 0));
   const invoiceLabel = `اشتراك غسيل — ${monthLabel(year, month)}`;
 
-  const subscriptions = await db.washSubscription.findMany({
-    where: {
-      status: 'ACTIVE',
-      startDate: { lte: monthEnd },
-      OR: [{ endDate: null }, { endDate: { gte: monthStart } }],
-    },
-    select: {
-      id: true,
-      customerId: true,
-      startDate: true,
-      endDate: true,
-      monthlyPrice: true,
-      periods: {
-        where: { year, month },
-        select: { id: true },
-        take: 1,
+  const [subscriptions] = await Promise.all([
+    db.washSubscription.findMany({
+      where: {
+        status: 'ACTIVE',
+        startDate: { lte: monthEnd },
+        OR: [{ endDate: null }, { endDate: { gte: monthStart } }],
       },
-    },
-  });
+      select: {
+        id: true,
+        customerId: true,
+        startDate: true,
+        endDate: true,
+        monthlyPrice: true,
+        defaultWasherId: true,
+        pauses: {
+          where: { fromDate: { lte: monthEnd }, toDate: { gte: monthStart } },
+          select: { fromDate: true, toDate: true },
+        },
+        periods: {
+          where: { year, month },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    }),
+  ]);
 
   let created = 0;
   let alreadyOpen = 0;
+  const subscriptionIds: string[] = [];
 
   for (const subscription of subscriptions) {
     // الفحص الصريح هو المسار المعتاد؛ قيد التفرّد أدناه يبقى حارس سباق النقرات فقط.
@@ -130,17 +138,25 @@ export async function openWashMonthRecords(year: number, month: number) {
 
         if (visitDates.length > 0) {
           await tx.washVisit.createMany({
-            data: visitDates.map((date) => ({
-              periodId: period.id,
-              dueDate: date,
-              scheduledDate: date,
-              status: 'BLOCKED' as const,
-              skipReason: 'UNPAID' as const,
-            })),
+            data: visitDates.map((date) => {
+              const paused = subscription.pauses.some(
+                (pause) => pause.fromDate <= date && pause.toDate >= date
+              );
+              return {
+                periodId: period.id,
+                dueDate: date,
+                scheduledDate: date,
+                assignedEmployeeId: subscription.defaultWasherId,
+                // المدفوع يفتح BLOCKED فقط؛ بدء يوم الإيقاف كـSKIPPED يحفظه بعد الدفع.
+                status: paused ? ('SKIPPED' as const) : ('BLOCKED' as const),
+                skipReason: paused ? ('CUSTOMER_TRAVEL' as const) : ('UNPAID' as const),
+              };
+            }),
           });
         }
       });
       created++;
+      subscriptionIds.push(subscription.id);
     } catch (error) {
       if (!isUniqueConstraintError(error)) throw error;
 
@@ -153,5 +169,5 @@ export async function openWashMonthRecords(year: number, month: number) {
     }
   }
 
-  return { created, alreadyOpen };
+  return { created, alreadyOpen, subscriptionIds };
 }

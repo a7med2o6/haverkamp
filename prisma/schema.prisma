@@ -608,6 +608,7 @@ model Employee {
   advances     EmployeeAdvance[]
   assignedWashVisits  WashVisit[] @relation("WashVisitAssignee")
   completedWashVisits WashVisit[] @relation("WashVisitCompleter")
+  defaultWashSubscriptions WashSubscription[] @relation("WashSubscriptionDefaultWasher")
 
   @@index([status])
   @@index([departmentId])
@@ -1096,6 +1097,10 @@ model WashSubscription {
   /// السعر المتفق عليه يُنسخ وقت العقد فلا تغيّر تعديلات الباقة عقداً قائماً
   monthlyPrice Decimal @db.Decimal(12, 3)
 
+  /// من يغسل هذه السيارة عادةً؛ يُنسخ إلى الغسلات كي تُرشَّح الجولة لكل غسّيل
+  defaultWasherId String?
+  defaultWasher   Employee? @relation("WashSubscriptionDefaultWasher", fields: [defaultWasherId], references: [id], onDelete: SetNull)
+
   area          String
   block         String?
   street        String?
@@ -1115,6 +1120,7 @@ model WashSubscription {
 
   @@index([customerId])
   @@index([vehicleId])
+  @@index([defaultWasherId])
   @@index([area, status])
   @@map("wash_subscriptions")
 }

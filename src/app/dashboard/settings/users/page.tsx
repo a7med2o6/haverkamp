@@ -15,17 +15,29 @@ export default async function UsersPage() {
   const session = await requirePermission('settings:read');
   const canWrite = can(session.user.role, 'settings:write');
 
-  const users = await db.user.findMany({
-    orderBy: [{ isActive: 'desc' }, { createdAt: 'asc' }],
-    include: { employee: { select: { code: true, fullName: true } } },
-  });
+  const [users, employees] = await Promise.all([
+    db.user.findMany({
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'asc' }],
+      include: { employee: { select: { id: true, code: true, fullName: true } } },
+    }),
+    db.employee.findMany({
+      where: {
+        OR: [
+          { status: 'ACTIVE', userId: null },
+          { userId: { not: null } },
+        ],
+      },
+      orderBy: { fullName: 'asc' },
+      select: { id: true, code: true, fullName: true, userId: true },
+    }),
+  ]);
 
   return (
     <>
       <PageHeader
         title="المستخدمون والصلاحيات"
         description={`${users.length} حساب · الدور يحدّد ما يراه المستخدم في اللوحة`}
-        actions={canWrite ? <UserFormButton /> : null}
+        actions={canWrite ? <UserFormButton employees={employees} /> : null}
       />
 
       <TableWrap>
@@ -78,6 +90,7 @@ export default async function UsersPage() {
                     <Td>
                       <div className="flex items-center gap-0.5">
                         <UserFormButton
+                          employees={employees}
                           user={{
                             id: u.id,
                             name: u.name,
@@ -85,6 +98,7 @@ export default async function UsersPage() {
                             phone: u.phone,
                             role: u.role,
                             isActive: u.isActive,
+                            employeeId: u.employee?.id ?? '',
                             password: '',
                           }}
                         />

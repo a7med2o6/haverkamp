@@ -17,17 +17,39 @@ export interface UserValues {
   phone?: string | null;
   role: string;
   isActive: boolean;
+  employeeId?: string | null;
   password?: string;
 }
 
-export function UserFormButton({ user }: { user?: UserValues }) {
+interface EmployeeOption {
+  id: string;
+  code: string;
+  fullName: string;
+  userId: string | null;
+}
+
+export function UserFormButton({
+  user,
+  employees,
+}: {
+  user?: UserValues;
+  employees: EmployeeOption[];
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const isEdit = !!user?.id;
 
   const [values, setValues] = useState<UserValues>(
-    user ?? { name: '', email: '', phone: '', role: 'RECEPTIONIST', isActive: true, password: '' }
+    user ?? {
+      name: '',
+      email: '',
+      phone: '',
+      role: 'RECEPTIONIST',
+      isActive: true,
+      employeeId: '',
+      password: '',
+    }
   );
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
@@ -50,6 +72,10 @@ export function UserFormButton({ user }: { user?: UserValues }) {
       }
     });
   }
+
+  const employeeOptions = employees.filter(
+    (employee) => employee.userId === null || employee.userId === user?.id
+  );
 
   return (
     <>
@@ -116,6 +142,25 @@ export function UserFormButton({ user }: { user?: UserValues }) {
                 {Object.entries(ROLE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field
+              label="الموظف المرتبط"
+              hint={values.role === 'WASHER' ? 'مطلوب للغسّيل، ويجب أن يملك مهارة الغسيل' : 'اختياري'}
+              error={errors.employeeId?.[0]}
+            >
+              <Select
+                value={values.employeeId ?? ''}
+                onChange={(e) => set('employeeId', e.target.value)}
+                required={values.role === 'WASHER'}
+              >
+                <option value="">بدون موظف مرتبط</option>
+                {employeeOptions.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.fullName} — {employee.code}
                   </option>
                 ))}
               </Select>

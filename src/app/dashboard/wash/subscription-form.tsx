@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
 import { Modal } from '@/components/ui/modal';
-import { dateOnlyToInput, formatPhone, todayDateOnly } from '@/lib/utils';
+import { dateOnlyToInput, formatPhone, todayInKuwait } from '@/lib/utils';
 import { customerVehicles } from '@/app/dashboard/job-orders/actions';
 import { createWashSubscription, updateWashSubscription } from './actions';
 
@@ -17,6 +17,7 @@ export interface WashSubscriptionFormValues {
   customerId: string;
   vehicleId: string;
   servicePackageId?: string | null;
+  defaultWasherId?: string | null;
   area: string;
   block?: string | null;
   street?: string | null;
@@ -44,16 +45,22 @@ interface PackageOption {
   label: string;
 }
 
+interface WasherOption {
+  id: string;
+  label: string;
+}
+
 const EMPTY: WashSubscriptionFormValues = {
   customerId: '',
   vehicleId: '',
   servicePackageId: '',
+  defaultWasherId: '',
   area: '',
   block: '',
   street: '',
   building: '',
   locationNotes: '',
-  startDate: dateOnlyToInput(todayDateOnly()),
+  startDate: dateOnlyToInput(todayInKuwait()),
   monthlyPrice: '',
   notes: '',
 };
@@ -61,12 +68,14 @@ const EMPTY: WashSubscriptionFormValues = {
 export function WashSubscriptionFormButton({
   customers,
   packages,
+  washers,
   subscription,
   initialVehicles = [],
   compact = false,
 }: {
   customers: CustomerOption[];
   packages: PackageOption[];
+  washers: WasherOption[];
   subscription?: WashSubscriptionFormValues;
   initialVehicles?: WashVehicleOption[];
   compact?: boolean;
@@ -90,6 +99,7 @@ export function WashSubscriptionFormButton({
           initial={subscription ?? EMPTY}
           customers={customers}
           packages={packages}
+          washers={washers}
           initialVehicles={initialVehicles}
           onClose={() => setOpen(false)}
         />
@@ -102,12 +112,14 @@ function WashSubscriptionFormModal({
   initial,
   customers,
   packages,
+  washers,
   initialVehicles,
   onClose,
 }: {
   initial: WashSubscriptionFormValues;
   customers: CustomerOption[];
   packages: PackageOption[];
+  washers: WasherOption[];
   initialVehicles: WashVehicleOption[];
   onClose: () => void;
 }) {
@@ -279,6 +291,20 @@ function WashSubscriptionFormModal({
             {packages.map((servicePackage) => (
               <option key={servicePackage.id} value={servicePackage.id}>
                 {servicePackage.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <Field label="الغسّيل المعتاد" error={errors.defaultWasherId?.[0]} hint="اختياري — يُنسخ إلى جدول الغسلات">
+          <Select
+            value={values.defaultWasherId ?? ''}
+            onChange={(event) => set('defaultWasherId', event.target.value)}
+          >
+            <option value="">بدون غسّيل محدد</option>
+            {washers.map((washer) => (
+              <option key={washer.id} value={washer.id}>
+                {washer.label}
               </option>
             ))}
           </Select>

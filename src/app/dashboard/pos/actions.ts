@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import type { Prisma } from '@/generated/prisma/client';
-import { todayDateOnly, toNumber } from '@/lib/utils';
+import { todayInKuwait, toNumber } from '@/lib/utils';
 
 /** يقرّب إلى 3 خانات عشرية (فلس) لتفادي أخطاء الفاصلة العائمة */
 function fils(n: number) {
@@ -20,24 +20,25 @@ async function makeSubscriptionPeriodEligible(
 ) {
   const period = await tx.washSubscriptionPeriod.findUnique({
     where: { orderId },
-    select: { id: true },
+    select: { id: true, subscriptionId: true },
   });
-  if (!period) return;
+  if (!period) return null;
 
   const updated = await tx.washSubscriptionPeriod.updateMany({
     where: { id: period.id, status: 'DUE' },
     data: { status: 'ELIGIBLE', eligibleAt },
   });
-  if (updated.count === 0) return;
+  if (updated.count === 0) return period.subscriptionId;
 
   await tx.washVisit.updateMany({
     where: {
       periodId: period.id,
       status: 'BLOCKED',
-      scheduledDate: { gte: todayDateOnly() },
+      scheduledDate: { gte: todayInKuwait() },
     },
     data: { status: 'PLANNED', skipReason: null },
   });
+  return period.subscriptionId;
 }
 
 const itemSchema = z.object({
@@ -327,7 +328,7 @@ export const setOrderDiscount = action({
     }
 
     const settled = paid >= total;
-    await db.$transaction(async (tx) => {
+    const washSubscriptionId = await db.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: orderId },
         data: {
@@ -339,8 +340,9 @@ export const setOrderDiscount = action({
       });
 
       if (order.channel === 'SUBSCRIPTION' && settled) {
-        await makeSubscriptionPeriodEligible(tx, orderId, new Date());
+        return makeSubscriptionPeriodEligible(tx, orderId, new Date());
       }
+      return null;
     });
 
     /*
@@ -355,6 +357,11 @@ export const setOrderDiscount = action({
     if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
     revalidatePath('/dashboard/wash');
     revalidatePath('/dashboard/wash/billing');
+    if (washSubscriptionId) {
+      revalidatePath('/dashboard/wash/today');
+      revalidatePath('/dashboard/wash/coverage');
+      revalidatePath(`/dashboard/wash/${washSubscriptionId}`);
+    }
     revalidatePath('/dashboard');
 
     return {
@@ -419,6 +426,7 @@ export const collectPayment = action({
       orderBy: { openedAt: 'desc' },
     });
 
+    let washSubscriptionId: string | null = null;
     await db.$transaction(async (tx) => {
       await tx.payment.create({
         data: { orderId, method, amount, reference },
@@ -435,7 +443,7 @@ export const collectPayment = action({
       });
 
       if (order.channel === 'SUBSCRIPTION' && settled) {
-        await makeSubscriptionPeriodEligible(tx, orderId, new Date());
+        washSubscriptionId = await makeSubscriptionPeriodEligible(tx, orderId, new Date());
       }
 
       // مسودة لم تُخصم من المخزون بعد — نخصمه الآن عند أول تحصيل
@@ -484,6 +492,11 @@ export const collectPayment = action({
     if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
     revalidatePath('/dashboard/wash');
     revalidatePath('/dashboard/wash/billing');
+    if (washSubscriptionId) {
+      revalidatePath('/dashboard/wash/today');
+      revalidatePath('/dashboard/wash/coverage');
+      revalidatePath(`/dashboard/wash/${washSubscriptionId}`);
+    }
     revalidatePath('/dashboard');
 
     return {

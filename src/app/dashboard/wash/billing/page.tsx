@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { EmptyState, Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { withFrom } from '@/lib/back-link';
-import { cn, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
+import { cn, formatKWD, todayInKuwait, toNumber } from '@/lib/utils';
 import { OpenWashMonthButton } from '../open-month-button';
 
 export const metadata: Metadata = { title: 'تحصيل اشتراكات الغسيل' };
@@ -47,7 +47,7 @@ export default async function WashBillingPage({
 }) {
   const session = await requirePermission('wash:read');
   const params = await searchParams;
-  const today = todayDateOnly();
+  const today = todayInKuwait();
   const currentYear = today.getUTCFullYear();
   const currentMonth = today.getUTCMonth() + 1;
 

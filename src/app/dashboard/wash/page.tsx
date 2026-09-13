@@ -77,7 +77,7 @@ export default async function WashSubscriptionsPage({
     : byFilter;
   const canWrite = can(session.user.role, 'wash:write');
 
-  const [subscriptions, total, customers, packages] = await Promise.all([
+  const [subscriptions, total, customers, packages, washers] = await Promise.all([
     db.washSubscription.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -108,6 +108,13 @@ export default async function WashSubscriptionsPage({
           },
         })
       : Promise.resolve([]),
+    canWrite
+      ? db.employee.findMany({
+          where: { status: 'ACTIVE', skills: { has: 'WASHING' } },
+          orderBy: { fullName: 'asc' },
+          select: { id: true, code: true, fullName: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   const customerOptions = customers.map((customer) => ({
@@ -122,6 +129,10 @@ export default async function WashSubscriptionsPage({
     )}${servicePackage.isActive ? '' : ' — غير مفعّلة'}`,
   }));
   const here = listHref(filter, q, page);
+  const washerOptions = washers.map((washer) => ({
+    id: washer.id,
+    label: `${washer.fullName} — ${washer.code}`,
+  }));
 
   return (
     <>
@@ -130,7 +141,11 @@ export default async function WashSubscriptionsPage({
         description={`${total} اشتراك`}
         actions={
           canWrite ? (
-            <WashSubscriptionFormButton customers={customerOptions} packages={packageOptions} />
+            <WashSubscriptionFormButton
+              customers={customerOptions}
+              packages={packageOptions}
+              washers={washerOptions}
+            />
           ) : null
         }
       />
@@ -205,7 +220,12 @@ export default async function WashSubscriptionsPage({
                 return (
                   <Tr key={subscription.id}>
                     <Td className="tnum whitespace-nowrap font-semibold" dir="ltr">
-                      {subscription.code}
+                      <Link
+                        href={`/dashboard/wash/${subscription.id}`}
+                        className="text-accent hover:underline"
+                      >
+                        {subscription.code}
+                      </Link>
                     </Td>
                     <Td className="whitespace-nowrap">
                       <Link
@@ -243,6 +263,7 @@ export default async function WashSubscriptionsPage({
                             compact
                             customers={customerOptions}
                             packages={packageOptions}
+                            washers={washerOptions}
                             initialVehicles={[
                               {
                                 id: subscription.vehicle.id,
@@ -255,6 +276,7 @@ export default async function WashSubscriptionsPage({
                               customerId: subscription.customerId,
                               vehicleId: subscription.vehicleId,
                               servicePackageId: subscription.servicePackageId,
+                              defaultWasherId: subscription.defaultWasherId,
                               area: subscription.area,
                               block: subscription.block,
                               street: subscription.street,

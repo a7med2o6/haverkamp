@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { AppError, action, optionalString } from '@/lib/action-utils';
+import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
+import { PROTECTION_BRAND_SLUGS } from '@/lib/intake';
 import { migratedPaths } from '@/lib/site-data';
 import { homeContentKeys, pageContentKeys, serviceContentKeys } from '@/lib/service-content';
 import { pageImageKeys } from '@/lib/page-images';
@@ -508,5 +509,153 @@ export const savePageContent = action({
     revalidateSite();
 
     return { id: page, message: `تم الحفظ — ${fields.length} نصاً` };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  الباقات والأسعار
+// ═══════════════════════════════════════════════════════════
+
+/*
+  أسعار الباقات هنا أسعار النظام: تُقترح في اشتراك الغسيل وفي بيان التشغيل.
+  أما الأسعار المعروضة على صفحات الموقع العامة فنصوصٌ تُعدَّل من «كل النصوص»،
+  ولا يقرأ الموقع هذا الجدول.
+*/
+function revalidatePackages() {
+  revalidatePath('/dashboard/cms/packages');
+  revalidatePath('/dashboard/wash');
+  revalidatePath('/dashboard/job-orders', 'layout');
+}
+
+/*
+  بيان التشغيل يطابق باقة الحماية باسمها العربي على ثوابت في intake.ts
+  («نص كبوت»، «كبوت كامل»، «فل بدي») ليقترح السعر. فتغيير اسمها أو حذفها
+  يُسكت الاقتراح بلا خطأ يُرى — لذلك يثبت اسمها ولا تُحذف، ويبقى سعرها
+  وتفعيلها قابلين للتعديل.
+*/
+function isProtectionService(slug: string) {
+  return (PROTECTION_BRAND_SLUGS as readonly string[]).includes(slug);
+}
+
+const packageSchema = z.object({
+  id: z.string().optional(),
+  serviceId: z.string().min(1, 'الخدمة مطلوبة'),
+  nameAr: z.string().trim().min(2, 'اسم الباقة بالعربية مطلوب'),
+  nameEn: optionalString,
+  price: moneySchema,
+  priceFrom: z.boolean(),
+  duration: optionalString,
+  warranty: optionalString,
+  sortOrder: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
+  isActive: z.boolean(),
+  isPopular: z.boolean(),
+  features: z.string().optional(),
+});
+
+export const saveServicePackage = action({
+  permission: 'cms:write',
+  schema: packageSchema,
+  audit: { entity: 'ServicePackage', action: 'SAVE' },
+  handler: async ({ id, serviceId, nameAr, nameEn, features, price, ...rest }) => {
+    const service = await db.service.findUnique({
+      where: { id: serviceId },
+      select: { slug: true },
+    });
+    if (!service) throw new AppError('الخدمة غير موجودة');
+
+    const featureList = (features ?? '')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const amount = Math.round(price * 1000) / 1000;
+
+    if (id) {
+      const existing = await db.servicePackage.findUnique({
+        where: { id },
+        select: {
+          serviceId: true,
+          translations: { where: { locale: 'ar' }, select: { name: true } },
+        },
+      });
+      if (!existing) throw new AppError('الباقة غير موجودة');
+      if (existing.serviceId !== serviceId) throw new AppError('لا تُنقل الباقة إلى خدمة أخرى');
+      const currentName = existing.translations[0]?.name;
+      if (isProtectionService(service.slug) && currentName && currentName !== nameAr) {
+        throw new AppError(
+          `اسم باقة الحماية «${currentName}» ثابت — بيان التشغيل يقترح السعر بمطابقته. عدّل السعر أو التفعيل فقط.`
+        );
+      }
+    }
+
+    const saved = await db.$transaction(async (tx) => {
+      const pkg = id
+        ? await tx.servicePackage.update({ where: { id }, data: { ...rest, price: amount } })
+        : await tx.servicePackage.create({ data: { ...rest, serviceId, price: amount } });
+
+      await tx.servicePackageTranslation.upsert({
+        where: { packageId_locale: { packageId: pkg.id, locale: 'ar' } },
+        update: { name: nameAr, features: featureList },
+        create: { packageId: pkg.id, locale: 'ar', name: nameAr, features: featureList },
+      });
+
+      // الإنجليزية اختيارية — لا يُنشأ سجلٌّ بلا اسم
+      if (nameEn) {
+        await tx.servicePackageTranslation.upsert({
+          where: { packageId_locale: { packageId: pkg.id, locale: 'en' } },
+          update: { name: nameEn },
+          create: { packageId: pkg.id, locale: 'en', name: nameEn, features: [] },
+        });
+      }
+      return pkg;
+    });
+
+    revalidatePackages();
+    return { id: saved.id, message: id ? `تم تحديث ${nameAr}` : `تمت إضافة ${nameAr}` };
+  },
+});
+
+export const toggleServicePackageActive = action({
+  permission: 'cms:write',
+  schema: z.object({ id: z.string().min(1), isActive: z.boolean() }),
+  audit: { entity: 'ServicePackage', action: 'TOGGLE' },
+  handler: async ({ id, isActive }) => {
+    await db.servicePackage.update({ where: { id }, data: { isActive } });
+    revalidatePackages();
+    return { id, message: isActive ? 'تم تفعيل الباقة' : 'أُوقفت الباقة — لا تُقترح بعد الآن' };
+  },
+});
+
+export const deleteServicePackage = action({
+  permission: 'cms:write',
+  schema: z.object({ id: z.string().min(1) }),
+  audit: { entity: 'ServicePackage', action: 'DELETE' },
+  handler: async ({ id }) => {
+    const pkg = await db.servicePackage.findUnique({
+      where: { id },
+      select: {
+        service: { select: { slug: true } },
+        translations: { where: { locale: 'ar' }, select: { name: true } },
+        _count: { select: { washSubscriptions: true } },
+      },
+    });
+    if (!pkg) throw new AppError('الباقة غير موجودة');
+    const name = pkg.translations[0]?.name ?? 'الباقة';
+
+    if (isProtectionService(pkg.service.slug)) {
+      throw new AppError(`«${name}» باقة حماية يعتمد عليها بيان التشغيل — أوقفها بدل حذفها`);
+    }
+    /*
+      العقد يحفظ سعره في نفسه فلا يتأثّر ماله بالحذف، لكنه يفقد اسم باقته
+      فلا يُعرف لاحقاً على أيّ باقةٍ اتُّفق. الإيقاف يحفظ الاثنين.
+    */
+    if (pkg._count.washSubscriptions > 0) {
+      throw new AppError(
+        `«${name}» مرتبطة بـ${pkg._count.washSubscriptions} اشتراك غسيل — أوقفها بدل حذفها`
+      );
+    }
+
+    await db.servicePackage.delete({ where: { id } });
+    revalidatePackages();
+    return { id, message: `حُذفت ${name}` };
   },
 });

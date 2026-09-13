@@ -63,6 +63,7 @@ export const NAV: NavGroup[] = [
     links: [
       { href: '/dashboard/cms/home', label: 'الصفحة الرئيسية', icon: 'Home', module: 'cms' },
       { href: '/dashboard/cms/services', label: 'الخدمات', icon: 'Layers', module: 'cms' },
+      { href: '/dashboard/cms/packages', label: 'الباقات والأسعار', icon: 'Tags', module: 'cms' },
       { href: '/dashboard/cms/settings', label: 'إعدادات الموقع', icon: 'Globe', module: 'cms' },
       { href: '/dashboard/cms/gallery', label: 'معرض الصور', icon: 'Images', module: 'cms' },
       { href: '/dashboard/cms/testimonials', label: 'آراء العملاء', icon: 'MessageSquareQuote', module: 'cms' },

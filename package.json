@@ -16,6 +16,7 @@
     "i18n:import": "tsx prisma/import-translations.ts",
     "db:seed:demo": "tsx prisma/seed-demo.ts",
     "db:seed:packages": "tsx prisma/seed-protection-packages.ts",
+    "db:seed:wash-packages": "tsx prisma/seed-wash-packages.ts",
     "db:import:employees": "tsx prisma/import-employees.ts",
     "db:import:leaves": "tsx prisma/import-leaves.ts",
     "legacy:sync": "node scripts/sync-legacy.mjs",

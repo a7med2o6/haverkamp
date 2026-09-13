@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { WhatsAppFloat } from '@/components/site/whatsapp-float';
 
 /**
  * تخطيط الموقع العام.
@@ -14,12 +15,12 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <link rel="stylesheet" href="/css/ds.css" />
 
       {children}
+      <WhatsAppFloat />
 
       {/* سكربتات التفاعل والحركة من الموقع الثابت — بلا i18n لأن الترجمة تُصيَّر على الخادم */}
       <Script src="/js/nav.js" strategy="afterInteractive" />
       <Script src="/js/scroll-anim.js" strategy="afterInteractive" />
       <Script src="/js/counters.js" strategy="afterInteractive" />
-      <Script src="/js/whatsapp-float.js" strategy="afterInteractive" />
     </>
   );
 }

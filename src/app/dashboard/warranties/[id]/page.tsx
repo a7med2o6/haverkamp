@@ -53,6 +53,8 @@ export default async function WarrantyDetailPage({
     db.warranty.findUnique({
       where: { id },
       include: {
+        // صاحب الكفالة من دفعها — قد لا يكون مالك السيارة اليوم
+        customer: { select: { id: true, name: true, phone: true } },
         vehicle: {
           include: {
             customer: true,
@@ -141,24 +143,39 @@ export default async function WarrantyDetailPage({
             </div>
 
             <div className="grid gap-3 text-[13px] sm:grid-cols-2">
-              <Info label="العميل">
-                {/* الصفحة محروسة بـcrm:read، فمن يراها يقرأ ملفّ صاحبها */}
-                <Link
-                  href={withFrom(
-                    `/dashboard/customers/${warranty.vehicle.customer.id}`,
-                    `/dashboard/warranties/${warranty.id}`
-                  )}
-                  className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
-                >
-                  {warranty.vehicle.customer.name}
-                </Link>
-                <span className="tnum block text-[12px] text-[var(--text-2)]" dir="ltr">
-                  {warranty.vehicle.customer.phone}
-                </span>
+              {/*
+                الشهادة تُطبع باسم من دفع ويوقّع عليها، لا باسم مالك السيارة اليوم:
+                الكفالة لا تنتقل مع البيع، وكانت تُعرض باسم المشتري فتوهمه أنها له.
+              */}
+              <Info label="صاحب الكفالة">
+                {warranty.customer ? (
+                  <>
+                    {/* الصفحة محروسة بـcrm:read، فمن يراها يقرأ ملفّ صاحبها */}
+                    <Link
+                      href={withFrom(
+                        `/dashboard/customers/${warranty.customer.id}`,
+                        `/dashboard/warranties/${warranty.id}`
+                      )}
+                      className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                    >
+                      {warranty.customer.name}
+                    </Link>
+                    <span className="tnum block text-[12px] text-[var(--text-2)]" dir="ltr">
+                      {warranty.customer.phone}
+                    </span>
+                  </>
+                ) : (
+                  'غير مسجّل'
+                )}
               </Info>
 
               <Info label="السيارة">
-                {warranty.vehicle.make} {warranty.vehicle.model}
+                <Link
+                  href={withFrom(`/dashboard/vehicles/${warranty.vehicle.id}`, `/dashboard/warranties/${warranty.id}`)}
+                  className="hover:text-accent hover:underline print:no-underline"
+                >
+                  {warranty.vehicle.make} {warranty.vehicle.model}
+                </Link>
                 {warranty.vehicle.year ? ` — ${warranty.vehicle.year}` : ''}
                 {warranty.vehicle.plateNo && (
                   <span className="tnum block text-[12px] text-[var(--text-2)]" dir="ltr">
@@ -166,6 +183,22 @@ export default async function WarrantyDetailPage({
                   </span>
                 )}
               </Info>
+
+              {warranty.vehicle.customer.id !== warranty.customer?.id && (
+                <div className="print:hidden">
+                  <Info label="مالك السيارة الآن">
+                    <Link
+                      href={withFrom(
+                        `/dashboard/customers/${warranty.vehicle.customer.id}`,
+                        `/dashboard/warranties/${warranty.id}`
+                      )}
+                      className="font-medium text-[var(--text-0)] hover:text-accent hover:underline"
+                    >
+                      {warranty.vehicle.customer.name}
+                    </Link>
+                  </Info>
+                </div>
+              )}
 
               <Info label="الخدمة المكفولة">
                 {warrantyLabel(warranty)}

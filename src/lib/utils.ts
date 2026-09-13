@@ -29,6 +29,11 @@ export function formatNumber(value: number | string | { toString(): string }, di
   }).format(Number.isFinite(n) ? n : 0);
 }
 
+/*
+  التاريخ والوقت يُقرآن بتوقيت الكويت لا بساعة الخادم: الخادم في سحابةٍ
+  على UTC، فحجز العاشرة صباحاً كان يُعرض السابعة، وما بعد منتصف الليل
+  بقليل يُنسب إلى الأمس.
+*/
 export function formatDate(d: Date | string | null | undefined, locale = 'ar-KW-u-nu-latn') {
   if (!d) return '—';
   const date = typeof d === 'string' ? new Date(d) : d;
@@ -36,6 +41,7 @@ export function formatDate(d: Date | string | null | undefined, locale = 'ar-KW-
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'Asia/Kuwait',
   }).format(date);
 }
 
@@ -48,6 +54,7 @@ export function formatDateTime(d: Date | string | null | undefined, locale = 'ar
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Asia/Kuwait',
   }).format(date);
 }
 

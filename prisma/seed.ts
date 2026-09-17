@@ -171,6 +171,7 @@ const SERVICES = [
   {
     slug: 'accessories',
     icon: 'ShoppingBag',
+    cardImage: '/assets/main-page/swarfsky.webp',
     sortOrder: 10,
     ar: {
       name: 'اكسسوارات',

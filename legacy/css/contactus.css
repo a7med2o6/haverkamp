@@ -482,7 +482,12 @@
 }
 
 @media (max-width: 720px) {
-  .contact-page { padding: 60px 16px 40px; }
+  /*
+    الشريط ثابتٌ فوق الصفحة وارتفاعه على الجوّال نحو 72px من أعلاها،
+    فحشوٌ أقلّ منه يدفن أول ما في الصفحة — وكان زرّ «العودة للرئيسية»
+    يختفي خلف الشريط كأنه غير موجود.
+  */
+  .contact-page { padding: 88px 16px 40px; }
   .profile-cover { height: 200px; }
   .cover-text-overlay { bottom: 16px; right: 20px; left: 20px; }
   .profile-avatar-sq { width: 120px; height: 120px; margin-top: -60px; border-width: 4px; border-radius: 16px; }
@@ -494,7 +499,7 @@
   .map-frame { height: 280px; }
 }
 @media (max-width: 480px) {
-  .contact-page { padding: 48px 12px 32px; }
+  .contact-page { padding: 86px 12px 32px; }
   .profile-cover { height: 160px; }
   .profile-avatar-sq { width: 96px; height: 96px; margin-top: -48px; border-radius: 14px; }
   .profile-name { font-size: 22px; }

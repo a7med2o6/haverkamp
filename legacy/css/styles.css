@@ -296,6 +296,23 @@ html[dir="ltr"] body {
 .lang-btn:active { transform: scale(0.92); }
 .lang-btn:hover { background: var(--glass-tint-strong); }
 
+/* === Nav actions ===
+   أزرار الشريط (الوضع واللغة والقائمة) عنقودٌ واحد في طرف الشريط:
+   `justify-content: space-between` يوزّع كل ابنٍ مباشر، فكل زرٍّ يُضاف
+   وحده يطفو في فراغ بين العناصر بلا رابطٍ يجمعه بأخيه. */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* زرّ الوضع مربّع إلى جانب زرّ اللغة المستطيل — لا يُنازعه الاتّساع */
+.theme-btn {
+  width: 34px;
+  font-size: 16px;
+}
+
 /* === Hamburger menu === */
 .nav-burger {
   display: none;
@@ -1423,6 +1440,10 @@ a.service-card { text-decoration: none; color: inherit; }
     font-size: 18px;
     margin-inline-start: auto;
   }
+  /* العنقود هو ما يُدفع إلى الطرف، لا زرّ اللغة وحده داخله */
+  .nav-actions { margin-inline-start: auto; }
+  .nav-actions .lang-btn { margin-inline-start: 0; }
+  .theme-btn { width: 30px; font-size: 15px; }
   .nav-burger { width: 34px; height: 34px; }
 }
 

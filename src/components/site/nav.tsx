@@ -76,26 +76,38 @@ export function SiteNav({
           </a>
         )}
 
-        {/* الوضع يُبدَّل من الموقع لا من لوحة التحكم وحدها */}
-        <SiteThemeToggle locale={locale} />
+        {/*
+          أزرار الشريط عنقودٌ واحد في طرفه: الشريط يوزّع أبناءه
+          بـ space-between، فزرّ الوضع وحده كان يطفو في فراغٍ بين
+          «تواصل معنا» وزرّ اللغة.
+        */}
+        <div className="nav-actions">
+          {/* الوضع يُبدَّل من الموقع لا من لوحة التحكم وحدها */}
+          <SiteThemeToggle locale={locale} />
 
-        {/* تبديل اللغة صار تنقّلاً بين مسارين ليُفهرَس كلٌّ منهما */}
-        <Link
-          href={alternateHref ?? other}
-          className="lang-btn"
-          aria-label={locale === 'ar' ? 'English' : 'العربية'}
-          title={locale === 'ar' ? 'English' : 'العربية'}
-        >
-          {locale === 'ar' ? '🇬🇧' : '🇰🇼'}
-        </Link>
+          {/* تبديل اللغة صار تنقّلاً بين مسارين ليُفهرَس كلٌّ منهما */}
+          <Link
+            href={alternateHref ?? other}
+            className="lang-btn"
+            aria-label={locale === 'ar' ? 'English' : 'العربية'}
+            title={locale === 'ar' ? 'English' : 'العربية'}
+          >
+            {locale === 'ar' ? '🇬🇧' : '🇰🇼'}
+          </Link>
 
-        {!contextLabel && (
-          <button className="nav-burger" id="nav-burger" aria-label="القائمة" aria-expanded="false">
-            <span />
-            <span />
-            <span />
-          </button>
-        )}
+          {!contextLabel && (
+            <button
+              className="nav-burger"
+              id="nav-burger"
+              aria-label="القائمة"
+              aria-expanded="false"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          )}
+        </div>
       </nav>
       {!contextLabel && <div className="nav-drawer" id="nav-drawer" />}
     </div>

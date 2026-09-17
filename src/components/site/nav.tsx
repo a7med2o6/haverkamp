@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Dictionary, Locale } from '@/lib/site-data';
+import { SiteThemeToggle } from './theme-toggle';
 
 export interface NavLink {
   href: string;
@@ -74,6 +75,9 @@ export function SiteNav({
             {t('nav.cta')}
           </a>
         )}
+
+        {/* الوضع يُبدَّل من الموقع لا من لوحة التحكم وحدها */}
+        <SiteThemeToggle locale={locale} />
 
         {/* تبديل اللغة صار تنقّلاً بين مسارين ليُفهرَس كلٌّ منهما */}
         <Link

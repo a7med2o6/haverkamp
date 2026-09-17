@@ -72,65 +72,52 @@ export async function AccessoriesPageView({ locale }: { locale: Locale }) {
               </div>
             </div>
 
-            {section.card === 'prod' ? (
-              <div className="products-grid">
-                {section.items.map((p) => (
-                  <div key={p.id} className="prod-card glass">
-                    <div className="prod-img">
-                      <Image src={p.image} alt={p.name} width={320} height={320} loading="lazy" />
-                      <a
-                        href={askFor(p.name)}
-                        target="_blank"
-                        rel="noopener"
-                        className="prod-wa-btn"
-                        aria-label={page.orderLabel}
-                      >
-                        <WaIcon />
-                      </a>
-                    </div>
-                    <div className="prod-name">{p.name}</div>
-                    {p.description && <div className="prod-desc">{p.description}</div>}
-                    <div className="prod-price">
-                      <span className="amount">{p.price}</span>
-                      <span className="currency">{page.currency}</span>
-                    </div>
+            <div className="products-grid">
+              {section.items.map((p) => (
+                /*
+                  أسماء الأصناف كما في تنسيقات الصفحة: البطاقة `product-card`
+                  والجسم `prod-body`. كانت البطاقة `prod-card` بلا مقابل في
+                  الـCSS وجسمها مفقوداً، فسقط عنها الإطار والحشو وتفاوتت
+                  البطاقات وتلاصق نصّها.
+                  وبطاقةٌ واحدة لكل الأقسام: الميداليات كانت صورةً وسعراً بلا
+                  اسم، فلا يعرف الزائر ما يطلب.
+                */
+                <div key={p.id} className="product-card glass">
+                  <div className="prod-img">
+                    {p.chip && <span className="prod-cat-chip">{p.chip}</span>}
+                    <Image src={p.image} alt={p.name} width={320} height={320} loading="lazy" />
                     <a
                       href={askFor(p.name)}
                       target="_blank"
                       rel="noopener"
-                      className="prod-order-btn"
+                      className="prod-wa-btn"
+                      aria-label={page.orderLabel}
                     >
-                      {page.orderLabel}
+                      <WaIcon />
                     </a>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="medals-grid">
-                {section.items.map((p) => (
-                  <div key={p.id} className="medal-card glass">
-                    <div className="medal-img">
-                      <Image src={p.image} alt={p.name} width={320} height={320} loading="lazy" />
-                    </div>
-                    <div className="medal-footer">
-                      <div className="medal-price">
-                        <span className="amount">{p.price}</span>{' '}
+                  <div className="prod-body">
+                    <div className="prod-name">{p.name}</div>
+                    {p.description && <div className="prod-desc">{p.description}</div>}
+                    {/* التذييل يدفع نفسه إلى أسفل البطاقة، فتستوي البطاقات مهما طال الاسم */}
+                    <div className="prod-footer">
+                      <div className="prod-price">
+                        <span className="amount">{p.price}</span>
                         <span className="currency">{page.currency}</span>
                       </div>
                       <a
                         href={askFor(p.name)}
                         target="_blank"
                         rel="noopener"
-                        className="medal-wa"
-                        aria-label={page.orderLabel}
+                        className="prod-order-btn"
                       >
-                        <WaIcon />
+                        {page.orderLabel}
                       </a>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
 

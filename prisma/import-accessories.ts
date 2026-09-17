@@ -69,16 +69,26 @@ async function main() {
   const last = await db.productCategory.findFirst({ orderBy: { sortOrder: 'desc' } });
   let nextOrder = (last?.sortOrder ?? 0) + 1;
 
-  for (const name of ['عطور', 'ميداليات', 'ميداليات جلد']) {
-    const existing = await db.productCategory.findFirst({ where: { nameAr: name } });
+  // الاسم الإنجليزي ليس زينة: هو شارة القسم على بطاقة المتجر
+  const CATEGORIES = [
+    { ar: 'عطور', en: 'Fragrances' },
+    { ar: 'ميداليات', en: 'Keychains' },
+    { ar: 'ميداليات جلد', en: 'Leather Keychains' },
+  ];
+
+  for (const { ar, en } of CATEGORIES) {
+    const existing = await db.productCategory.findFirst({ where: { nameAr: ar } });
     if (existing) {
-      categoryIds.set(name, existing.id);
+      categoryIds.set(ar, existing.id);
+      if (!existing.nameEn) {
+        await db.productCategory.update({ where: { id: existing.id }, data: { nameEn: en } });
+      }
       continue;
     }
     const created = await db.productCategory.create({
-      data: { nameAr: name, sortOrder: nextOrder++ },
+      data: { nameAr: ar, nameEn: en, sortOrder: nextOrder++ },
     });
-    categoryIds.set(name, created.id);
+    categoryIds.set(ar, created.id);
   }
 
   let added = 0;

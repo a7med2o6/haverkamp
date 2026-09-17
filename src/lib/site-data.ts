@@ -779,16 +779,15 @@ export const getContactPage = cache(async (locale: Locale) => {
 /** الفئات كما تظهر على الصفحة: العنوان ومُعرّف القسم وزر التصفية */
 /**
  * التصنيفات الثلاثة الموروثة من الصفحة الثابتة: لها عناوين مترجَمة
- * (بالإيموجي) وبطاقة مصمّمة لها. أي تصنيف آخر يُعرض باسمه من قاعدة
- * البيانات وببطاقة المنتج العادية — فلا يختفي منتج جديد بصمت.
+ * (بالإيموجي) ومُعرّفات ثابتة تُشير إليها روابط التنقّل. أي تصنيف آخر
+ * يُعرض باسمه من قاعدة البيانات — فلا يختفي منتج جديد بصمت.
+ * والبطاقة واحدة للجميع: اسمٌ وسعرٌ وزرّ طلب، فلا يُحرم قسمٌ من اسم
+ * منتجه لأن تصميماً قديماً اكتفى بصورته.
  */
-const ACC_KNOWN: Record<
-  string,
-  { id: string; h2: string; nav: string; card: 'prod' | 'medal' }
-> = {
-  عطور: { id: 'perfumes', h2: 'acc.cat1.h2', nav: 'acc.nav.perfumes', card: 'prod' },
-  ميداليات: { id: 'medals', h2: 'acc.cat2.h2', nav: 'acc.nav.medals', card: 'medal' },
-  'ميداليات جلد': { id: 'leather', h2: 'acc.cat3.h2', nav: 'acc.nav.leather', card: 'medal' },
+const ACC_KNOWN: Record<string, { id: string; h2: string; nav: string }> = {
+  عطور: { id: 'perfumes', h2: 'acc.cat1.h2', nav: 'acc.nav.perfumes' },
+  ميداليات: { id: 'medals', h2: 'acc.cat2.h2', nav: 'acc.nav.medals' },
+  'ميداليات جلد': { id: 'leather', h2: 'acc.cat3.h2', nav: 'acc.nav.leather' },
 };
 
 /** مُعرّف قسم صالح لـ id في HTML من اسم عربي */
@@ -800,6 +799,8 @@ interface AccessoryItem {
   id: string;
   name: string;
   description: string;
+  /** شارة القسم على الصورة — اسم التصنيف الإنجليزي إن وُجد */
+  chip: string | null;
   image: string;
   price: string;
 }
@@ -825,7 +826,7 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
   // نبني الأقسام من تصنيفات المنتجات الفعلية حفاظاً على ترتيب الاستعلام
   const groups = new Map<
     string,
-    { id: string; h2: string; nav: string; card: 'prod' | 'medal'; items: AccessoryItem[] }
+    { id: string; h2: string; nav: string; items: AccessoryItem[] }
   >();
 
   for (const p of products) {
@@ -840,7 +841,6 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
         id: known?.id ?? sectionId(p.categoryId),
         h2: known ? t(known.h2) : name,
         nav: known ? t(known.nav) : name,
-        card: known?.card ?? 'prod',
         items: [],
       });
     }
@@ -849,6 +849,8 @@ export const getAccessoriesPage = cache(async (locale: Locale) => {
       id: p.id,
       name: (locale === 'en' ? p.nameEn || p.nameAr : p.nameAr) ?? '',
       description: p.description ?? '',
+      // شارة القسم على الصورة — بالإنجليزية كما في تصميم الصفحة، وتُترك لمن لا اسم إنجليزي لتصنيفه
+      chip: p.category?.nameEn ?? null,
       image: p.image ?? '',
       // الأسعار Decimal — نحوّلها لنص بلا أصفار زائدة كما في الصفحة الأصلية
       price: Number(p.price).toString(),

@@ -269,7 +269,8 @@ export default async function JobOrderDetailPage({
                 </span>
               )}
             </CardTitle>
-            {canWrite && (
+            {/* بعد التسليم لا بند يُضاف: خرجت السيارة بما عليها */}
+            {canWrite && job.status !== 'DELIVERED' && (
               <JobItemForm
                 jobOrderId={job.id}
                 vehiclePaintCode={job.vehicle?.paintCode ?? null}
@@ -287,7 +288,6 @@ export default async function JobOrderDetailPage({
           <JobItems
             jobOrderId={job.id}
             canWrite={canWrite}
-            hasInvoice={Boolean(job.order)}
             delivered={job.status === 'DELIVERED'}
             items={job.items.map((i) => {
               const children = job.items.filter((c) => c.parentId === i.id);

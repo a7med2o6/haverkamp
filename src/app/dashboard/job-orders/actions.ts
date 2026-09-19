@@ -73,6 +73,122 @@ async function assertItemInJob(itemId: string, jobOrderId: string) {
   if (item.jobOrderId !== jobOrderId) throw new AppError('البند لا يخصّ أمر الشغل هذا');
 }
 
+/**
+ * بنود الأمر لا تُمسّ بعد التسليم: خرجت السيارة بما عليها، وصار ما في
+ * الأمر وفاتورته سجلاً لما جرى لا مسودةً لما سيجري.
+ */
+async function assertJobOpen(jobOrderId: string) {
+  const job = await db.jobOrder.findUnique({
+    where: { id: jobOrderId },
+    select: { status: true },
+  });
+  if (!job) throw new AppError('أمر الشغل غير موجود');
+  if (job.status === 'DELIVERED') {
+    throw new AppError('سُلّمت السيارة — بنود أمرها وفاتورتها صارت سجلاً لا يُعدَّل');
+  }
+}
+
+/** نصّ بند الفاتورة: الصبغ يحمل تشطيبه وكوده — «صبغ دائم — قطع بدي · مطفي · كود LY9T» */
+function invoiceLineLabel(item: { label: string; spec: string | null; paint: unknown }) {
+  return item.paint && item.spec ? `${item.label} · ${item.spec}` : item.label;
+}
+
+/** بنود الفاتورة من بنود الأمر: الآباء المسعَّرة وحدها، بترتيب الأمر */
+function invoiceLinesOf(jobOrderId: string, tx: Prisma.TransactionClient) {
+  return tx.jobOrderItem.findMany({
+    // محتويات الباقات بنود متابعة داخلية بصفر — الفاتورة تأخذ الآباء فقط
+    where: { jobOrderId, parentId: null, isPriced: true },
+    orderBy: { id: 'asc' },
+    select: {
+      productId: true,
+      label: true,
+      spec: true,
+      qty: true,
+      unitPrice: true,
+      total: true,
+      paint: { select: { id: true } },
+    },
+  });
+}
+
+/**
+ * فاتورة الأمر تتبعه حتى التسليم.
+ *
+ * كانت الفاتورة تنسخ البنود ساعة صدورها ثم تنفصل عنها: بندٌ أُضيف بعدها
+ * لا يصل إليها، والتسليم لا يسأل إلا «هل سُدِّدت الفاتورة؟» — فتخرج
+ * السيارة مسدَّدةً وشغلٌ عليها لم يُطالَب به أحد. وسعرٌ صُحِّح بعدها لا
+ * مكان لتصحيحه، فالفاتورة لا تعرف إلا الخصم.
+ *
+ * فصار كل تغيير على بنود الأمر يُعيد بناء بنود فاتورته في المعاملة نفسها:
+ * لا لحظةَ يقول فيها الأمر رقماً والفاتورة رقماً آخر. والخصم يبقى كما
+ * سُجِّل، والإجمالي لا ينزل تحت ما حُصِّل — كقاعدة الخصم نفسها.
+ *
+ * البند غير المسعَّر لا يدخل الفاتورة حتى يُسعَّر، والتسليم يمنعه: صفرُه
+ * ليس مجاناً.
+ */
+async function syncJobInvoice(tx: Prisma.TransactionClient, jobOrderId: string) {
+  const order = await tx.order.findUnique({
+    where: { jobOrderId },
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      customerId: true,
+      discountAmount: true,
+      taxAmount: true,
+      paidAmount: true,
+    },
+  });
+  // الملغاة والمرتجعة انتهى أمرها — لا تُبعث من جديد بتعديل بند
+  if (!order || order.status === 'CANCELLED' || order.status === 'REFUNDED') return null;
+
+  const lines = await invoiceLinesOf(jobOrderId, tx);
+  const subtotal = fils(lines.reduce((sum, i) => sum + Number(i.total), 0));
+  const discount = Number(order.discountAmount);
+  const paid = Number(order.paidAmount);
+
+  if (discount > subtotal) {
+    throw new AppError(
+      `خصم الفاتورة ${order.number} (${discount.toFixed(3)} د.ك) يصير أكبر من قيمتها — عدّل الخصم أولاً`
+    );
+  }
+  const total = fils(subtotal - discount + Number(order.taxAmount));
+  if (total < paid) {
+    throw new AppError(
+      `حُصِّل من الفاتورة ${order.number} ${paid.toFixed(3)} د.ك — لا ينزل إجماليها تحت المحصَّل`
+    );
+  }
+
+  await tx.orderItem.deleteMany({ where: { orderId: order.id } });
+  await tx.orderItem.createMany({
+    data: lines.map((i) => ({
+      orderId: order.id,
+      productId: i.productId,
+      label: invoiceLineLabel(i),
+      qty: i.qty,
+      unitPrice: i.unitPrice,
+      total: i.total,
+    })),
+  });
+
+  // الصفرُ سداد، كما في التسليم: فاتورة كفالةٍ أو مجاملةٍ بصفر مسدَّدة
+  const status = paid >= total ? 'COMPLETED' : paid > 0 ? 'PARTIAL' : 'DRAFT';
+  await tx.order.update({ where: { id: order.id }, data: { subtotal, total, status } });
+
+  return { id: order.id, customerId: order.customerId };
+}
+
+/** ما يعرض الفاتورة أو مستحقّها — يُبطَل مع كل مزامنة */
+function revalidateInvoice(invoice: { id: string; customerId: string | null } | null) {
+  if (!invoice) return;
+  // قائمة الأوامر تعرض إجمالي الفاتورة لكل أمر — فتتبعها
+  revalidatePath('/dashboard/job-orders');
+  revalidatePath('/dashboard/invoices');
+  revalidatePath(`/dashboard/invoices/${invoice.id}`);
+  if (invoice.customerId) revalidatePath(`/dashboard/customers/${invoice.customerId}`);
+  revalidatePath('/dashboard');
+}
+
 export const updateJobOrder = action({
   permission: 'workshop:write',
   schema: z.object({
@@ -140,6 +256,18 @@ export const setJobStatus = action({
       والقابل للإزالة يُستثنى: يُنزع ولا يُطابَق عليه.
     */
     if (status === 'DELIVERED') {
+      /*
+        بندٌ بانتظار التسعير لم يدخل الفاتورة بعد — الفاتورة تتبع المسعَّر
+        وحده. فلو خرجت السيارة لخرج شغلُه بلا ثمن وهي «مسدَّدة».
+      */
+      const unpriced = await db.jobOrderItem.findFirst({
+        where: { jobOrderId: id, parentId: null, isPriced: false },
+        select: { label: true },
+      });
+      if (unpriced) {
+        throw new AppError(`«${unpriced.label}» بانتظار التسعير — سعّره قبل التسليم`);
+      }
+
       const uncoded = await db.paintDetail.findFirst({
         where: { item: { jobOrderId: id }, type: 'PERMANENT', paintCode: null },
         select: { item: { select: { label: true } } },
@@ -258,9 +386,16 @@ export const deleteJobItem = action({
   audit: { entity: 'JobOrderItem', action: 'DELETE' },
   handler: async ({ id, jobOrderId }) => {
     await assertItemInJob(id, jobOrderId);
-    await db.jobOrderItem.delete({ where: { id } });
+    await assertJobOpen(jobOrderId);
+
+    const invoice = await db.$transaction(async (tx) => {
+      await tx.jobOrderItem.delete({ where: { id } });
+      return syncJobInvoice(tx, jobOrderId);
+    });
+
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
-    return { id, message: 'تم حذف البند' };
+    revalidateInvoice(invoice);
+    return { id, message: invoice ? 'تم حذف البند وتحديث الفاتورة' : 'تم حذف البند' };
   },
 });
 
@@ -289,29 +424,34 @@ export const createInvoiceFromJob = action({
       throw new AppError(`«${unpriced.label}» بانتظار التسعير — سعّره قبل إصدار الفاتورة`);
     }
 
-    const subtotal = fils(job.items.reduce((sum, i) => sum + Number(i.total), 0));
+    const number = await nextNumber('invoice');
+    const order = await db.$transaction(async (tx) => {
+      // البنود بمنشئ المزامنة نفسه — فالفاتورة تولد كما ستبقى
+      const lines = await invoiceLinesOf(job.id, tx);
+      const subtotal = fils(lines.reduce((sum, i) => sum + Number(i.total), 0));
 
-    const order = await db.order.create({
-      data: {
-        number: await nextNumber('invoice'),
-        channel: 'INVOICE',
-        status: 'DRAFT',
-        customerId: job.customerId,
-        jobOrderId: job.id,
-        cashierId: userId,
-        subtotal,
-        total: subtotal,
-        items: {
-          create: job.items.map((i) => ({
-            productId: i.productId,
-            // الصبغ يحمل تشطيبه وكوده إلى الفاتورة: «صبغ دائم — قطع بدي · مطفي · كود LY9T»
-            label: i.paint && i.spec ? `${i.label} · ${i.spec}` : i.label,
-            qty: i.qty,
-            unitPrice: i.unitPrice,
-            total: i.total,
-          })),
+      return tx.order.create({
+        data: {
+          number,
+          channel: 'INVOICE',
+          // الصفرُ سداد: كفالةٌ أو مجاملةٌ بصفر لا تنتظر تحصيلاً
+          status: subtotal === 0 ? 'COMPLETED' : 'DRAFT',
+          customerId: job.customerId,
+          jobOrderId: job.id,
+          cashierId: userId,
+          subtotal,
+          total: subtotal,
+          items: {
+            create: lines.map((i) => ({
+              productId: i.productId,
+              label: invoiceLineLabel(i),
+              qty: i.qty,
+              unitPrice: i.unitPrice,
+              total: i.total,
+            })),
+          },
         },
-      },
+      });
     });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
@@ -694,24 +834,29 @@ export const addJobLine = action({
   audit: { entity: 'JobOrderItem', action: 'ADD_LINE' },
   handler: async ({ jobOrderId, line }) => {
     assertLinePrice(line);
-    const job = await db.jobOrder.findUnique({ where: { id: jobOrderId }, select: { id: true } });
-    if (!job) throw new AppError('أمر الشغل غير موجود');
+    await assertJobOpen(jobOrderId);
 
-    await db.$transaction(async (tx) => {
+    const invoice = await db.$transaction(async (tx) => {
       await createJobLine(tx, jobOrderId, line);
       await adoptPaintCode(tx, jobOrderId);
+      return syncJobInvoice(tx, jobOrderId);
     });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
-    return { id: jobOrderId, message: 'تمت إضافة البند' };
+    revalidateInvoice(invoice);
+    return {
+      id: jobOrderId,
+      message: invoice ? 'تمت إضافة البند إلى الأمر وفاتورته' : 'تمت إضافة البند',
+    };
   },
 });
 
 /**
- * «تسعير البند» — بعد المعاينة، أو تصحيح سعرٍ قبل الفاتورة.
+ * «تسعير البند» — بعد المعاينة، أو تصحيح سعرٍ حتى التسليم.
  *
- * بعد صدور الفاتورة لا يُمسّ سعر البند: الفاتورة نسخت أسعارها ساعة صدورها،
- * وتعديلُ البند وحده يجعل الأمر يقول رقماً والفاتورة رقماً آخر.
+ * كان يُمنع بعد الفاتورة ويُحال إليها، والفاتورة لا تعرف إلا الخصم — فسعرٌ
+ * كُتب أقلّ من حقّه لا يُصحَّح أبداً. صارت الفاتورة تتبع البند، فيُصحَّح
+ * هنا وتتبعه في المعاملة نفسها.
  *
  * وموافقة العميل تُسجَّل ولا تمنع — وإعادة التسعير تمسحها، فالموافقة على
  * سعرٍ لا تنتقل إلى سعرٍ غيره.
@@ -732,31 +877,33 @@ export const setItemPrice = action({
     if (approved && !method) throw new AppError('اختر كيف وافق العميل');
 
     await assertItemInJob(itemId, jobOrderId);
+    await assertJobOpen(jobOrderId);
     const item = await db.jobOrderItem.findUnique({
       where: { id: itemId },
-      select: { parentId: true, jobOrder: { select: { order: { select: { number: true } } } } },
+      select: { parentId: true },
     });
     if (!item) throw new AppError('البند غير موجود');
     if (item.parentId) throw new AppError('السعر للبند لا لقطعه');
-    if (item.jobOrder.order) {
-      throw new AppError(`صدرت الفاتورة ${item.jobOrder.order.number} — عدّل السعر عليها لا على البند`);
-    }
 
     const value = fils(price);
-    await db.jobOrderItem.update({
-      where: { id: itemId },
-      data: {
-        unitPrice: value,
-        total: value,
-        isPriced: true,
-        priceApprovedAt: approved ? new Date() : null,
-        priceApprovalMethod: approved ? method : null,
-        priceApprovalNote: approved ? (note ?? null) : null,
-      },
+    const invoice = await db.$transaction(async (tx) => {
+      await tx.jobOrderItem.update({
+        where: { id: itemId },
+        data: {
+          unitPrice: value,
+          total: value,
+          isPriced: true,
+          priceApprovedAt: approved ? new Date() : null,
+          priceApprovalMethod: approved ? method : null,
+          priceApprovalNote: approved ? (note ?? null) : null,
+        },
+      });
+      return syncJobInvoice(tx, jobOrderId);
     });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
-    return { id: itemId, message: 'تم تسعير البند' };
+    revalidateInvoice(invoice);
+    return { id: itemId, message: invoice ? 'تم تسعير البند وتحديث الفاتورة' : 'تم تسعير البند' };
   },
 });
 
@@ -790,7 +937,8 @@ export const updatePaintDetail = action({
       throw new AppError('سُلّمت السيارة — سجلّ الصبغ صار تاريخاً لا يُعدَّل');
     }
 
-    await db.$transaction(async (tx) => {
+    // التشطيب والكود في نصّ بند الفاتورة — فتتبعهما
+    const invoice = await db.$transaction(async (tx) => {
       await tx.paintDetail.update({
         where: { itemId },
         data: {
@@ -806,9 +954,11 @@ export const updatePaintDetail = action({
         data: { spec: paintSpec(finish, paintCode) || null },
       });
       await adoptPaintCode(tx, jobOrderId);
+      return syncJobInvoice(tx, jobOrderId);
     });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    revalidateInvoice(invoice);
     return { id: itemId, message: 'تم حفظ سجلّ الصبغ' };
   },
 });

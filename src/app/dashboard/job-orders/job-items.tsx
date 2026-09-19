@@ -48,15 +48,12 @@ export function JobItems({
   items,
   jobOrderId,
   canWrite,
-  hasInvoice,
   delivered,
 }: {
   items: JobItemRow[];
   jobOrderId: string;
   canWrite: boolean;
-  /** بعد الفاتورة لا يُسعَّر بند — الفاتورة نسخت أسعارها */
-  hasInvoice: boolean;
-  /** بعد التسليم يصير سجلّ الصبغ تاريخاً */
+  /** بعد التسليم تصير البنود وسجلّ الصبغ تاريخاً — والفاتورة قبله تتبعها */
   delivered: boolean;
 }) {
   const parents = items.filter((i) => i.parentId === null);
@@ -65,7 +62,8 @@ export function JobItems({
     if (!i.parentId) continue;
     partsOf.set(i.parentId, [...(partsOf.get(i.parentId) ?? []), i]);
   }
-  const canPrice = canWrite && !hasInvoice;
+  // التسعير والحذف حتى التسليم: الفاتورة، إن صدرت، تتبع البنود في كليهما
+  const canEdit = canWrite && !delivered;
 
   return (
     <TableWrap className="rounded-none border-0">
@@ -80,7 +78,7 @@ export function JobItems({
           <tr>
             <Th>ما طلبه العميل</Th>
             <Th>السعر</Th>
-            {canWrite && <Th />}
+            {canEdit && <Th />}
           </tr>
         </thead>
         <tbody>
@@ -167,7 +165,7 @@ export function JobItems({
                       <>
                         <div className="flex items-center gap-1">
                           <span className="tnum font-semibold">{formatKWD(item.total)}</span>
-                          {canPrice && (
+                          {canEdit && (
                             <PriceItemButton
                               itemId={item.id}
                               jobOrderId={jobOrderId}
@@ -191,7 +189,7 @@ export function JobItems({
                     ) : (
                       <div className="flex flex-col items-start gap-1.5">
                         <Badge tone="warn">بانتظار التسعير</Badge>
-                        {canPrice && (
+                        {canEdit && (
                           <PriceItemButton
                             itemId={item.id}
                             jobOrderId={jobOrderId}
@@ -203,7 +201,7 @@ export function JobItems({
                       </div>
                     )}
                   </Td>
-                  {canWrite && (
+                  {canEdit && (
                     <Td className="align-top">
                       <JobItemActions
                         id={item.id}

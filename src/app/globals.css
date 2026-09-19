@@ -376,6 +376,60 @@
   @page {
     margin: 12mm;
   }
+
+  /*
+    الورق أبيض دائماً — والوضع الداكن يلوّن النصّ بألوانٍ فاتحة تختفي عليه.
+    فالمستند يُطبع بقيم الوضع الفاتح أيّاً كان وضع الشاشة.
+  */
+  .invoice-doc {
+    --surface-1: #ffffff;
+    --surface-2: #f4f6f9;
+    --text-0: #0a1424;
+    --text-1: #2b3a4f;
+    --text-2: #55657f;
+    --line: rgba(13, 31, 51, 0.16);
+    border: 0 !important;
+    border-radius: 0 !important;
+    /* هامشٌ صغير داخل هامش الصفحة — بلاه يلامس النصّ حافّة الورقة فيُقصّ */
+    padding: 0 2mm !important;
+    max-width: none !important;
+  }
+
+  /*
+    كلّ ما يحوي المستند أبيض — هيكل اللوحة يلوّن خلفيته بلون الوضع الداكن،
+    فيُطبع شريطٌ أسود تحت الفاتورة وحولها.
+  */
+  :has(> .invoice-doc),
+  :has(.invoice-doc) {
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .invoice-doc .invoice-logo {
+    filter: none !important;
+  }
+
+  /* نسخة العميل: خلفيتها الداكنة وطول الشاشة لا مكان لهما على الورق */
+  .invoice-public {
+    background: #fff !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  .invoice-receipt {
+    font-size: 11px !important;
+  }
+}
+
+/*
+  الشعار داكنٌ على شفّاف — يُقلب على الخلفية الداكنة كما في شريط الموقع.
+  والداكن هو الأصل حين لا وضع محفوظاً. بـ:where تتساوى القاعدتان وزناً،
+  فيغلب الفاتح لأنه بعدها — غلافٌ فاتح داخل صفحة داكنة يُرسم فاتحاً.
+*/
+:where(:root:not([data-theme]), [data-theme='dark']) .invoice-logo {
+  filter: invert(1) brightness(1.4) hue-rotate(180deg);
+}
+:where([data-theme='light']) .invoice-logo {
+  filter: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

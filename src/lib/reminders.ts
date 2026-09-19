@@ -1,6 +1,7 @@
 import type { Prisma } from '@/generated/prisma/client';
 import { dayKey } from '@/lib/utils';
 import { normalizePhone } from '@/lib/whatsapp';
+import { siteUrl } from '@/lib/site-url';
 import { bookingServiceLabel } from '@/lib/intake';
 
 /**
@@ -91,15 +92,6 @@ export function formatReminderWhen(d: Date): string {
   }).format(d);
 
   return `${date} · ${time}`;
-}
-
-/** أساس الروابط العامة — لا يصلح المسار النسبي في رسالة واتساب */
-function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.AUTH_URL ||
-    'https://haverkampkw.com'
-  ).replace(/\/$/, '');
 }
 
 /** رابط صفحة التأكيد العامة */

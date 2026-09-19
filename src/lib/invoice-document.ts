@@ -39,7 +39,25 @@ const JOB_SELECT = {
   },
 } satisfies Prisma.JobOrderSelect;
 
-const SETTINGS = ['contact.address.ar', 'contact.phone', 'pos.receiptFooter.ar'] as const;
+const SETTINGS = [
+  'contact.address.ar',
+  'contact.phone',
+  'pos.receiptFooter.ar',
+  'pos.letterhead.top',
+  'pos.letterhead.bottom',
+  'pos.letterhead.left',
+  'pos.letterhead.right',
+] as const;
+
+/** هوامش ورق الشركة المقيسة من إطاره — إن غاب الإعداد أو فسد */
+const LETTERHEAD_DEFAULT = { top: 40, bottom: 20, left: 16, right: 16 };
+
+/** رقمٌ معقول بالمليمتر أو الافتراضي — «٤٠» بأرقام عربية تُفهم، و٥٠٠ لا تُطبع */
+function mmSetting(raw: unknown, fallback: number) {
+  const text = String(raw ?? '').replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+  const n = Number(text);
+  return Number.isFinite(n) && n >= 0 && n <= 120 ? n : fallback;
+}
 
 async function load(where: Prisma.OrderWhereUniqueInput) {
   const order = await db.order.findUnique({ where, include: INCLUDE });
@@ -51,8 +69,8 @@ async function load(where: Prisma.OrderWhereUniqueInput) {
     jobId ? db.jobOrder.findUnique({ where: { id: jobId }, select: JOB_SELECT }) : null,
     db.siteSetting.findMany({ where: { key: { in: [...SETTINGS] } } }),
   ]);
-  const setting = (key: (typeof SETTINGS)[number]) =>
-    (settings.find((s) => s.key === key)?.value as string | undefined) ?? '';
+  const raw = (key: (typeof SETTINGS)[number]) => settings.find((s) => s.key === key)?.value;
+  const setting = (key: (typeof SETTINGS)[number]) => (raw(key) as string | undefined) ?? '';
 
   const voided = order.status === 'CANCELLED' || order.status === 'REFUNDED';
   const total = toNumber(order.total);
@@ -118,6 +136,12 @@ async function load(where: Prisma.OrderWhereUniqueInput) {
       address: setting('contact.address.ar'),
       phone: setting('contact.phone'),
       footer: setting('pos.receiptFooter.ar'),
+      letterhead: {
+        top: mmSetting(raw('pos.letterhead.top'), LETTERHEAD_DEFAULT.top),
+        bottom: mmSetting(raw('pos.letterhead.bottom'), LETTERHEAD_DEFAULT.bottom),
+        left: mmSetting(raw('pos.letterhead.left'), LETTERHEAD_DEFAULT.left),
+        right: mmSetting(raw('pos.letterhead.right'), LETTERHEAD_DEFAULT.right),
+      },
     },
   };
 }

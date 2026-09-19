@@ -421,6 +421,42 @@
 }
 
 /*
+  معاينة ورق الشركة — بمقاس الورقة الحقيقي وصورتها خلفه. الورقة بيضاء
+  أيّاً كان وضع الشاشة، فتُرسم بقيم الوضع الفاتح.
+*/
+.invoice-letterhead {
+  --surface-1: #ffffff;
+  --surface-2: #f4f6f9;
+  --text-0: #0a1424;
+  --text-1: #2b3a4f;
+  --text-2: #55657f;
+  --line: rgba(13, 31, 51, 0.16);
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  background: #fff url('/assets/letterhead-a4.webp') center / 100% 100% no-repeat;
+  box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.35);
+}
+.invoice-doc--letterhead {
+  max-width: none;
+  background: transparent;
+}
+
+@media print {
+  /* الورقة مطبوعٌ عليها الإطار والشعار — تسقط الصورة، والهوامش هوامش @page */
+  .invoice-letterhead {
+    width: auto;
+    min-height: 0;
+    padding: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+  .invoice-doc--letterhead {
+    padding: 0 !important;
+  }
+}
+
+/*
   الشعار داكنٌ على شفّاف — يُقلب على الخلفية الداكنة كما في شريط الموقع.
   والداكن هو الأصل حين لا وضع محفوظاً. بـ:where تتساوى القاعدتان وزناً،
   فيغلب الفاتح لأنه بعدها — غلافٌ فاتح داخل صفحة داكنة يُرسم فاتحاً.

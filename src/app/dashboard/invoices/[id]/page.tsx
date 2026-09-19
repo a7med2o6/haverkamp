@@ -32,7 +32,7 @@ export default async function InvoiceDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  /** من أين جاء الزائر — ليعود إليه؛ وشكل الطباعة: ورقة A4 أو إيصال حراري */
+  /** من أين جاء الزائر — ليعود إليه؛ وشكل الطباعة: ورق الشركة أو A4 أبيض أو إيصال حراري */
   searchParams: Promise<{ from?: string; format?: string }>;
 }) {
   const session = await requirePermission('pos:read');
@@ -60,12 +60,13 @@ export default async function InvoiceDetailPage({
     .map(([method, amount]) => ({ method, amount: Math.round(amount * 1000) / 1000 }))
     .filter((r) => r.amount > 0);
 
-  const receipt = format === 'receipt';
+  // ورق الشركة هو الأصل — الفاتورة الرسمية تُطبع عليه
+  const printFormat = format === 'a4' || format === 'receipt' ? format : 'letterhead';
   // تبديل الشكل يحفظ «من أين جاء» — فالعودة تبقى إلى حيث كانت
-  const formatHref = (f: 'a4' | 'receipt') => {
+  const formatHref = (f: 'letterhead' | 'a4' | 'receipt') => {
     const q = new URLSearchParams();
     if (from) q.set('from', from);
-    if (f === 'receipt') q.set('format', 'receipt');
+    if (f !== 'letterhead') q.set('format', f);
     const s = q.toString();
     return s ? `${here}?${s}` : here;
   };
@@ -104,11 +105,12 @@ export default async function InvoiceDetailPage({
           )}
           {can(role, 'pos:write') && <ShareInvoiceButton orderId={doc.id} />}
 
-          {/* الورقة لطابعة المكتب، والإيصال لطابعة الكاشير الحرارية */}
+          {/* ورق الشركة المطبوع للفواتير الرسمية، والأبيض لغيرها، والإيصال لطابعة الكاشير */}
           <div className="flex rounded-[var(--radius-sm)] border border-[var(--line)] p-0.5 text-[12px]">
             {(
               [
-                ['a4', 'A4'],
+                ['letterhead', 'ورق الشركة'],
+                ['a4', 'A4 أبيض'],
                 ['receipt', 'إيصال 80مم'],
               ] as const
             ).map(([f, label]) => (
@@ -118,7 +120,7 @@ export default async function InvoiceDetailPage({
                 replace
                 className={cn(
                   'rounded-[calc(var(--radius-sm)-2px)] px-2.5 py-1 transition-colors',
-                  (f === 'receipt') === receipt
+                  f === printFormat
                     ? 'bg-accent/15 font-semibold text-accent'
                     : 'text-[var(--text-2)] hover:text-[var(--text-0)]'
                 )}
@@ -134,7 +136,7 @@ export default async function InvoiceDetailPage({
       <InvoiceDocument
         doc={doc}
         audience="staff"
-        format={receipt ? 'receipt' : 'a4'}
+        format={printFormat}
         customerHref={
           doc.customer && can(role, 'crm:read')
             ? withFrom(`/dashboard/customers/${doc.customer.id}`, here)

@@ -286,6 +286,21 @@ async function seedServices() {
   console.log(`  ✔ الخدمات: ${SERVICES.length}`);
 }
 
+/**
+ * هوامش الطباعة على ورق الشركة الرسمي (بالمليمتر) — مقيسةٌ من إطار الورقة:
+ * الإطار على 10مم من الجانبين، ويبدأ تحت الشعار على 35.5مم، وخطّه السفلي
+ * على 13مم من حافّة الورقة. والأرقام هنا داخله بهامشٍ للزوايا المستديرة.
+ *
+ * تُنشأ ولا تُحدَّث: الطابعات تنحرف مليمتراً أو اثنين، فيُعايَر الهامش من
+ * الإعدادات بعد طباعة تجريبية — وإعادة البذور لا تمحو تلك المعايرة.
+ */
+const LETTERHEAD_SETTINGS = [
+  { key: 'pos.letterhead.top', value: 40, group: 'pos' },
+  { key: 'pos.letterhead.bottom', value: 20, group: 'pos' },
+  { key: 'pos.letterhead.left', value: 16, group: 'pos' },
+  { key: 'pos.letterhead.right', value: 16, group: 'pos' },
+];
+
 async function seedSettings() {
   for (const s of SITE_SETTINGS) {
     await db.siteSetting.upsert({
@@ -294,7 +309,14 @@ async function seedSettings() {
       create: { key: s.key, value: s.value as never, group: s.group },
     });
   }
-  console.log(`  ✔ الإعدادات: ${SITE_SETTINGS.length}`);
+  for (const s of LETTERHEAD_SETTINGS) {
+    await db.siteSetting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: { key: s.key, value: s.value as never, group: s.group },
+    });
+  }
+  console.log(`  ✔ الإعدادات: ${SITE_SETTINGS.length + LETTERHEAD_SETTINGS.length}`);
 }
 
 async function seedLookups() {

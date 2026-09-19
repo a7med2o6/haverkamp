@@ -126,6 +126,7 @@ export const createPosOrder = action({
               method: p.method,
               amount: p.amount,
               reference: p.reference,
+              registerSessionId: session?.id ?? null,
             })),
           },
         },
@@ -212,16 +213,18 @@ export const closeRegister = action({
   handler: async ({ id, closingCash, notes }) => {
     const session = await db.registerSession.findUnique({
       where: { id },
-      include: { orders: { include: { payments: true } } },
+      include: { payments: { where: { method: 'CASH' }, select: { amount: true } } },
     });
     if (!session) throw new AppError('الوردية غير موجودة');
     if (session.closedAt) throw new AppError('الوردية مغلقة بالفعل');
 
-    // المتوقع = رصيد البداية + كل المقبوضات النقدية خلال الوردية
-    const cashReceived = session.orders
-      .flatMap((o) => o.payments)
-      .filter((p) => p.method === 'CASH')
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+    /*
+      المتوقع = رصيد البداية + ما قُبض نقداً في هذه الوردية.
+      كان يُجمع من دفعات فواتيرها، والفاتورة تنتقل إلى وردية آخر تحصيل
+      بدفعاتها القديمة كلها — فتُحسب في الدرج نقودٌ قُبضت أمس في درج غيره.
+      فصار يُجمع من الدفعات المقبوضة فيها وحدها.
+    */
+    const cashReceived = session.payments.reduce((sum, p) => sum + Number(p.amount), 0);
 
     const expectedCash = fils(Number(session.openingFloat) + cashReceived);
     const variance = fils(closingCash - expectedCash);
@@ -420,7 +423,7 @@ export const collectPayment = action({
     const paidAmount = fils(toNumber(order.paidAmount) + amount);
     const settled = paidAmount >= total;
 
-    // وردية الصندوق المفتوحة — لتدخل المقبوضات النقدية في تسوية اليوم
+    // وردية الصندوق المفتوحة — لتدخل هذه الدفعة في تسوية درجها
     const session = await db.registerSession.findFirst({
       where: { openedById: userId, closedAt: null },
       orderBy: { openedAt: 'desc' },
@@ -428,18 +431,14 @@ export const collectPayment = action({
 
     let washSubscriptionId: string | null = null;
     await db.$transaction(async (tx) => {
+      // الدفعة تُحسب في درج الوردية التي قُبضت فيها — لا في وردية بيع الفاتورة
       await tx.payment.create({
-        data: { orderId, method, amount, reference },
+        data: { orderId, method, amount, reference, registerSessionId: session?.id ?? null },
       });
 
       await tx.order.update({
         where: { id: orderId },
-        data: {
-          paidAmount,
-          status: settled ? 'COMPLETED' : 'PARTIAL',
-          // نربط الفاتورة بوردية التحصيل إن لم تكن مرتبطة بواحدة
-          ...(session ? { registerSessionId: session.id } : {}),
-        },
+        data: { paidAmount, status: settled ? 'COMPLETED' : 'PARTIAL' },
       });
 
       if (order.channel === 'SUBSCRIPTION' && settled) {

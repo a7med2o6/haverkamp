@@ -52,16 +52,13 @@ export default async function PosPage() {
     db.registerSession.findFirst({
       where: { openedById: session.user.id, closedAt: null },
       orderBy: { openedAt: 'desc' },
-      include: { orders: { include: { payments: true } } },
+      include: { payments: { where: { method: 'CASH' }, select: { amount: true } } },
     }),
   ]);
 
-  // إجمالي المقبوضات النقدية خلال الوردية المفتوحة
+  // النقد المقبوض في الوردية المفتوحة — مبيعاتها وتحصيلاتها معاً، كما في درجها
   const cashSales = register
-    ? register.orders
-        .flatMap((o) => o.payments)
-        .filter((p) => p.method === 'CASH')
-        .reduce((sum, p) => sum + toNumber(p.amount), 0)
+    ? register.payments.reduce((sum, p) => sum + toNumber(p.amount), 0)
     : 0;
 
   const posProducts: PosProduct[] = products.map((p) => ({
@@ -76,7 +73,7 @@ export default async function PosPage() {
         title="نقطة البيع"
         description={
           register
-            ? `وردية مفتوحة · مبيعات نقدية ${formatKWD(cashSales)}`
+            ? `وردية مفتوحة · مقبوضات نقدية ${formatKWD(cashSales)}`
             : 'لا توجد وردية مفتوحة'
         }
         actions={

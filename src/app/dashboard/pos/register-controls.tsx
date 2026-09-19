@@ -132,7 +132,7 @@ export function CloseRegisterButton({
           <div className="space-y-4">
             <div className="space-y-2 rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-2)] p-3.5 text-[13px]">
               <Row label="الرصيد الافتتاحي" value={formatKWD(openingFloat)} />
-              <Row label="مبيعات نقدية" value={formatKWD(cashSales)} />
+              <Row label="مقبوضات نقدية" value={formatKWD(cashSales)} />
               <div className="border-t border-[var(--line)] pt-2">
                 <Row label="المتوقع في الدرج" value={formatKWD(expected)} bold />
               </div>

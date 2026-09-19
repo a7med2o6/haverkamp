@@ -332,8 +332,8 @@ export const setOrderDiscount = action({
 
     const settled = paid >= total;
     const washSubscriptionId = await db.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: orderId },
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
         data: {
           discountAmount: discount,
           discountNote,
@@ -341,6 +341,10 @@ export const setOrderDiscount = action({
           status: settled ? 'COMPLETED' : paid > 0 ? 'PARTIAL' : 'DRAFT',
         },
       });
+      // إلغاءٌ سبق إلى الصفّ لا يُمحى بخصمٍ متأخّر
+      if (updated.count === 0) {
+        throw new AppError('لا يمكن تعديل خصم فاتورة ملغاة أو مرتجعة');
+      }
 
       if (order.channel === 'SUBSCRIPTION' && settled) {
         return makeSubscriptionPeriodEligible(tx, orderId, new Date());
@@ -436,10 +440,17 @@ export const collectPayment = action({
         data: { orderId, method, amount, reference, registerSessionId: session?.id ?? null },
       });
 
-      await tx.order.update({
-        where: { id: orderId },
+      /*
+        مشروطٌ بألّا تكون أُلغيت أو رُدّت: إلغاءٌ سبقنا إلى قفل الصفّ لا
+        تُعيده هذه الدفعة سارية — تفشل وتُلغى معاملتها ودفعتها معها.
+      */
+      const updated = await tx.order.updateMany({
+        where: { id: orderId, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
         data: { paidAmount, status: settled ? 'COMPLETED' : 'PARTIAL' },
       });
+      if (updated.count === 0) {
+        throw new AppError('لا يمكن التحصيل على فاتورة ملغاة أو مرتجعة');
+      }
 
       if (order.channel === 'SUBSCRIPTION' && settled) {
         washSubscriptionId = await makeSubscriptionPeriodEligible(tx, orderId, new Date());
@@ -504,5 +515,238 @@ export const collectPayment = action({
         ? `تم التحصيل — الفاتورة ${order.number} مسدّدة بالكامل`
         : `تم تحصيل ${amount.toFixed(3)} د.ك — المتبقي ${(remaining - amount).toFixed(3)}`,
     };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════
+//  إلغاء الفاتورة وردّها
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * يعيد إلى المخزون ما خرج منه بهذه الفاتورة — من حركاتها لا من بنودها:
+ * الفاتورة لا تقول هل خُصم مخزونها أصلاً (المعلّقة لا تخصم، والمحصَّلة
+ * تخصم)، وحركاتُ الصادر بمرجع رقمها تقول ذلك يقيناً.
+ */
+async function returnOrderStock(
+  tx: Prisma.TransactionClient,
+  number: string,
+  userId: string,
+  note: string
+) {
+  // ردٌّ سبق لا يُكرَّر — لا يعود الصنف إلى الرفّ مرتين
+  const returned = await tx.stockMovement.count({ where: { reference: number, type: 'RETURN' } });
+  if (returned > 0) return;
+
+  const out = await tx.stockMovement.findMany({
+    where: { reference: number, type: 'OUT' },
+    select: { productId: true, qty: true },
+  });
+
+  for (const m of out) {
+    const product = await tx.product.update({
+      where: { id: m.productId },
+      data: { stockQty: { increment: m.qty } },
+      select: { stockQty: true },
+    });
+    await tx.stockMovement.create({
+      data: {
+        productId: m.productId,
+        type: 'RETURN',
+        qty: m.qty,
+        balance: product.stockQty,
+        reference: number,
+        note,
+        userId,
+      },
+    });
+  }
+}
+
+const voidSchema = z.object({
+  orderId: z.string(),
+  // السبب ليس زينة: فاتورةٌ تُلغى بلا سبب تُسأل عنها في كل جرد
+  reason: z.string().trim().min(3, 'اكتب سبب الإلغاء'),
+});
+
+/** ما يقرأ الفاتورة أو أثرها — يُبطَل مع إلغائها أو ردّها */
+function revalidateVoided(order: {
+  id: string;
+  customerId: string | null;
+  jobOrderId: string | null;
+}) {
+  revalidatePath('/dashboard/invoices');
+  revalidatePath(`/dashboard/invoices/${order.id}`);
+  revalidatePath('/dashboard/pos');
+  revalidatePath('/dashboard/products');
+  revalidatePath('/dashboard/job-orders');
+  if (order.jobOrderId) revalidatePath(`/dashboard/job-orders/${order.jobOrderId}`);
+  if (order.customerId) revalidatePath(`/dashboard/customers/${order.customerId}`);
+  revalidatePath('/dashboard');
+}
+
+/** ما يُبقي الفاتورة خارج الإلغاء والردّ — مشترك بين الاثنين */
+function assertVoidable(order: { status: string; channel: string; number: string }) {
+  if (order.status === 'CANCELLED' || order.status === 'REFUNDED') {
+    throw new AppError(`الفاتورة ${order.number} ملغاة أو مرتجعة بالفعل`);
+  }
+  if (order.channel === 'SUBSCRIPTION') {
+    /*
+      فاتورة الاشتراك تفتح شهر الغسيل وزياراته — إلغاؤها هنا يترك الشهر
+      مفتوحاً بلا فاتورة. تُدار من صفحة الاشتراك.
+    */
+    throw new AppError('فاتورة اشتراك غسيل — تُدار من صفحة الاشتراك');
+  }
+}
+
+/**
+ * يحجز الفاتورة للإلغاء أو الردّ داخل المعاملة — أول ما فيها.
+ *
+ * الفحص قبل المعاملة يقرأ حالةً قد تتغيّر: ضغطتان متزامنتان على «مرتجع»
+ * تمرّان كلتاهما فيُردّ المبلغ مرتين. والتحديث المشروط يقفل الصفّ، فتنتظر
+ * الثانية ثم تجد الحالة تغيّرت فتُلغى معاملتها كلها.
+ */
+async function claimForVoid(
+  tx: Prisma.TransactionClient,
+  order: { id: string; number: string },
+  data: Prisma.OrderUncheckedUpdateManyInput
+) {
+  const claimed = await tx.order.updateMany({
+    where: { id: order.id, status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+    data,
+  });
+  if (claimed.count === 0) {
+    throw new AppError(`الفاتورة ${order.number} ملغاة أو مرتجعة بالفعل`);
+  }
+}
+
+/**
+ * إلغاء فاتورة لم يُحصَّل منها شيء.
+ *
+ * لا تُحذف: رقمها يبقى في التسلسل وسببها شاهداً. وتنفكّ عن أمر شغلها
+ * ليُصدر له غيرها — كانت فاتورة الأمر الخاطئة لا تُستبدل أبداً، ورسالة
+ * التسليم تطلب «فاتورة سارية» لا سبيل إليها.
+ */
+export const cancelOrder = action({
+  permission: 'pos:delete',
+  schema: voidSchema,
+  audit: { entity: 'Order', action: 'CANCEL' },
+  handler: async ({ orderId, reason }, { userId }) => {
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        channel: true,
+        paidAmount: true,
+        jobOrderId: true,
+        customerId: true,
+      },
+    });
+    if (!order) throw new AppError('الفاتورة غير موجودة');
+    assertVoidable(order);
+
+    const paid = toNumber(order.paidAmount);
+    if (paid > 0) {
+      throw new AppError(`حُصِّل منها ${paid.toFixed(3)} د.ك — استعمل «مرتجع» ليُردّ المبلغ`);
+    }
+
+    await db.$transaction(async (tx) => {
+      await claimForVoid(tx, order, {
+        status: 'CANCELLED',
+        voidedAt: new Date(),
+        voidReason: reason,
+        voidedById: userId,
+        jobOrderId: null,
+        formerJobOrderId: order.jobOrderId,
+      });
+      await returnOrderStock(tx, order.number, userId, `إلغاء الفاتورة ${order.number}`);
+    });
+
+    revalidateVoided(order);
+    return { id: orderId, message: `أُلغيت الفاتورة ${order.number}` };
+  },
+});
+
+/**
+ * ردّ فاتورة حُصِّل منها — كاملةً.
+ *
+ * يُقيَّد ما رُدّ دفعاتٍ سالبة بطرق الدفع نفسها، في وردية من ردّها: نقدٌ
+ * خرج من الدرج اليوم يُنقص متوقَّع درج اليوم، لا درجَ يوم البيع المغلق.
+ * والآجل يُردّ آجلاً — لم يدخل مالاً فلا يخرج مالاً.
+ */
+export const refundOrder = action({
+  permission: 'pos:delete',
+  schema: voidSchema,
+  audit: { entity: 'Order', action: 'REFUND' },
+  handler: async ({ orderId, reason }, { userId }) => {
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        channel: true,
+        paidAmount: true,
+        jobOrderId: true,
+        customerId: true,
+      },
+    });
+    if (!order) throw new AppError('الفاتورة غير موجودة');
+    assertVoidable(order);
+
+    if (toNumber(order.paidAmount) <= 0) {
+      throw new AppError('لم يُحصَّل من الفاتورة شيء — ألغِها بدل ردّها');
+    }
+
+    const session = await db.registerSession.findFirst({
+      where: { openedById: userId, closedAt: null },
+      orderBy: { openedAt: 'desc' },
+    });
+
+    const refunded = await db.$transaction(async (tx) => {
+      await claimForVoid(tx, order, {
+        status: 'REFUNDED',
+        paidAmount: 0,
+        voidedAt: new Date(),
+        voidReason: reason,
+        voidedById: userId,
+        jobOrderId: null,
+        formerJobOrderId: order.jobOrderId,
+      });
+
+      /*
+        الصافي لكل طريقة يُقرأ بعد الحجز لا قبله: تحصيلٌ وقع بين القراءة
+        والحجز كان سيبقى خارج الردّ. والحجز يقفل الصفّ، فلا دفعة تُضاف بعده.
+      */
+      const payments = await tx.payment.findMany({
+        where: { orderId },
+        select: { method: true, amount: true },
+      });
+      const net = new Map<(typeof payments)[number]['method'], number>();
+      for (const p of payments) {
+        net.set(p.method, fils((net.get(p.method) ?? 0) + toNumber(p.amount)));
+      }
+      const refunds = [...net].filter(([, amount]) => amount > 0);
+      if (refunds.length === 0) {
+        throw new AppError('لم يُحصَّل من الفاتورة شيء — ألغِها بدل ردّها');
+      }
+
+      await tx.payment.createMany({
+        data: refunds.map(([method, amount]) => ({
+          orderId,
+          method,
+          amount: -amount,
+          reference: 'مرتجع',
+          registerSessionId: session?.id ?? null,
+        })),
+      });
+      await returnOrderStock(tx, order.number, userId, `مرتجع الفاتورة ${order.number}`);
+      return refunds;
+    });
+
+    revalidateVoided(order);
+    const total = refunded.reduce((sum, [, amount]) => sum + amount, 0);
+    return { id: orderId, message: `رُدّت الفاتورة ${order.number} — ${total.toFixed(3)} د.ك` };
   },
 });

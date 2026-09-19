@@ -14,6 +14,7 @@ import { formatDateTime, formatKWD, toNumber } from '@/lib/utils';
 import { PrintButton } from './print-button';
 import { CollectPaymentButton } from './collect-button';
 import { DiscountButton } from './discount-button';
+import { VoidInvoiceButton } from './void-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,7 @@ export default async function InvoiceDetailPage({
         customer: true,
         cashier: { select: { name: true } },
         jobOrder: { select: { id: true, number: true } },
+        voidedBy: { select: { name: true } },
       },
     }),
     db.siteSetting.findMany({
@@ -65,11 +67,32 @@ export default async function InvoiceDetailPage({
   const setting = (key: string) =>
     (settings.find((s) => s.key === key)?.value as string | undefined) ?? '';
 
-  const remaining = toNumber(order.total) - toNumber(order.paidAmount);
-  const canCollect =
-    can(session.user.role, 'pos:write') &&
-    order.status !== 'CANCELLED' &&
-    order.status !== 'REFUNDED';
+  const voided = order.status === 'CANCELLED' || order.status === 'REFUNDED';
+  // الملغاة والمرتجعة لا يُطالَب فيها بشيء — لا «متبقٍّ» على ما أُلغي
+  const remaining = voided ? 0 : toNumber(order.total) - toNumber(order.paidAmount);
+  const canCollect = can(session.user.role, 'pos:write') && !voided;
+
+  /*
+    الإلغاء والردّ لمن يملك الحذف في نقطة البيع (المدير فما فوق) لا
+    للكاشير: فاتورةٌ يلغيها من أصدرها لا رقيب عليها.
+  */
+  const canVoid =
+    can(session.user.role, 'pos:delete') && !voided && order.channel !== 'SUBSCRIPTION';
+  const netByMethod = new Map<(typeof order.payments)[number]['method'], number>();
+  for (const p of order.payments) {
+    netByMethod.set(p.method, (netByMethod.get(p.method) ?? 0) + toNumber(p.amount));
+  }
+  const refunds = [...netByMethod]
+    .map(([method, amount]) => ({ method, amount: Math.round(amount * 1000) / 1000 }))
+    .filter((r) => r.amount > 0);
+
+  // أمر الشغل الذي كانت له قبل إلغائها — أثرٌ يُقرأ لا رابطٌ فريد
+  const formerJob = order.formerJobOrderId
+    ? await db.jobOrder.findUnique({
+        where: { id: order.formerJobOrderId },
+        select: { id: true, number: true },
+      })
+    : null;
 
   return (
     <>
@@ -95,6 +118,14 @@ export default async function InvoiceDetailPage({
           {canCollect && remaining > 0 && (
             <CollectPaymentButton orderId={order.id} remaining={remaining} />
           )}
+          {canVoid && (
+            <VoidInvoiceButton
+              orderId={order.id}
+              number={order.number}
+              refunds={refunds}
+              isJob={Boolean(order.jobOrderId)}
+            />
+          )}
           <PrintButton />
         </div>
       </div>
@@ -111,6 +142,34 @@ export default async function InvoiceDetailPage({
           </CardHeader>
 
           <CardBody className="space-y-4">
+            {/* الملغاة تُطبع بحالها — ورقةٌ بلا هذا السطر تُقرأ فاتورةً سارية */}
+            {voided && (
+              <div className="rounded-[var(--radius-sm)] border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-[13px]">
+                <p className="font-semibold text-danger">
+                  {order.status === 'REFUNDED' ? 'فاتورة مرتجعة — رُدّ ما حُصِّل منها' : 'فاتورة ملغاة'}
+                </p>
+                {order.voidReason && (
+                  <p className="mt-0.5 text-[var(--text-1)]">{order.voidReason}</p>
+                )}
+                <p className="tnum mt-1 text-[11px] text-[var(--text-2)]">
+                  {order.voidedBy?.name ?? '—'}
+                  {order.voidedAt && ` · ${formatDateTime(order.voidedAt)}`}
+                  {formerJob && (
+                    <>
+                      {' · كانت فاتورة '}
+                      <Link
+                        href={`/dashboard/job-orders/${formerJob.id}`}
+                        className="text-accent hover:underline print:no-underline"
+                        dir="ltr"
+                      >
+                        {formerJob.number}
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--line)] pb-4">
               <div>
                 <p className="text-[11px] text-[var(--text-2)]">رقم الفاتورة</p>

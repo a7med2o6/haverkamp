@@ -44,6 +44,7 @@ model User {
   auditLogs        AuditLog[]
   stockMovements   StockMovement[]
   ordersAsCashier  Order[]           @relation("OrderCashier")
+  ordersVoided     Order[]           @relation("OrderVoider")
   registerSessions RegisterSession[]
   approvedLeaves   LeaveRequest[]    @relation("LeaveApprover")
   reviewsGiven     PerformanceReview[] @relation("ReviewAuthor")
@@ -1326,6 +1327,16 @@ model Order {
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  /// إلغاء الفاتورة أو ردّها — متى ولماذا ومن. الفاتورة لا تُحذف: رقمها
+  /// يبقى في التسلسل وسببها يبقى شاهداً.
+  voidedAt   DateTime?
+  voidReason String?
+  voidedById String?
+  voidedBy   User?     @relation("OrderVoider", fields: [voidedById], references: [id], onDelete: SetNull)
+  /// أمر الشغل الذي كانت له قبل إلغائها — تنفكّ عنه ليُصدر له غيرها،
+  /// ويبقى الأثر هنا (نصّاً لا رابطاً: الرابط الفريد لفاتورته السارية)
+  formerJobOrderId String?
 
   items    OrderItem[]
   payments Payment[]

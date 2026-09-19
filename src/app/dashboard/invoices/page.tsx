@@ -134,7 +134,11 @@ export default async function InvoicesPage({
               />
             ) : (
               orders.map((o) => {
-                const remaining = toNumber(o.total) - toNumber(o.paidAmount);
+                // الملغاة والمرتجعة لا متبقّي عليها — لم يعد يُطالَب فيها بشيء
+                const remaining =
+                  o.status === 'CANCELLED' || o.status === 'REFUNDED'
+                    ? 0
+                    : toNumber(o.total) - toNumber(o.paidAmount);
                 return (
                   <Tr key={o.id}>
                     <Td className="tnum" dir="ltr">

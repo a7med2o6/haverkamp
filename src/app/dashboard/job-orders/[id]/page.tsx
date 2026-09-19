@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { JOB_STATUS } from '@/lib/labels';
 import { dueStatus, formatDate, formatDateTime, formatKWD, toLocalInput, toNumber } from '@/lib/utils';
 import {
-  CreateInvoiceButton,
+  IssueInvoiceButton,
   EditJobOrderButton,
   IssueWarrantyButton,
   JobItemForm,
@@ -176,7 +176,19 @@ export default async function JobOrderDetailPage({
             />
           )}
           {canInvoice && !job.order && job.items.length > 0 && (
-            <CreateInvoiceButton jobOrderId={job.id} />
+            <IssueInvoiceButton
+              jobOrderId={job.id}
+              jobNumber={job.number}
+              lines={job.items
+                .filter((i) => !i.parentId && i.isPriced)
+                .map((i) => ({
+                  id: i.id,
+                  // كما ستُطبع: الصبغ يحمل تشطيبه وكوده
+                  label: i.paint && i.spec ? `${i.label} · ${i.spec}` : i.label,
+                  total: toNumber(i.total),
+                }))}
+              unpriced={job.items.filter((i) => !i.parentId && !i.isPriced).map((i) => i.label)}
+            />
           )}
           {canWarranty && job.vehicleId && (
             <IssueWarrantyButton jobOrderId={job.id} paintParts={paintWarrantyParts} />

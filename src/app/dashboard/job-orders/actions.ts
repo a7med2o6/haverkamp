@@ -399,12 +399,38 @@ export const deleteJobItem = action({
   },
 });
 
-/** ينشئ فاتورة من بنود أمر الشغل */
+/**
+ * إصدار فاتورة أمر الشغل — بخصمها ودفعتها الأولى في خطوة واحدة.
+ *
+ * كان الإصدار زرّاً يولّد فاتورة معلّقة، ثم يُفتح الخصم في نافذة والتحصيل
+ * في أخرى — والعميل واقفٌ عند الاستقبال. والعربون ليس نظاماً آخر: الفاتورة
+ * تتبع الأمر حتى التسليم، فتُصدر عند الاستلام ويُقيَّد العربون دفعةً أولى
+ * عليها.
+ */
 export const createInvoiceFromJob = action({
   permission: 'pos:write',
-  schema: z.object({ jobOrderId: z.string() }),
+  schema: z.object({
+    jobOrderId: z.string(),
+    discountAmount: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0).default(0),
+    discountNote: optionalString.optional(),
+    /** دفعة عند الإصدار — عربونٌ أو المبلغ كلّه. الآجل ليس دفعة: الفاتورة بلا دفعة آجلةٌ أصلاً */
+    payment: z
+      .object({
+        method: z.enum(['CASH', 'KNET', 'VISA', 'TRANSFER', 'LINK']),
+        amount: z.union([z.string(), z.number()]).transform(Number),
+        reference: optionalString,
+      })
+      .nullish(),
+  }),
   audit: { entity: 'Order', action: 'FROM_JOB' },
-  handler: async ({ jobOrderId }, { userId }) => {
+  handler: async ({ jobOrderId, discountAmount, discountNote, payment }, { userId }) => {
+    if (!Number.isFinite(discountAmount) || discountAmount < 0) {
+      throw new AppError('قيمة الخصم غير صالحة');
+    }
+    if (payment && (!Number.isFinite(payment.amount) || payment.amount <= 0)) {
+      throw new AppError('مبلغ الدفعة يجب أن يكون أكبر من صفر');
+    }
+
     const job = await db.jobOrder.findUnique({
       where: { id: jobOrderId },
       // محتويات الباقات بنود متابعة داخلية بصفر — الفاتورة تأخذ الآباء فقط
@@ -424,23 +450,56 @@ export const createInvoiceFromJob = action({
       throw new AppError(`«${unpriced.label}» بانتظار التسعير — سعّره قبل إصدار الفاتورة`);
     }
 
-    const number = await nextNumber('invoice');
+    // الدفعة تُحسب في درج وردية من قبضها — كالتحصيل تماماً
+    const session = payment
+      ? await db.registerSession.findFirst({
+          where: { openedById: userId, closedAt: null },
+          orderBy: { openedAt: 'desc' },
+          select: { id: true },
+        })
+      : null;
+
     const order = await db.$transaction(async (tx) => {
       // البنود بمنشئ المزامنة نفسه — فالفاتورة تولد كما ستبقى
       const lines = await invoiceLinesOf(job.id, tx);
       const subtotal = fils(lines.reduce((sum, i) => sum + Number(i.total), 0));
 
+      const discount = fils(discountAmount);
+      if (discount > subtotal) throw new AppError('الخصم أكبر من قيمة الفاتورة');
+      const total = fils(subtotal - discount);
+
+      const paid = payment ? fils(payment.amount) : 0;
+      if (paid > total) {
+        throw new AppError(`الدفعة أكبر من إجمالي الفاتورة ${total.toFixed(3)} د.ك`);
+      }
+
+      // الرقم بعد التحقّق: إصدارٌ مرفوض لا يُسقط رقماً من التسلسل
+      const number = await nextNumber('invoice');
       return tx.order.create({
         data: {
           number,
           channel: 'INVOICE',
           // الصفرُ سداد: كفالةٌ أو مجاملةٌ بصفر لا تنتظر تحصيلاً
-          status: subtotal === 0 ? 'COMPLETED' : 'DRAFT',
+          status: paid >= total ? 'COMPLETED' : paid > 0 ? 'PARTIAL' : 'DRAFT',
           customerId: job.customerId,
           jobOrderId: job.id,
           cashierId: userId,
           subtotal,
-          total: subtotal,
+          discountAmount: discount,
+          // سببٌ بلا خصم لا يُطبع — لا معنى لـ«عميل دائم» بجانب صفر
+          discountNote: discount > 0 ? (discountNote ?? null) : null,
+          total,
+          paidAmount: paid,
+          ...(payment && {
+            payments: {
+              create: {
+                method: payment.method,
+                amount: paid,
+                reference: payment.reference,
+                registerSessionId: session?.id ?? null,
+              },
+            },
+          }),
           items: {
             create: lines.map((i) => ({
               productId: i.productId,
@@ -455,8 +514,18 @@ export const createInvoiceFromJob = action({
     });
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
+    revalidatePath('/dashboard/job-orders');
     revalidatePath('/dashboard/invoices');
-    return { id: order.id, message: `تم إنشاء الفاتورة ${order.number}` };
+    revalidatePath(`/dashboard/customers/${job.customerId}`);
+    revalidatePath('/dashboard');
+    const paid = Number(order.paidAmount);
+    return {
+      id: order.id,
+      message:
+        paid > 0
+          ? `صدرت الفاتورة ${order.number} وحُصِّل ${paid.toFixed(3)} د.ك`
+          : `صدرت الفاتورة ${order.number}`,
+    };
   },
 });
 

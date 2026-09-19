@@ -18,8 +18,8 @@ import {
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Select, Textarea } from '@/components/ui/field';
-import { JOB_STATUS, toOptions } from '@/lib/labels';
-import { cn } from '@/lib/utils';
+import { JOB_STATUS, PAYMENT_METHOD, toOptions } from '@/lib/labels';
+import { cn, formatKWD } from '@/lib/utils';
 import {
   BODY_PARTS,
   GLASS_PARTS,
@@ -584,28 +584,267 @@ export function JobItemActions({
   );
 }
 
-export function CreateInvoiceButton({ jobOrderId }: { jobOrderId: string }) {
+/** طرق الدفع عند الإصدار — الآجل ليس دفعة: الفاتورة بلا دفعة آجلةٌ أصلاً */
+const ISSUE_METHODS = toOptions(PAYMENT_METHOD).filter((o) => o.value !== 'CREDIT');
+
+const fils = (n: number) => Math.round(n * 1000) / 1000;
+
+/**
+ * إصدار الفاتورة — شاشة لا زرّ.
+ *
+ * كان الزرّ يولّد فاتورة معلّقة بنقرة، ثم يُفتح الخصم في نافذة والتحصيل
+ * في أخرى والعميل واقف. هنا يُرى ما سيُطالَب به بنداً بنداً، ويُسجَّل
+ * الخصم والعربون أو المبلغ كلّه، ثم تصدر الفاتورة مرة واحدة.
+ */
+export function IssueInvoiceButton({
+  jobOrderId,
+  jobNumber,
+  lines,
+  unpriced,
+}: {
+  jobOrderId: string;
+  jobNumber: string;
+  /** البنود المسعَّرة كما ستظهر في الفاتورة */
+  lines: { id: string; label: string; total: number }[];
+  /** بنود بانتظار التسعير — تمنع الإصدار */
+  unpriced: string[];
+}) {
+  const [open, setOpen] = useState(false);
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [discount, setDiscount] = useState('');
+  const [discountNote, setDiscountNote] = useState('');
+  const [method, setMethod] = useState('CASH');
+  const [amount, setAmount] = useState('');
+  const [reference, setReference] = useState('');
+
+  const subtotal = fils(lines.reduce((sum, l) => sum + l.total, 0));
+  const discountValue = fils(Number(discount) || 0);
+  const total = fils(subtotal - discountValue);
+  const paying = fils(Number(amount) || 0);
+  const left = fils(total - paying);
+
+  const blocked = unpriced.length > 0;
+  const tooMuchDiscount = discountValue > subtotal;
+  const tooMuchPaid = paying > total;
+  const canIssue = !blocked && !tooMuchDiscount && !tooMuchPaid && !pending;
+
+  function reset() {
+    setDiscount('');
+    setDiscountNote('');
+    setMethod('CASH');
+    setAmount('');
+    setReference('');
+  }
+
+  function submit() {
+    startTransition(async () => {
+      const res = await createInvoiceFromJob({
+        jobOrderId,
+        discountAmount: discountValue,
+        discountNote,
+        payment: paying > 0 ? { method, amount: paying, reference } : null,
+      });
+      if (res.ok) {
+        toast.success(res.message ?? 'تم');
+        setOpen(false);
+        router.push(`/dashboard/invoices/${res.id}`);
+      } else toast.error(res.error);
+    });
+  }
 
   return (
-    <Button
-      variant="secondary"
-      size="sm"
-      disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          const res = await createInvoiceFromJob({ jobOrderId });
-          if (res.ok) {
-            toast.success(res.message ?? 'تم');
-            router.push(`/dashboard/invoices/${res.id}`);
-          } else toast.error(res.error);
-        })
-      }
-    >
-      {pending ? <Loader2 className="animate-spin" /> : <FileText />}
-      إصدار فاتورة
-    </Button>
+    <>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => {
+          reset();
+          setOpen(true);
+        }}
+      >
+        <FileText />
+        إصدار فاتورة
+      </Button>
+
+      {open && (
+        <Modal
+          open
+          onClose={() => setOpen(false)}
+          title="إصدار فاتورة"
+          description={`أمر الشغل ${jobNumber} — البنود تتبعها الفاتورة حتى التسليم`}
+          size="md"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+                إلغاء
+              </Button>
+              <Button onClick={submit} disabled={!canIssue}>
+                {pending && <Loader2 className="animate-spin" />}
+                {paying > 0 ? `إصدار وتحصيل ${formatKWD(paying)}` : 'إصدار الفاتورة'}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {blocked && (
+              <div className="rounded-[var(--radius-sm)] border border-warn/30 bg-warn/10 px-3.5 py-2.5 text-[13px] text-warn">
+                <p className="font-semibold">سعّر هذه البنود أولاً — صفرُها ليس مجاناً:</p>
+                <ul className="mt-1 list-inside list-disc">
+                  {unpriced.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* ما سيُطالَب به — بنداً بنداً كما سيُطبع */}
+            <div className="rounded-[var(--radius-sm)] border border-[var(--line)]">
+              <ul className="divide-y divide-[var(--line)] text-[13px]">
+                {lines.map((l) => (
+                  <li key={l.id} className="flex items-start justify-between gap-3 px-3.5 py-2">
+                    <span className="text-[var(--text-1)]">{l.label}</span>
+                    <span className="tnum shrink-0 font-semibold text-[var(--text-0)]">
+                      {formatKWD(l.total)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center justify-between border-t border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2 text-[13px]">
+                <span className="text-[var(--text-2)]">المجموع</span>
+                <span className="tnum font-bold text-[var(--text-0)]">{formatKWD(subtotal)}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+              <Field label="خصم (د.ك)">
+                <Input
+                  type="number"
+                  step="0.001"
+                  min={0}
+                  max={subtotal}
+                  value={discount}
+                  onChange={(e) => setDiscount(e.target.value)}
+                  dir="ltr"
+                  className="tnum text-start"
+                  placeholder="0.000"
+                />
+              </Field>
+              <Field label="سبب الخصم" hint={discountValue > 0 ? 'يُطبع بجانب الخصم' : undefined}>
+                <Input
+                  value={discountNote}
+                  onChange={(e) => setDiscountNote(e.target.value)}
+                  placeholder="عميل دائم، عرض…"
+                  disabled={discountValue <= 0}
+                />
+              </Field>
+            </div>
+
+            {/* عربونٌ أو المبلغ كلّه — أو لا شيء فتصدر آجلة */}
+            <div className="space-y-3 rounded-[var(--radius-sm)] border border-[var(--line)] p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[13px] font-semibold text-[var(--text-0)]">دفعة الآن</p>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setAmount(total > 0 ? total.toFixed(3) : '')}
+                    className="rounded-full border border-[var(--line)] px-3 py-1 text-[12px] text-[var(--text-2)] hover:border-accent hover:text-accent"
+                  >
+                    المبلغ كلّه
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAmount('')}
+                    className="rounded-full border border-[var(--line)] px-3 py-1 text-[12px] text-[var(--text-2)] hover:border-accent hover:text-accent"
+                  >
+                    بلا دفعة
+                  </button>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="المبلغ (د.ك)">
+                  <Input
+                    type="number"
+                    step="0.001"
+                    min={0}
+                    max={total}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    dir="ltr"
+                    className="tnum text-start"
+                    placeholder="عربون أو المبلغ كلّه"
+                  />
+                </Field>
+                <Field label="طريقة الدفع">
+                  <Select
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value)}
+                    disabled={paying <= 0}
+                  >
+                    {ISSUE_METHODS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+              {paying > 0 && method !== 'CASH' && (
+                <Field label="رقم العملية / المرجع">
+                  <Input
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    dir="ltr"
+                    className="text-start"
+                  />
+                </Field>
+              )}
+            </div>
+
+            {tooMuchDiscount ? (
+              <p className="rounded-[var(--radius-sm)] border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-[13px] text-danger">
+                الخصم أكبر من قيمة الفاتورة
+              </p>
+            ) : tooMuchPaid ? (
+              <p className="rounded-[var(--radius-sm)] border border-danger/30 bg-danger/10 px-3.5 py-2.5 text-[13px] text-danger">
+                الدفعة أكبر من الإجمالي <span className="tnum font-bold">{formatKWD(total)}</span>
+              </p>
+            ) : (
+              <div className="space-y-1 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-2)] px-3.5 py-2.5 text-[13px]">
+                <SummaryRow label="الإجمالي" value={formatKWD(total)} strong />
+                {paying > 0 && <SummaryRow label="يُحصَّل الآن" value={formatKWD(paying)} tone="text-ok" />}
+                <SummaryRow
+                  label={left > 0 ? 'يبقى مستحقاً' : 'الحالة'}
+                  value={left > 0 ? formatKWD(left) : 'مسدَّدة بالكامل'}
+                  tone={left > 0 ? 'text-warn' : 'text-ok'}
+                />
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  strong,
+  tone,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[var(--text-2)]">{label}</span>
+      <span className={cn('tnum', strong ? 'font-bold text-[var(--text-0)]' : 'font-semibold', tone)}>
+        {value}
+      </span>
+    </div>
   );
 }
 

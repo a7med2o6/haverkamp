@@ -506,7 +506,11 @@ function LastSalePanel({
   sale: { id: string; number: string };
   onDismiss: () => void;
 }) {
-  const receiptUrl = `/dashboard/invoices/${sale.id}?print=1`;
+  /*
+    فاتورة نقطة البيع على ورقة بيضاء بترويستها لا على ورق الشركة: الأخير
+    للفواتير الرسمية التي تُسلَّم باليد، وبيعُ الإكسسوار يُطبع كما كان.
+  */
+  const receiptUrl = `/dashboard/invoices/${sale.id}?format=a4&print=1`;
 
   return (
     <div className="grid h-full place-items-center px-4 text-center">

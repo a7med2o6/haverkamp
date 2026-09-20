@@ -1,11 +1,10 @@
 'use server';
 
-import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { AppError, action } from '@/lib/action-utils';
-import { siteUrl } from '@/lib/site-url';
+import { ensureShareToken, invoiceShareUrl } from '@/lib/invoice-document';
 import { waMeLink } from '@/lib/whatsapp';
 import { formatKWD, toNumber } from '@/lib/utils';
 
@@ -28,24 +27,12 @@ export const shareInvoice = action({
         status: true,
         total: true,
         paidAmount: true,
-        shareToken: true,
         customer: { select: { name: true, phone: true } },
       },
     });
     if (!order) throw new AppError('الفاتورة غير موجودة');
 
-    let token = order.shareToken;
-    if (!token) {
-      // مشروطٌ بخلوّه: ضغطتان متزامنتان لا تولّدان رابطين يُبطل أحدهما الآخر
-      await db.order.updateMany({
-        where: { id: orderId, shareToken: null },
-        data: { shareToken: randomUUID() },
-      });
-      token = (await db.order.findUniqueOrThrow({ where: { id: orderId }, select: { shareToken: true } }))
-        .shareToken!;
-    }
-
-    const url = `${siteUrl()}/i/${token}`;
+    const url = invoiceShareUrl(await ensureShareToken(orderId));
     const total = toNumber(order.total);
     const paid = toNumber(order.paidAmount);
     const voided = order.status === 'CANCELLED' || order.status === 'REFUNDED';

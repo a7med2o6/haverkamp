@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
 import { normalizePlate } from '@/lib/search';
+import { typeCodeOf } from '@/lib/type-codes';
 import { vehicleIdsByPlate } from '@/lib/search-db';
 import {
   PAINT_PARTS,
@@ -88,14 +89,42 @@ async function assertJobOpen(jobOrderId: string) {
   }
 }
 
-/** نصّ بند الفاتورة: الصبغ يحمل تشطيبه وكوده — «صبغ دائم — قطع بدي · مطفي · كود LY9T» */
-function invoiceLineLabel(item: { label: string; spec: string | null; paint: unknown }) {
-  return item.paint && item.spec ? `${item.label} · ${item.spec}` : item.label;
+/**
+ * وصف البند تحت اسمه في الفاتورة: ماركة الحماية، أو درجات العازل وقطعها،
+ * أو تشطيب الصبغ وكوده. الرمز في عمودٍ مستقلّ، والوصف يقول ما لا يقوله.
+ */
+function invoiceLineSpec(item: {
+  label: string;
+  spec: string | null;
+  paint: unknown;
+  children: { label: string; spec: string | null }[];
+}) {
+  // الصبغ: تشطيبه وكوده كما كانا يُلحقان بالاسم
+  if (item.paint) return item.spec;
+
+  /*
+    العازل: الدرجة على القطع لا على البند — «شفاف» للجام الأمامي و«30%»
+    لباقي السيارة. تُجمع كل درجةٍ بقطعها: «شفاف: الجام الأمامي · 30%: ...»
+  */
+  const grades = new Map<string, string[]>();
+  for (const part of item.children) {
+    if (!part.spec) continue;
+    grades.set(part.spec, [...(grades.get(part.spec) ?? []), part.label]);
+  }
+  if (grades.size > 0) {
+    const text = [...grades]
+      .map(([grade, parts]) => `${grade}: ${parts.join('، ')}`)
+      .join(' · ');
+    return item.spec ? `${item.spec} — ${text}` : text;
+  }
+
+  // الحماية وغيرها: الماركة وحدها، وهي في الرمز أيضاً — فتُذكر كاملةً هنا
+  return item.spec;
 }
 
 /** بنود الفاتورة من بنود الأمر: الآباء المسعَّرة وحدها، بترتيب الأمر */
-function invoiceLinesOf(jobOrderId: string, tx: Prisma.TransactionClient) {
-  return tx.jobOrderItem.findMany({
+async function invoiceLinesOf(jobOrderId: string, tx: Prisma.TransactionClient) {
+  const items = await tx.jobOrderItem.findMany({
     // محتويات الباقات بنود متابعة داخلية بصفر — الفاتورة تأخذ الآباء فقط
     where: { jobOrderId, parentId: null, isPriced: true },
     orderBy: { id: 'asc' },
@@ -107,8 +136,24 @@ function invoiceLinesOf(jobOrderId: string, tx: Prisma.TransactionClient) {
       unitPrice: true,
       total: true,
       paint: { select: { id: true } },
+      service: { select: { slug: true } },
+      children: { orderBy: { id: 'asc' }, select: { label: true, spec: true } },
     },
   });
+
+  return items.map((item) => ({
+    productId: item.productId,
+    label: item.label,
+    spec: invoiceLineSpec(item),
+    typeCode: typeCodeOf({
+      serviceSlug: item.service?.slug,
+      brand: item.paint ? null : item.spec,
+      label: item.label,
+    }),
+    qty: item.qty,
+    unitPrice: item.unitPrice,
+    total: item.total,
+  }));
 }
 
 /**
@@ -164,7 +209,9 @@ async function syncJobInvoice(tx: Prisma.TransactionClient, jobOrderId: string) 
     data: lines.map((i) => ({
       orderId: order.id,
       productId: i.productId,
-      label: invoiceLineLabel(i),
+      label: i.label,
+      spec: i.spec,
+      typeCode: i.typeCode,
       qty: i.qty,
       unitPrice: i.unitPrice,
       total: i.total,
@@ -503,7 +550,9 @@ export const createInvoiceFromJob = action({
           items: {
             create: lines.map((i) => ({
               productId: i.productId,
-              label: invoiceLineLabel(i),
+              label: i.label,
+              spec: i.spec,
+              typeCode: i.typeCode,
               qty: i.qty,
               unitPrice: i.unitPrice,
               total: i.total,

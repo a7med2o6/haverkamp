@@ -6,9 +6,10 @@ import { db } from '@/lib/db';
 import { backTo, withFrom } from '@/lib/back-link';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
-import { getInvoiceById } from '@/lib/invoice-document';
+import { getInvoiceById, invoiceQr } from '@/lib/invoice-document';
 import { cn } from '@/lib/utils';
 import { InvoiceDocument } from '@/components/invoice/invoice-document';
+import { LetterheadInvoice } from '@/components/invoice/letterhead-invoice';
 import { PrintButton } from './print-button';
 import { CollectPaymentButton } from './collect-button';
 import { DiscountButton } from './discount-button';
@@ -133,6 +134,10 @@ export default async function InvoiceDetailPage({
         </div>
       </div>
 
+      {printFormat === 'letterhead' ? (
+        /* رمزٌ يُمسح فيفتح نسخة العميل — يُولَّد مع أول طباعة ثم يبقى */
+        <LetterheadInvoice doc={doc} qr={await invoiceQr(doc.id)} />
+      ) : (
       <InvoiceDocument
         doc={doc}
         audience="staff"
@@ -144,6 +149,7 @@ export default async function InvoiceDetailPage({
         }
         jobHref={doc.job ? withFrom(`/dashboard/job-orders/${doc.job.id}`, here) : undefined}
       />
+      )}
     </>
   );
 }

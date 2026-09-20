@@ -27,13 +27,12 @@ export function InvoiceDocument({
 }: {
   doc: InvoiceDoc;
   audience: "staff" | "customer";
-  format?: "letterhead" | "a4" | "receipt";
+  format?: "a4" | "receipt";
   customerHref?: string;
   jobHref?: string;
 }) {
   const staff = audience === "staff";
   const receipt = format === "receipt";
-  const letterhead = format === "letterhead";
   const vehicle = doc.job?.vehicle;
   const car = vehicle
     ? [`${vehicle.make} ${vehicle.model}`, vehicle.year]
@@ -41,15 +40,14 @@ export function InvoiceDocument({
         .join(" — ")
     : null;
 
+  // ورق الشركة له مكوّنه: LetterheadInvoice
   const article = (
     <article
       className={cn(
         "invoice-doc mx-auto text-[var(--text-1)]",
-        letterhead
-          ? "invoice-doc--letterhead text-[12.5px]"
-          : receipt
-            ? "invoice-receipt w-full max-w-[80mm] rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-1)] p-4 text-[12px]"
-            : "max-w-2xl rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-6 text-[13px] sm:p-8",
+        receipt
+          ? "invoice-receipt w-full max-w-[80mm] rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-1)] p-4 text-[12px]"
+          : "max-w-2xl rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-6 text-[13px] sm:p-8",
       )}
     >
       {/*
@@ -63,12 +61,7 @@ export function InvoiceDocument({
         ── الترويسة — div لا header: الطباعة تخفي كل header (ترويسة اللوحة).
         وورق الشركة مطبوعٌ عليه الشعار والتواصل، فيُكتفى بعنوان المستند.
       */}
-      {letterhead ? (
-        <h1 className="text-center text-xl font-bold tracking-wide text-[var(--text-0)]">
-          فاتورة
-        </h1>
-      ) : (
-        <div className="flex flex-col items-center gap-1 border-b border-[var(--line)] pb-4 text-center">
+      <div className="flex flex-col items-center gap-1 border-b border-[var(--line)] pb-4 text-center">
           <Image
             src="/assets/logo.png"
             alt="هافركامب"
@@ -92,13 +85,12 @@ export function InvoiceDocument({
               {doc.shop.address}
             </p>
           )}
-          {doc.shop.phone && (
-            <p className="tnum text-[11px] text-[var(--text-2)]" dir="ltr">
-              {doc.shop.phone}
-            </p>
-          )}
-        </div>
-      )}
+        {doc.shop.phone && (
+          <p className="tnum text-[11px] text-[var(--text-2)]" dir="ltr">
+            {doc.shop.phone}
+          </p>
+        )}
+      </div>
 
       {/* الملغاة تُطبع بحالها — ورقةٌ بلا هذا السطر تُقرأ فاتورةً سارية */}
       {doc.void && (
@@ -226,6 +218,7 @@ export function InvoiceDocument({
             {doc.items.map((i) => (
               <li key={i.id} className="px-2.5 py-2">
                 <p className="text-[var(--text-0)]">{i.label}</p>
+                {i.spec && <p className="text-[11px]">{i.spec}</p>}
                 <p className="tnum mt-0.5 flex justify-between text-[11px] text-[var(--text-2)]">
                   <span>
                     {i.qty} × {formatKWD(i.unitPrice)}
@@ -250,7 +243,13 @@ export function InvoiceDocument({
             <tbody className="divide-y divide-[var(--line)]">
               {doc.items.map((i) => (
                 <tr key={i.id}>
-                  <td className="px-3 py-2 text-[var(--text-0)]">{i.label}</td>
+                  <td className="px-3 py-2 text-[var(--text-0)]">
+                    {i.label}
+                    {/* النوع ودرجاته — نسخة العميل تقول ما رُكّب على سيارته */}
+                    {i.spec && (
+                      <span className="mt-0.5 block text-[11px] text-[var(--text-2)]">{i.spec}</span>
+                    )}
+                  </td>
                   <td className="tnum px-3 py-2">{i.qty}</td>
                   <td className="tnum px-3 py-2">{formatKWD(i.unitPrice)}</td>
                   <td className="tnum px-3 py-2 font-semibold text-[var(--text-0)]">
@@ -371,23 +370,7 @@ export function InvoiceDocument({
     </article>
   );
 
-  if (!letterhead) return article;
-
-  /*
-    ورق الشركة: معاينةٌ بمقاس الورقة الحقيقي (210مم) وصورة الورقة خلفها،
-    فيُرى أين يقع المحتوى من الإطار قبل الطباعة. وعند الطباعة تسقط الصورة
-    (الورقة مطبوعةٌ أصلاً) وتصير الهوامش هوامشَ الصفحة نفسها.
-  */
-  const m = doc.shop.letterhead;
-  const margins = `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`;
-  return (
-    <div className="overflow-x-auto pb-2 print:overflow-visible print:pb-0">
-      <style>{`@page { size: A4; margin: ${margins}; }`}</style>
-      <div className="invoice-letterhead mx-auto" style={{ padding: margins }}>
-        {article}
-      </div>
-    </div>
-  );
+  return article;
 }
 
 function Meta({

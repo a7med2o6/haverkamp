@@ -633,7 +633,8 @@ export function IssueInvoiceButton({
     setDiscount('');
     setDiscountNote('');
     setMethod('CASH');
-    setAmount('');
+    // الفاتورة تُحصَّل كاملةً بعد انتهاء الشغل — لا عربون، فالمبلغ كلّه مكتوبٌ سلفاً
+    setAmount(subtotal > 0 ? subtotal.toFixed(3) : '');
     setReference('');
   }
 
@@ -743,7 +744,7 @@ export function IssueInvoiceButton({
             {/* عربونٌ أو المبلغ كلّه — أو لا شيء فتصدر آجلة */}
             <div className="space-y-3 rounded-[var(--radius-sm)] border border-[var(--line)] p-3.5">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-[13px] font-semibold text-[var(--text-0)]">دفعة الآن</p>
+                <p className="text-[13px] font-semibold text-[var(--text-0)]">التحصيل</p>
                 <div className="flex gap-1.5">
                   <button
                     type="button"
@@ -752,12 +753,13 @@ export function IssueInvoiceButton({
                   >
                     المبلغ كلّه
                   </button>
+                  {/* تُصدر بلا تحصيل حين يتأخّر الدفع — والقاعدة أن تُحصَّل كاملة */}
                   <button
                     type="button"
                     onClick={() => setAmount('')}
                     className="rounded-full border border-[var(--line)] px-3 py-1 text-[12px] text-[var(--text-2)] hover:border-accent hover:text-accent"
                   >
-                    بلا دفعة
+                    بلا تحصيل
                   </button>
                 </div>
               </div>
@@ -772,7 +774,7 @@ export function IssueInvoiceButton({
                     onChange={(e) => setAmount(e.target.value)}
                     dir="ltr"
                     className="tnum text-start"
-                    placeholder="عربون أو المبلغ كلّه"
+                    placeholder="المبلغ كلّه"
                   />
                 </Field>
                 <Field label="طريقة الدفع">

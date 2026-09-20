@@ -441,6 +441,15 @@
   max-width: none;
   background: transparent;
 }
+/* تظليلٌ خفيفٌ جداً لخانات العناوين وسطر الإجمالي — يُفرّق ولا يُعتم */
+.invoice-shade {
+  background: #f6f6f6;
+}
+.invoice-qr svg {
+  width: 26mm;
+  height: 26mm;
+  display: block;
+}
 
 @media print {
   /* الورقة مطبوعٌ عليها الإطار والشعار — تسقط الصورة، والهوامش هوامش @page */
@@ -453,6 +462,11 @@
   }
   .invoice-doc--letterhead {
     padding: 0 !important;
+  }
+  /* التظليل يُطبع كما يُرى — بلا هذا يُسقطه المتصفّح فيضيع الفرق */
+  .invoice-shade {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

@@ -1,6 +1,9 @@
 import { cache } from 'react';
+import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
+import { qrSvg } from '@/lib/qr';
+import { siteUrl } from '@/lib/site-url';
 import { warrantyLabel } from '@/lib/intake';
 import { toNumber } from '@/lib/utils';
 
@@ -112,6 +115,8 @@ async function load(where: Prisma.OrderWhereUniqueInput) {
     items: order.items.map((i) => ({
       id: i.id,
       label: i.label,
+      spec: i.spec,
+      typeCode: i.typeCode,
       qty: toNumber(i.qty),
       unitPrice: toNumber(i.unitPrice),
       total: toNumber(i.total),
@@ -147,6 +152,43 @@ async function load(where: Prisma.OrderWhereUniqueInput) {
 }
 
 export type InvoiceDoc = NonNullable<Awaited<ReturnType<typeof load>>>;
+
+/**
+ * مفتاح نسخة العميل — يُنشأ عند الحاجة إليه أول مرة (طباعةٌ فيها رمز
+ * الاستجابة، أو إرسالٌ بالواتساب) ثم يبقى. مشروطٌ بخلوّه: طلبان متزامنان
+ * لا يولّدان مفتاحين يُبطل أحدهما الآخر.
+ */
+export async function ensureShareToken(orderId: string): Promise<string> {
+  const current = await db.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: { shareToken: true },
+  });
+  if (current.shareToken) return current.shareToken;
+
+  await db.order.updateMany({
+    where: { id: orderId, shareToken: null },
+    data: { shareToken: randomUUID() },
+  });
+  const after = await db.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: { shareToken: true },
+  });
+  return after.shareToken!;
+}
+
+/** رابط نسخة العميل من الفاتورة */
+export function invoiceShareUrl(token: string) {
+  return `${siteUrl()}/i/${token}`;
+}
+
+/**
+ * رمز الاستجابة للفاتورة — يمسحه العميل فيرى نسخته على النظام. يُولَّد
+ * للطباعة وحدها: نسخة العميل لا تحتاج رمزاً يعيده إلى نفسه.
+ */
+export async function invoiceQr(orderId: string) {
+  const token = await ensureShareToken(orderId);
+  return qrSvg(invoiceShareUrl(token));
+}
 
 /** للوحة — بالمعرّف */
 export const getInvoiceById = cache((id: string) => load({ id }));

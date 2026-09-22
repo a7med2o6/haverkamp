@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { AlertTriangle, CheckCircle2, Clock3, Route } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
+import { can } from '@/lib/rbac';
 import { formatDateOnly, todayDateOnly } from '@/lib/utils';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,7 @@ export const metadata: Metadata = { title: 'جولة اليوم' };
 export const dynamic = 'force-dynamic';
 
 export default async function WashTodayPage() {
-  const session = await requirePermission('wash:read');
+  const session = await requirePermission('wash:visit');
   const today = todayDateOnly();
   const employee = await db.employee.findUnique({
     where: { userId: session.user.id },
@@ -23,6 +24,7 @@ export default async function WashTodayPage() {
   });
 
   if (!employee) {
+    const canReadWash = can(session.user.role, 'wash:read');
     return (
       <>
         <PageHeader title="جولة اليوم" description={formatDateOnly(today)} />
@@ -31,11 +33,15 @@ export default async function WashTodayPage() {
             <AlertTriangle className="mx-auto size-10 text-warn" />
             <h1 className="mt-4 text-lg font-bold text-[var(--text-0)]">الحساب غير مرتبط بموظف</h1>
             <p className="mx-auto mt-2 max-w-md text-[13px] leading-6 text-[var(--text-2)]">
-              اربط هذا الحساب بملف الموظف حتى تظهر الزيارات المسندة إليه وحدها في جولة اليوم.
+              {canReadWash
+                ? 'اربط هذا الحساب بملف الموظف حتى تظهر الزيارات المسندة إليه وحدها في جولة اليوم.'
+                : 'يُرجى التواصل مع مدير الفرع لربط هذا الحساب بملف الموظف لعرض جولة اليوم.'}
             </p>
-            <Link href="/dashboard/wash/coverage" className={`${buttonVariants({ variant: 'secondary' })} mt-5`}>
-              عرض تغطية الشهر
-            </Link>
+            {canReadWash && (
+              <Link href="/dashboard/wash/coverage" className={`${buttonVariants({ variant: 'secondary' })} mt-5`}>
+                عرض تغطية الشهر
+              </Link>
+            )}
           </CardBody>
         </Card>
       </>

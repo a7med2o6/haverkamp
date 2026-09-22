@@ -364,7 +364,7 @@ async function visitMutationContext(
 }
 
 export const completeWashVisit = action({
-  permission: 'wash:write',
+  permission: 'wash:visit',
   schema: visitIdSchema,
   audit: { entity: 'WashVisit', action: 'COMPLETE' },
   handler: async ({ visitId }, { userId }) => {
@@ -386,7 +386,7 @@ export const completeWashVisit = action({
 });
 
 export const skipWashVisit = action({
-  permission: 'wash:write',
+  permission: 'wash:visit',
   schema: z.object({
     visitId: z.string().min(1, 'الغسلة مطلوبة'),
     reason: z.enum(washerSkipReasons),
@@ -413,7 +413,7 @@ export const skipWashVisit = action({
 });
 
 export const undoWashVisit = action({
-  permission: 'wash:write',
+  permission: 'wash:visit',
   schema: visitIdSchema,
   audit: { entity: 'WashVisit', action: 'UNDO' },
   handler: async ({ visitId }, { userId }) => {
@@ -439,6 +439,10 @@ export const undoWashVisit = action({
   },
 });
 
+/*
+  هذا لا يُسجّل غسلةً واحدة بل يُلغي يوماً على المشتركين كافة — قرارُ مشرفٍ
+  لا قرارُ واقفٍ عند سيارة. فبقي خلف الكتابة لا خلف الزيارة.
+*/
 export const skipWashDay = action({
   permission: 'wash:write',
   schema: z.object({ date: dateSchema, reason: z.enum(['HOLIDAY', 'WEATHER']) }),

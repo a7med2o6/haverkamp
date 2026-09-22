@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import * as Icons from 'lucide-react';
 import { NAV } from './nav-config';
-import { canAccessModule } from '@/lib/rbac';
+import { can, canAccessModule } from '@/lib/rbac';
 import type { Role } from '@/generated/prisma/enums';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +26,10 @@ export function Sidebar({
 
   const groups = NAV.map((g) => ({
     ...g,
-    links: g.links.filter((l) => !l.soon && canAccessModule(role, l.module)),
+    links: g.links.filter((l) => {
+      if (l.soon) return false;
+      return l.permission ? can(role, l.permission) : canAccessModule(role, l.module);
+    }),
   })).filter((g) => g.links.length > 0);
 
   return (

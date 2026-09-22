@@ -15,7 +15,12 @@ export const MODULES = [
 ] as const;
 
 export type ModuleKey = (typeof MODULES)[number];
-export type Action = 'read' | 'write' | 'delete';
+/**
+ * visit: تسجيل نتيجة غسلة ميدانية إنجازاً أو تعذّراً.
+ * افترقت عن write لأن غسّيل الميدان يسجّل مروره بيده، ولا يُفتح بمفتاحه
+ * عقودُ الاشتراك ولا أسعارُها ولا فواتيرُ العملاء.
+ */
+export type Action = 'read' | 'write' | 'delete' | 'visit';
 export type Permission = `${ModuleKey}:${Action}` | '*';
 
 const ALL: Permission[] = ['*'];
@@ -38,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   MANAGER: [
     ...readOnly('dashboard'),
     ...full('crm', 'workshop', 'wash', 'pos', 'inventory'),
+    'wash:visit',
     ...readWrite('cms'),
     ...readOnly('hr', 'reports'),
   ],
@@ -52,9 +58,14 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   RECEPTIONIST: [
     ...readOnly('dashboard'),
     ...readWrite('crm', 'workshop', 'wash'),
+    'wash:visit',
     ...readOnly('pos'),
   ],
-  WASHER: [...readOnly('dashboard'), ...readWrite('wash')],
+  /*
+    الغسّيل لا يحتاج لوحة الإشراف ولا قراءة عقود الغسيل؛ صلاحيته تقتصر
+    على تسجيل غسلات جولته اليومية المسندة إليه فقط.
+  */
+  WASHER: ['wash:visit'],
 };
 
 export function can(role: Role | undefined | null, permission: Permission): boolean {

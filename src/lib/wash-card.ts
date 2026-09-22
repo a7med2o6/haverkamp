@@ -30,6 +30,8 @@ async function load(token: string) {
       street: true,
       building: true,
       locationNotes: true,
+      lat: true,
+      lng: true,
       customer: { select: { name: true, phone: true } },
       vehicle: { select: { make: true, model: true, year: true, plateNo: true } },
       periods: {
@@ -190,6 +192,8 @@ async function load(token: string) {
       endDate: subscription.endDate,
       location: washLocationLine(subscription),
       locationNotes: subscription.locationNotes,
+      lat: subscription.lat !== null ? toNumber(subscription.lat) : null,
+      lng: subscription.lng !== null ? toNumber(subscription.lng) : null,
       customer: {
         name: subscription.customer.name,
         phone: subscription.customer.phone,

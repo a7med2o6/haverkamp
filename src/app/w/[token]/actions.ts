@@ -4,10 +4,12 @@ import { db } from '@/lib/db';
 import {
   clearWashAttempts,
   grantWashAccess,
+  hasWashAccess,
   noteFailedWashAttempt,
   phoneLast4,
   tooManyWashAttempts,
 } from '@/lib/wash-access';
+import { checkLatLng, roundPoint } from '@/lib/geo';
 
 /**
  * التحقّق قبل عرض كارت متابعة الغسيل: آخر أربعة أرقام من جوّال صاحب الاشتراك.
@@ -44,5 +46,61 @@ export async function verifyWashAccess(
 
   clearWashAttempts(token);
   await grantWashAccess(token);
+  return { error: null };
+}
+
+/**
+ * حفظ أو تحديث موقع السيارة بطلب من العميل عبر الكارت العام (/w/[token]).
+ *
+ * دالة خادم مباشرة (ليست action()): العميل ليس مستخدماً مسجلاً في النظام.
+ * لا يُسمح بتعديل الموقع إلا إذا مرّ الزائر من بوابة الأرقام الأربعة أو لم
+ * يكن للعميل رقم هاتف مسجل، وكان الاشتراك غير منتهٍ. ولا تُكشف في رسالة
+ * الخطأ تفاصيل وجود الرابط حمايةً للخصوصية.
+ */
+export async function saveWashCardLocation(
+  token: string,
+  lat: number,
+  lng: number
+): Promise<{ error: string | null }> {
+  if (!token || typeof lat !== 'number' || typeof lng !== 'number') {
+    return { error: 'بيانات غير صالحة' };
+  }
+
+  const check = checkLatLng(lat, lng);
+  if (check) {
+    return { error: check.error };
+  }
+
+  const subscription = await db.washSubscription.findUnique({
+    where: { shareToken: token },
+    select: {
+      id: true,
+      status: true,
+      customer: { select: { phone: true } },
+    },
+  });
+
+  if (!subscription || subscription.status === 'ENDED') {
+    return { error: 'تعذّر حفظ الموقع' };
+  }
+
+  const guarded = Boolean(phoneLast4(subscription.customer?.phone));
+  const open = !guarded || (await hasWashAccess(token));
+
+  if (!open) {
+    return { error: 'تعذّر حفظ الموقع' };
+  }
+
+  const point = roundPoint(lat, lng);
+
+  await db.washSubscription.update({
+    where: { id: subscription.id },
+    data: {
+      lat: point.lat,
+      lng: point.lng,
+      locationSetAt: new Date(),
+    },
+  });
+
   return { error: null };
 }

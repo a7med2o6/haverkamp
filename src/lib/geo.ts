@@ -22,6 +22,38 @@ function normalizeArabicNumbers(str: string): string {
     .replace(/،/g, ',');
 }
 
+/**
+  حدود الكويت الجغرافية تحمي من الخطأ الأشهر: عكس خطي الطول والعرض
+  أثناء النسخ أو الإدخال، فيقع 47.97 في خانة خط العرض.
+*/
+export function checkLatLng(lat: number, lng: number): { error: string } | null {
+  if (lat >= 46.4 && lat <= 48.6 && lng >= 28.4 && lng <= 30.2) {
+    return {
+      error:
+        'الإحداثيات معكوسة (خط الطول مكان خط العرض) — يُرجى كتابة خط العرض أولاً ثم خط الطول',
+    };
+  }
+
+  if (lat < 28.4 || lat > 30.2 || lng < 46.4 || lng > 48.6) {
+    return {
+      error: 'الموقع يقع خارج حدود الكويت الجغرافية',
+    };
+  }
+
+  return null;
+}
+
+/**
+  تقريب الإحداثيات إلى ست خانات عشرية لتوحيد دقة الحفظ بين الإدخال اليدوي
+  والتقاط جهاز الجوال.
+*/
+export function roundPoint(lat: number, lng: number): { lat: number; lng: number } {
+  return {
+    lat: Number(lat.toFixed(6)),
+    lng: Number(lng.toFixed(6)),
+  };
+}
+
 export function parseLatLng(raw: string): { lat: number; lng: number } | { error: string } {
   if (!raw || !raw.trim()) {
     return { error: 'لم يتم إدخال إحداثيات' };
@@ -81,29 +113,58 @@ export function parseLatLng(raw: string): { lat: number; lng: number } | { error
     };
   }
 
-  /*
-    حدود الكويت الجغرافية تحمي من الخطأ الأشهر: عكس خطي الطول والعرض
-    أثناء النسخ، فيقع 47.97 في خانة خط العرض.
-  */
-  if (lat >= 46.4 && lat <= 48.6 && lng >= 28.4 && lng <= 30.2) {
-    return {
-      error:
-        'الإحداثيات معكوسة (خط الطول مكان خط العرض) — يُرجى كتابة خط العرض أولاً ثم خط الطول',
-    };
-  }
+  const check = checkLatLng(lat, lng);
+  if (check) return check;
 
-  if (lat < 28.4 || lat > 30.2 || lng < 46.4 || lng > 48.6) {
-    return {
-      error: 'الموقع يقع خارج حدود الكويت الجغرافية',
-    };
-  }
-
-  return {
-    lat: Number(lat.toFixed(6)),
-    lng: Number(lng.toFixed(6)),
-  };
+  return roundPoint(lat, lng);
 }
 
 export function directionsUrl(lat: number | string, lng: number | string): string {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
+/**
+ * التحقق من دعم المتصفح والسياق الآمن للخدمات الجغرافية.
+ */
+export function checkGeolocationSupport(): string | null {
+  if (typeof window !== 'undefined' && !window.isSecureContext) {
+    return 'يتطلب تحديد الموقع اتصالاً آمناً (HTTPS) — افتح الصفحة عبر رابط آمن';
+  }
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    return 'متصفحك لا يدعم تحديد الموقع الجغرافي — استخدم متصفحاً أحدث';
+  }
+  return null;
+}
+
+/**
+ * تحويل حالات تعذر تحديد الموقع في المتصفح إلى رسائل عربية تفاعلية توضح ما يجب فعله.
+ */
+export function getGeolocationErrorMessage(error: unknown): string {
+  const supportError = checkGeolocationSupport();
+  if (supportError && !(typeof GeolocationPositionError !== 'undefined' && error instanceof GeolocationPositionError)) {
+    return supportError;
+  }
+  if (typeof GeolocationPositionError !== 'undefined' && error instanceof GeolocationPositionError) {
+    switch (error.code) {
+      case error.PERMISSION_DENIED:
+        return 'اسمَح للموقع بالوصول إلى موقعك الجغرافي من إعدادات المتصفح ثم أعد المحاولة';
+      case error.POSITION_UNAVAILABLE:
+        return 'تعذّر الاتصال بأقمار الموقع — تأكّد من تفعيل الـ GPS وجرّب الانتقال إلى مكان مكشوف';
+      case error.TIMEOUT:
+        return 'انتهت مهلة البحث عن الموقع — أعد المحاولة في مكان أفضل أو خارج المواقف المغلقة';
+    }
+  }
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = (error as { code: number }).code;
+    if (code === 1) {
+      return 'اسمَح للموقع بالوصول إلى موقعك الجغرافي من إعدادات المتصفح ثم أعد المحاولة';
+    }
+    if (code === 2) {
+      return 'تعذّر الاتصال بأقمار الموقع — تأكّد من تفعيل الـ GPS وجرّب الانتقال إلى مكان مكشوف';
+    }
+    if (code === 3) {
+      return 'انتهت مهلة البحث عن الموقع — أعد المحاولة في مكان أفضل أو خارج المواقف المغلقة';
+    }
+  }
+  return 'تعذّر تحديد الموقع — تأكّد من تفعيل الـ GPS وإعدادات المتصفح وأعد المحاولة';
 }

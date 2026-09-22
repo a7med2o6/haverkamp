@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { directionsUrl } from '@/lib/geo';
-import { completeWashVisit, skipWashVisit, undoWashVisit } from '../actions';
+import { checkGeolocationSupport, directionsUrl, getGeolocationErrorMessage } from '@/lib/geo';
+import { completeWashVisit, saveWashVisitLocation, skipWashVisit, undoWashVisit } from '../actions';
 
 type VisitStatus = 'PLANNED' | 'COMPLETED' | 'SKIPPED';
 type SkipReason = 'CAR_ABSENT' | 'CUSTOMER_TRAVEL' | 'WEATHER' | 'OTHER';
@@ -62,10 +62,52 @@ export function TodayRoute({ visits }: { visits: TodayVisit[] }) {
 function VisitCard({ visit, order }: { visit: TodayVisit; order: number }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [locating, setLocating] = useState(false);
   const [status, setStatus] = useState(visit.status);
   const [reason, setReason] = useState(visit.skipReason);
   const [showReasons, setShowReasons] = useState(false);
   const collapsed = status !== 'PLANNED';
+
+  /*
+    نلتقط موقع السيارة بدقة الجهاز ونعرض الدقة المقاسة للموظف حتى وإن كانت ضعيفة
+    (كالمواقف السفلية)؛ فالنقطة التقريبية خير من غيابها وتتيح له إعادة التقاطها لاحقاً.
+  */
+  function handleCaptureLocation() {
+    const supportError = checkGeolocationSupport();
+    if (supportError) {
+      toast.error(supportError);
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        startTransition(async () => {
+          try {
+            const result = await saveWashVisitLocation({
+              visitId: visit.id,
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            if (!result.ok) {
+              toast.error(result.error);
+              return;
+            }
+            const accuracy = Math.round(position.coords.accuracy);
+            toast.success(`حُفظ الموقع — دقّة ±${accuracy} م`);
+            router.refresh();
+          } finally {
+            setLocating(false);
+          }
+        });
+      },
+      (error) => {
+        setLocating(false);
+        toast.error(getGeolocationErrorMessage(error));
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
 
   function complete() {
     startTransition(async () => {
@@ -156,8 +198,13 @@ function VisitCard({ visit, order }: { visit: TodayVisit; order: number }) {
       </div>
 
       <div className="space-y-4 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] bg-[var(--surface-2)] p-3.5">
-          <div className="flex items-start gap-3 min-w-0 flex-1">
+        {/*
+          العنوان سطرٌ طويل والأزرار عريضة، وشاشة الجوّال ضيّقة: وضعُهما
+          جنباً إلى جنب يعصر العنوان كلمةً في كل سطر. فالعنوان أوّلاً كاملاً،
+          والأزرار تحته، ولا يجتمعان إلا حيث تتّسع الشاشة.
+        */}
+        <div className="space-y-3 rounded-[var(--radius-md)] bg-[var(--surface-2)] p-3.5 sm:flex sm:items-center sm:justify-between sm:gap-3 sm:space-y-0">
+          <div className="flex items-start gap-3 min-w-0 sm:flex-1">
             <MapPin className="mt-0.5 size-5 shrink-0 text-accent" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold leading-6 text-[var(--text-0)]">{visit.location}</p>
@@ -166,19 +213,41 @@ function VisitCard({ visit, order }: { visit: TodayVisit; order: number }) {
               )}
             </div>
           </div>
-          {visit.lat !== null && visit.lng !== null && (
-            <a
-              href={directionsUrl(visit.lat, visit.lng)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                buttonVariants({ variant: 'secondary' }),
-                'shrink-0 gap-1.5 font-bold text-accent'
-              )}
+          {visit.lat !== null && visit.lng !== null ? (
+            <div className="flex items-center justify-between gap-2 sm:justify-end sm:shrink-0">
+              <a
+                href={directionsUrl(visit.lat, visit.lng)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  buttonVariants({ variant: 'secondary' }),
+                  'gap-1.5 font-bold text-accent'
+                )}
+              >
+                <Navigation className="size-4" />
+                الاتجاهات
+              </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCaptureLocation}
+                disabled={pending || locating}
+                className="gap-1 text-[12px] text-[var(--text-2)] hover:text-[var(--text-0)]"
+              >
+                {locating ? <Loader2 className="size-3.5 animate-spin" /> : <MapPin className="size-3.5" />}
+                تحديث الموقع
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={handleCaptureLocation}
+              disabled={pending || locating}
+              className="w-full gap-1.5 font-bold text-accent sm:w-auto sm:shrink-0"
             >
-              <Navigation className="size-4" />
-              الاتجاهات
-            </a>
+              {locating ? <Loader2 className="size-4 animate-spin" /> : <MapPin className="size-4" />}
+              احفظ موقع هذه السيارة
+            </Button>
           )}
         </div>
 

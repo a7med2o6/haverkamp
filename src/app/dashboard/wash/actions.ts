@@ -9,7 +9,7 @@ import { dateOnlyFromInput, formatKWD, todayDateOnly, toNumber } from '@/lib/uti
 import { siteUrl } from '@/lib/site-url';
 import { waMeLink } from '@/lib/whatsapp';
 import { ensureWashShareToken } from '@/lib/wash-card';
-import { parseLatLng } from '@/lib/geo';
+import { checkLatLng, parseLatLng, roundPoint } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
 import { openWashMonthRecords } from './month-service';
 
@@ -548,4 +548,43 @@ export const shareWashSubscription = action({
     };
   },
 });
+
+const saveVisitLocationSchema = z.object({
+  visitId: z.string().min(1, 'الغسلة مطلوبة'),
+  lat: z.number(),
+  lng: z.number(),
+});
+
+/**
+ * حفظ موقع سيارة الاشتراك عند التقاطه ميدانياً من قبل الغسّيل.
+ *
+ * يُعاد استخدام `visitMutationContext` لضمان عدم سماح النظام للموظف
+ * بالتعديل إلا على غسلاته المسندة إليه في يومها الجاري دون تكرار منطق الصلاحية.
+ */
+export const saveWashVisitLocation = action({
+  permission: 'wash:visit',
+  schema: saveVisitLocationSchema,
+  audit: { entity: 'WashSubscription', action: 'LOCATE' },
+  handler: async ({ visitId, lat, lng }, { userId }) => {
+    // الإذن قبل البيانات: من لا غسلة له هنا لا يُفحص ما أرسله أصلاً
+    const context = await visitMutationContext(visitId, userId, ['PLANNED', 'COMPLETED', 'SKIPPED']);
+
+    const check = checkLatLng(lat, lng);
+    if (check) throw new AppError(check.error);
+    const point = roundPoint(lat, lng);
+
+    await db.washSubscription.update({
+      where: { id: context.subscriptionId },
+      data: {
+        lat: point.lat,
+        lng: point.lng,
+        locationSetAt: new Date(),
+      },
+    });
+
+    revalidateWash([context.subscriptionId]);
+    return { id: context.subscriptionId, message: 'تم حفظ موقع السيارة' };
+  },
+});
+
 

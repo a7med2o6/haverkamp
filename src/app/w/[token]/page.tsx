@@ -7,6 +7,7 @@ import { formatDateOnly, formatKWD } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { VerifyForm } from './verify-form';
 import { AutoRefresh } from './auto-refresh';
+import { SetLocation } from './set-location';
 
 export const dynamic = 'force-dynamic';
 
@@ -174,6 +175,14 @@ export default async function PublicWashCardPage({
             </span>
           </div>
         </div>
+
+        {/*
+          عقدٌ منتهٍ لا يُطلب موقعه: الإجراء يردّ الطلب، فزرٌّ يُضغط ليُردّ
+          كلّ مرة أسوأ من غيابه.
+        */}
+        {subscription.status !== 'ENDED' && (
+          <SetLocation token={token} lat={subscription.lat} lng={subscription.lng} />
+        )}
 
         {/*
           عقدٌ وُقّع ولم يُفتح شهره بعد. وصمتُ الصفحة هنا أسوأ من خبر:

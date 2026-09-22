@@ -75,6 +75,11 @@ export default async function WashSubscriptionDetailPage({
       defaultWasher: { select: { fullName: true, code: true } },
       },
     }),
+    /*
+      يُسحب الأحدث من قاعدة البيانات ويُقلب للعرض: العقد القديم له مئات
+      الغسلات، فالسحب تصاعدياً يأتي بأقدمها ويحجب شهره الجاري. وتُقرأ
+      بعد القلب كجدولٍ يمشي مع الأيام — أوّل الشهر أوّل السطور.
+    */
     db.washVisit.findMany({
       where: { period: { subscriptionId: id } },
       orderBy: [{ scheduledDate: 'desc' }, { createdAt: 'desc' }],
@@ -85,6 +90,7 @@ export default async function WashSubscriptionDetailPage({
       },
     }),
   ]);
+  visits.reverse();
   if (!subscription) notFound();
   const defaultWasher = subscription?.defaultWasher ?? null;
 
@@ -249,8 +255,8 @@ export default async function WashSubscriptionDetailPage({
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>سجل الغسلات</CardTitle>
-              <p className="mt-1 text-[12px] text-[var(--text-2)]">أحدث 120 غسلة، الأحدث أولاً.</p>
+              <CardTitle>جدول الغسلات</CardTitle>
+              <p className="mt-1 text-[12px] text-[var(--text-2)]">آخر 120 غسلة، بترتيب أيامها.</p>
             </div>
           </CardHeader>
           <CardBody className="p-0">

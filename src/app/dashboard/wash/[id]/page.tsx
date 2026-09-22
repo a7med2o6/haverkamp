@@ -11,7 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState, Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { AddPauseForm, DeletePauseButton } from './pause-controls';
+import { ShareWashButton } from './share-button';
 import { washLocationLine } from '@/app/dashboard/wash/location';
+import { qrSvg } from '@/lib/qr';
+import { siteUrl } from '@/lib/site-url';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +88,10 @@ export default async function WashSubscriptionDetailPage({
   const defaultWasher = subscription?.defaultWasher ?? null;
 
   const canWrite = can(session.user.role, 'wash:write');
+  const qrCodeSvg = canWrite && subscription.shareToken
+    ? await qrSvg(`${siteUrl()}/w/${subscription.shareToken}`)
+    : null;
+
   const status = {
     ACTIVE: { label: 'سارٍ', tone: 'ok' as const },
     PAUSED: { label: 'موقوف', tone: 'warn' as const },
@@ -155,6 +162,36 @@ export default async function WashSubscriptionDetailPage({
           </dl>
         </CardBody>
       </Card>
+
+      {canWrite && (
+        <Card className="mb-5">
+          <CardHeader>
+            <div>
+              <CardTitle>بطاقة العميل</CardTitle>
+              <p className="mt-1 text-[12px] text-[var(--text-2)]">
+                رابط متابعة الغسلات الخاص بالعميل لمشاركته عبر الواتساب أو مسحه من الرمز.
+              </p>
+            </div>
+            <ShareWashButton subscriptionId={subscription.id} />
+          </CardHeader>
+          {qrCodeSvg && (
+            <CardBody className="border-t border-[var(--line)] pt-4">
+              <div className="flex items-center gap-4">
+                <div
+                  className="size-24 shrink-0 rounded-[var(--radius-sm)] border border-[var(--line)] bg-white p-1.5 [&_svg]:size-full"
+                  dangerouslySetInnerHTML={{ __html: qrCodeSvg }}
+                />
+                <div>
+                  <p className="text-[13px] font-semibold text-[var(--text-0)]">رمز الاستجابة السريعة (QR)</p>
+                  <p className="mt-1 text-[12px] text-[var(--text-2)]">
+                    يمكن للعميل مسح هذا الرمز مباشرة لمتابعة حالة اشتراكه وغسلاته.
+                  </p>
+                </div>
+              </div>
+            </CardBody>
+          )}
+        </Card>
+      )}
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <Card>

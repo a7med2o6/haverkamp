@@ -1179,6 +1179,8 @@ model WashSubscription {
   endDate   DateTime? @db.Date
   status    WashSubscriptionStatus @default(ACTIVE)
   notes     String?
+  /// مفتاح متابعة الاشتراك للعميل (/w/[token]) — يولد عند أول إنشاء للعقد
+  shareToken String? @unique @default(uuid(4))
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

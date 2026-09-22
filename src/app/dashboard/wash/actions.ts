@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
-import { dateOnlyFromInput, todayDateOnly } from '@/lib/utils';
+import { dateOnlyFromInput, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
+import { siteUrl } from '@/lib/site-url';
+import { waMeLink } from '@/lib/whatsapp';
+import { ensureWashShareToken } from '@/lib/wash-card';
 import type { Prisma } from '@/generated/prisma/client';
 import { openWashMonthRecords } from './month-service';
 
@@ -456,3 +459,54 @@ export const skipWashDay = action({
     };
   },
 });
+
+/**
+ * رابط كارت متابعة الغسيل للعميل، ورسالة واتساب جاهزة به.
+ */
+export const shareWashSubscription = action({
+  permission: 'wash:write',
+  schema: z.object({ id: z.string().min(1) }),
+  audit: { entity: 'WashSubscription', action: 'SHARE' },
+  handler: async ({ id }) => {
+    const subscription = await db.washSubscription.findUnique({
+      where: { id },
+      select: {
+        code: true,
+        monthlyPrice: true,
+        customer: { select: { name: true, phone: true } },
+        vehicle: { select: { make: true, model: true, year: true } },
+      },
+    });
+    if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
+
+    const token = await ensureWashShareToken(id);
+    const url = `${siteUrl()}/w/${token}`;
+    const price = formatKWD(toNumber(subscription.monthlyPrice));
+    const car = `${subscription.vehicle.make} ${subscription.vehicle.model}${
+      subscription.vehicle.year ? ` ${subscription.vehicle.year}` : ''
+    }`;
+
+    const text = [
+      `مرحباً ${subscription.customer?.name ?? 'عميلنا العزيز'}،`,
+      '',
+      `🚗 اشتراك الغسيل: ${subscription.code}`,
+      `🚘 السيارة: ${car}`,
+      `💰 الاشتراك الشهري: ${price}`,
+      '',
+      'لمتابعة غسلاتك وموعد الغسلة القادمة:',
+      url,
+    ].join('\n');
+
+    // أوّل إرسالٍ يسكّ المفتاح، ورمزُ الصفحة يُبنى منه — فتُبطل لتظهره
+    revalidatePath(`/dashboard/wash/${id}`);
+
+    return {
+      id,
+      data: {
+        url,
+        whatsapp: subscription.customer?.phone ? waMeLink(subscription.customer.phone, text) : null,
+      },
+    };
+  },
+});
+

@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { WashSkipReason, WashSubscriptionStatus, WashVisitStatus } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { washLocationLine } from '@/app/dashboard/wash/location';
-import { todayDateOnly, toNumber } from '@/lib/utils';
+import { formatDateOnly, todayDateOnly, toNumber } from '@/lib/utils';
 
 /**
  * كارت متابعة اشتراك الغسيل للعميل — ما يراه صاحب الاشتراك في نسخته العامة (/w/[token]).
@@ -95,11 +95,11 @@ async function load(token: string) {
 
   let current = null;
   if (currentRaw) {
-    const monthLabel = new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'UTC',
-    }).format(new Date(Date.UTC(currentRaw.year, currentRaw.month - 1, 1)));
+    /*
+      مسمى فترة الاشتراك يذكر المدى الفعلي الممتد بين تاريخي البداية والنهاية
+      بدل تسمية الشهر التقويمي.
+    */
+    const monthLabel = `${formatDateOnly(currentRaw.fromDate)} إلى ${formatDateOnly(currentRaw.toDate)}`;
 
     const renewsOn = new Date(currentRaw.toDate.getTime() + 86_400_000);
     const msLeft = currentRaw.toDate.getTime() - today.getTime();
@@ -166,11 +166,7 @@ async function load(token: string) {
     : subscription.periods;
 
   const history = historyPeriods.slice(0, 6).map((p) => {
-    const monthLabelStr = new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'UTC',
-    }).format(new Date(Date.UTC(p.year, p.month - 1, 1)));
+    const monthLabelStr = `${formatDateOnly(p.fromDate)} إلى ${formatDateOnly(p.toDate)}`;
 
     return {
       id: p.id,

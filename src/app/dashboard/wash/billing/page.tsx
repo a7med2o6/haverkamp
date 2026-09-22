@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { EmptyState, Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { withFrom } from '@/lib/back-link';
-import { cn, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
+import { cn, formatDateOnly, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
 import { OpenWashMonthButton } from '../open-month-button';
 
 export const metadata: Metadata = { title: 'تحصيل اشتراكات الغسيل' };
@@ -163,13 +163,14 @@ export default async function WashBillingPage({
       </div>
 
       <TableWrap>
-        <Table className="min-w-[980px]">
+        <Table className="min-w-[1080px]">
           <caption className="sr-only">تحصيل اشتراكات الغسيل لشهر {label}</caption>
           <thead>
             <tr>
               <Th>العميل</Th>
               <Th>السيارة</Th>
               <Th>المنطقة</Th>
+              <Th>الفترة</Th>
               <Th>الفاتورة</Th>
               <Th>المستحق</Th>
               <Th>المحصّل</Th>
@@ -182,7 +183,7 @@ export default async function WashBillingPage({
               <EmptyState
                 title={`لم يُفتح شهر ${label} بعد`}
                 description="افتح الشهر لإنشاء فواتير الاشتراكات وجدول الغسلات المستحقة."
-                colSpan={8}
+                colSpan={9}
                 icon={<CircleDollarSign className="size-6" />}
                 action={
                   canWrite ? <OpenWashMonthButton year={year} month={month} label={label} /> : null
@@ -213,6 +214,9 @@ export default async function WashBillingPage({
                       )}
                     </Td>
                     <Td>{period.subscription.area}</Td>
+                    <Td className="tnum whitespace-nowrap text-[13px] text-[var(--text-1)]">
+                      {formatDateOnly(period.fromDate)} — {formatDateOnly(period.toDate)}
+                    </Td>
                     <Td className="tnum whitespace-nowrap" dir="ltr">
                       {period.order ? (
                         <Link
@@ -244,3 +248,4 @@ export default async function WashBillingPage({
     </>
   );
 }
+

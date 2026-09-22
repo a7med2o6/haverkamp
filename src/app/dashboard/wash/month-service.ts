@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
+import { formatDateOnly } from '@/lib/utils';
 
 const DAY_MS = 86_400_000;
 
@@ -12,12 +13,38 @@ function isUniqueConstraintError(error: unknown): boolean {
   );
 }
 
-function monthLabel(year: number, month: number): string {
-  return new Intl.DateTimeFormat('ar-KW-u-nu-latn', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, 1)));
+/**
+ * تُحسب حدود الفترة من يوم مرساة تاريخ بدء العقد لا من غرتي الشهرين.
+ *
+ * التقيد بأيام الشهر يمنع انكسار التاريخ في الأشهر القصيرة (كشباط/فبراير)،
+ * دون أن تُنزح المرساة الأصلية في الأشهر التالية — فالعقد يعود إلى يومه
+ * دون انحرافٍ متراكم.
+ */
+export function washPeriodBounds(
+  startDate: Date,
+  year: number,
+  month: number
+): { fromDate: Date; toDate: Date } | null {
+  const anchorDay = startDate.getUTCDate();
+
+  const daysInCurrentMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const clampedFromDay = Math.min(anchorDay, daysInCurrentMonth);
+  const fromDate = new Date(Date.UTC(year, month - 1, clampedFromDay));
+
+  if (fromDate.getTime() < startDate.getTime()) {
+    return null;
+  }
+
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+
+  const daysInNextMonth = new Date(Date.UTC(nextYear, nextMonth, 0)).getUTCDate();
+  const clampedNextDay = Math.min(anchorDay, daysInNextMonth);
+  const nextAnchorDate = new Date(Date.UTC(nextYear, nextMonth - 1, clampedNextDay));
+
+  const toDate = new Date(nextAnchorDate.getTime() - DAY_MS);
+
+  return { fromDate, toDate };
 }
 
 /**
@@ -49,7 +76,6 @@ export function washVisitDates(startDate: Date, fromDate: Date, toDate: Date): D
 export async function openWashMonthRecords(year: number, month: number) {
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const monthEnd = new Date(Date.UTC(year, month, 0));
-  const invoiceLabel = `اشتراك غسيل — ${monthLabel(year, month)}`;
 
   const [subscriptions] = await Promise.all([
     db.washSubscription.findMany({
@@ -66,7 +92,6 @@ export async function openWashMonthRecords(year: number, month: number) {
         monthlyPrice: true,
         defaultWasherId: true,
         pauses: {
-          where: { fromDate: { lte: monthEnd }, toDate: { gte: monthStart } },
           select: { fromDate: true, toDate: true },
         },
         periods: {
@@ -89,13 +114,25 @@ export async function openWashMonthRecords(year: number, month: number) {
       continue;
     }
 
-    const fromDate = new Date(
-      Math.max(monthStart.getTime(), subscription.startDate.getTime())
-    );
-    const toDate = new Date(
-      Math.min(monthEnd.getTime(), subscription.endDate?.getTime() ?? monthEnd.getTime())
-    );
+    const bounds = washPeriodBounds(subscription.startDate, year, month);
+    if (!bounds) continue;
+
+    const { fromDate } = bounds;
+    let { toDate } = bounds;
+
+    if (subscription.endDate) {
+      if (fromDate.getTime() > subscription.endDate.getTime()) continue;
+      if (toDate.getTime() > subscription.endDate.getTime()) {
+        toDate = subscription.endDate;
+      }
+    }
+
     const visitDates = washVisitDates(subscription.startDate, fromDate, toDate);
+    /*
+      اسم البند في الفاتورة يذكر المدى الفعلي للفترة بدل اسم الشهر التقويمي،
+      تجنباً لنفس الإيهام الذي عالجه تعديل التواريخ.
+    */
+    const invoiceLabel = `اشتراك غسيل — ${formatDateOnly(fromDate)} إلى ${formatDateOnly(toDate)}`;
 
     try {
       await db.$transaction(async (tx) => {
@@ -171,3 +208,4 @@ export async function openWashMonthRecords(year: number, month: number) {
 
   return { created, alreadyOpen, subscriptionIds };
 }
+

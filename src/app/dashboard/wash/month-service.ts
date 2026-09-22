@@ -1,6 +1,7 @@
+import type { Prisma } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
-import { formatDateOnly } from '@/lib/utils';
+import { formatDateOnly, todayDateOnly } from '@/lib/utils';
 
 const DAY_MS = 86_400_000;
 
@@ -73,6 +74,146 @@ export function washVisitDates(startDate: Date, fromDate: Date, toDate: Date): D
   return dates;
 }
 
+/**
+ * تُحدد السنة والشهر للفترة الأولى التي يجب فتحها فور توقيع العقد.
+ *
+ * العقد المعقود اليوم يفتح فترته فوراً:
+ * 1. إذا كان تاريخ البدء في المستقبل، تُفتح فترة شهر البدء نفسه.
+ * 2. إذا كان تاريخ البدء اليوم أو في الماضي، نأخذ الفترة التي تشمل تاريخ اليوم
+ *    (فالعقد المرسى على يوم 22 يكون في يوم 5 من الشهر التالي داخل فترة الشهر السابق).
+ *    نفحص شهر اليوم التقويمي أولاً، فإن لم تشمل فترته اليومَ فحصنا الشهر السابق.
+ */
+export function initialPeriodYearMonth(
+  startDate: Date,
+  today: Date = todayDateOnly()
+): { year: number; month: number } {
+  if (startDate.getTime() > today.getTime()) {
+    return {
+      year: startDate.getUTCFullYear(),
+      month: startDate.getUTCMonth() + 1,
+    };
+  }
+
+  const currentYear = today.getUTCFullYear();
+  const currentMonth = today.getUTCMonth() + 1;
+
+  const currentBounds = washPeriodBounds(startDate, currentYear, currentMonth);
+  if (
+    currentBounds &&
+    currentBounds.fromDate.getTime() <= today.getTime() &&
+    today.getTime() <= currentBounds.toDate.getTime()
+  ) {
+    return { year: currentYear, month: currentMonth };
+  }
+
+  const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+  const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+
+  return { year: prevYear, month: prevMonth };
+}
+
+/**
+ * تفتح فترة استحقاق واحدة لعقد غسيل محدد وسنة وشهر محددين.
+ *
+ * المنطق يُستخرج هنا ليتشارك فيه الإنشاء الفردي للعقد عند توقيعه مع الفتح
+ * الجملي الشهري، فتسري قواعد الاستحقاق والفاتورة والزيارات من موضعٍ واحد.
+ */
+export async function openPeriodForSubscription(
+  tx: Prisma.TransactionClient,
+  subscription: {
+    id: string;
+    customerId: string;
+    startDate: Date;
+    endDate?: Date | null;
+    monthlyPrice: Prisma.Decimal | number;
+    defaultWasherId?: string | null;
+    pauses?: Array<{ fromDate: Date; toDate: Date }>;
+  },
+  year: number,
+  month: number
+): Promise<boolean> {
+  const bounds = washPeriodBounds(subscription.startDate, year, month);
+  if (!bounds) return false;
+
+  const { fromDate } = bounds;
+  let { toDate } = bounds;
+
+  if (subscription.endDate) {
+    if (fromDate.getTime() > subscription.endDate.getTime()) return false;
+    if (toDate.getTime() > subscription.endDate.getTime()) {
+      toDate = subscription.endDate;
+    }
+  }
+
+  const visitDates = washVisitDates(subscription.startDate, fromDate, toDate);
+  /*
+    اسم البند في الفاتورة يذكر المدى الفعلي للفترة بدل اسم الشهر التقويمي،
+    تجنباً لنفس الإيهام الذي عالجه تعديل التواريخ.
+  */
+  const invoiceLabel = `اشتراك غسيل — ${formatDateOnly(fromDate)} إلى ${formatDateOnly(toDate)}`;
+
+  // نملك المفتاح الفريد للفترة أولاً؛ إن سبقنا طلب متزامن تُلغى الفاتورة معه كلها.
+  const period = await tx.washSubscriptionPeriod.create({
+    data: {
+      subscriptionId: subscription.id,
+      year,
+      month,
+      fromDate,
+      toDate,
+      priceSnapshot: subscription.monthlyPrice,
+      status: 'DUE',
+    },
+  });
+
+  const order = await tx.order.create({
+    data: {
+      number: await nextNumber('invoice'),
+      channel: 'SUBSCRIPTION',
+      status: 'DRAFT',
+      customerId: subscription.customerId,
+      subtotal: subscription.monthlyPrice,
+      total: subscription.monthlyPrice,
+      items: {
+        create: {
+          label: invoiceLabel,
+          qty: 1,
+          unitPrice: subscription.monthlyPrice,
+          total: subscription.monthlyPrice,
+        },
+      },
+    },
+  });
+
+  await tx.washSubscriptionPeriod.update({
+    where: { id: period.id },
+    data: { orderId: order.id },
+  });
+
+  const defaultWasherId = subscription.defaultWasherId ?? null;
+  const pauses = subscription.pauses ?? [];
+
+  if (visitDates.length > 0) {
+    await tx.washVisit.createMany({
+      data: visitDates.map((date) => {
+        const paused = pauses.some(
+          (pause) => pause.fromDate <= date && pause.toDate >= date
+        );
+        return {
+          periodId: period.id,
+          dueDate: date,
+          scheduledDate: date,
+          assignedEmployeeId: defaultWasherId,
+          // المدفوع يفتح BLOCKED فقط؛ بدء يوم الإيقاف كـSKIPPED يحفظه بعد الدفع.
+          status: paused ? ('SKIPPED' as const) : ('BLOCKED' as const),
+          skipReason: paused ? ('CUSTOMER_TRAVEL' as const) : ('UNPAID' as const),
+        };
+      }),
+    });
+  }
+
+  return true;
+}
+
 export async function openWashMonthRecords(year: number, month: number) {
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const monthEnd = new Date(Date.UTC(year, month, 0));
@@ -114,86 +255,14 @@ export async function openWashMonthRecords(year: number, month: number) {
       continue;
     }
 
-    const bounds = washPeriodBounds(subscription.startDate, year, month);
-    if (!bounds) continue;
-
-    const { fromDate } = bounds;
-    let { toDate } = bounds;
-
-    if (subscription.endDate) {
-      if (fromDate.getTime() > subscription.endDate.getTime()) continue;
-      if (toDate.getTime() > subscription.endDate.getTime()) {
-        toDate = subscription.endDate;
-      }
-    }
-
-    const visitDates = washVisitDates(subscription.startDate, fromDate, toDate);
-    /*
-      اسم البند في الفاتورة يذكر المدى الفعلي للفترة بدل اسم الشهر التقويمي،
-      تجنباً لنفس الإيهام الذي عالجه تعديل التواريخ.
-    */
-    const invoiceLabel = `اشتراك غسيل — ${formatDateOnly(fromDate)} إلى ${formatDateOnly(toDate)}`;
-
     try {
-      await db.$transaction(async (tx) => {
-        // نملك المفتاح الفريد للفترة أولاً؛ إن سبقنا طلب متزامن تُلغى الفاتورة معه كلها.
-        const period = await tx.washSubscriptionPeriod.create({
-          data: {
-            subscriptionId: subscription.id,
-            year,
-            month,
-            fromDate,
-            toDate,
-            priceSnapshot: subscription.monthlyPrice,
-            status: 'DUE',
-          },
-        });
-
-        const order = await tx.order.create({
-          data: {
-            number: await nextNumber('invoice'),
-            channel: 'SUBSCRIPTION',
-            status: 'DRAFT',
-            customerId: subscription.customerId,
-            subtotal: subscription.monthlyPrice,
-            total: subscription.monthlyPrice,
-            items: {
-              create: {
-                label: invoiceLabel,
-                qty: 1,
-                unitPrice: subscription.monthlyPrice,
-                total: subscription.monthlyPrice,
-              },
-            },
-          },
-        });
-
-        await tx.washSubscriptionPeriod.update({
-          where: { id: period.id },
-          data: { orderId: order.id },
-        });
-
-        if (visitDates.length > 0) {
-          await tx.washVisit.createMany({
-            data: visitDates.map((date) => {
-              const paused = subscription.pauses.some(
-                (pause) => pause.fromDate <= date && pause.toDate >= date
-              );
-              return {
-                periodId: period.id,
-                dueDate: date,
-                scheduledDate: date,
-                assignedEmployeeId: subscription.defaultWasherId,
-                // المدفوع يفتح BLOCKED فقط؛ بدء يوم الإيقاف كـSKIPPED يحفظه بعد الدفع.
-                status: paused ? ('SKIPPED' as const) : ('BLOCKED' as const),
-                skipReason: paused ? ('CUSTOMER_TRAVEL' as const) : ('UNPAID' as const),
-              };
-            }),
-          });
-        }
+      const opened = await db.$transaction(async (tx) => {
+        return openPeriodForSubscription(tx, subscription, year, month);
       });
-      created++;
-      subscriptionIds.push(subscription.id);
+      if (opened) {
+        created++;
+        subscriptionIds.push(subscription.id);
+      }
     } catch (error) {
       if (!isUniqueConstraintError(error)) throw error;
 
@@ -208,4 +277,3 @@ export async function openWashMonthRecords(year: number, month: number) {
 
   return { created, alreadyOpen, subscriptionIds };
 }
-

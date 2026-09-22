@@ -11,7 +11,7 @@ import { waMeLink } from '@/lib/whatsapp';
 import { ensureWashShareToken } from '@/lib/wash-card';
 import { checkLatLng, parseLatLng, roundPoint } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
-import { openWashMonthRecords } from './month-service';
+import { initialPeriodYearMonth, openPeriodForSubscription, openWashMonthRecords } from './month-service';
 
 const dateSchema = z
   .string()
@@ -138,17 +138,32 @@ export const createWashSubscription = action({
     const { mapPoint, ...data } = input;
     await validateReferences(data);
 
+    let periodOpened = false;
+
     const created = await db
-      .$transaction(async (tx) =>
-        tx.washSubscription.create({
+      .$transaction(async (tx) => {
+        const subscription = await tx.washSubscription.create({
           data: {
             ...data,
             defaultWasherId: data.defaultWasherId ?? null,
             ...subscriptionCoordinates(mapPoint),
             code: await nextNumber('washSubscription'),
           },
-        })
-      )
+        });
+
+        /*
+          توقيع العقد يفتح فترته الأولى وفاتورتها في المعاملة نفسها (All of it or none of it).
+          عقدٌ بلا فترة ولا فاتورة تسريبٌ صامت للإيراد وشللٌ في جدول الغسلات؛
+          فإما أن يُحفظ العقد مبرماً بملحقاته المالية أو يفشل كاملاً ليُعاد المحاولة.
+
+          نفتح فترة واحدة فقط: العقد المؤرّخ في الماضي لا يسكّ سلسلة فواتير عن أشهر مضت،
+          بل يكتفي بالفترة التي تضم تاريخ اليوم. أما العقد المستقبلي فيفتح شهر بدئه.
+        */
+        const { year, month } = initialPeriodYearMonth(subscription.startDate);
+        periodOpened = await openPeriodForSubscription(tx, subscription, year, month);
+
+        return subscription;
+      })
       .catch(async (error: unknown) => {
         // الفهرس الجزئي يحسم سباق عمليتي حفظ؛ نعيد سببه التجاري لا خطأ قاعدة البيانات
         const existing = await db.washSubscription.findFirst({
@@ -161,7 +176,12 @@ export const createWashSubscription = action({
 
     revalidateWash([created.id]);
     revalidatePath(`/dashboard/customers/${input.customerId}`);
-    return { id: created.id, message: `تم إنشاء اشتراك الغسيل ${created.code}` };
+    return {
+      id: created.id,
+      message: periodOpened
+        ? `تم إنشاء اشتراك الغسيل ${created.code} وفتح فترته الأولى وفاتورتها`
+        : `تم إنشاء اشتراك الغسيل ${created.code} وسيتم فتح فترته لاحقاً`,
+    };
   },
 });
 

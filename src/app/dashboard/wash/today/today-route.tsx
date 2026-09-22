@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronDown, Loader2, MapPin, Phone, RotateCcw, TriangleAlert } from 'lucide-react';
+import { Check, ChevronDown, Loader2, MapPin, Navigation, Phone, RotateCcw, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { directionsUrl } from '@/lib/geo';
 import { completeWashVisit, skipWashVisit, undoWashVisit } from '../actions';
 
 type VisitStatus = 'PLANNED' | 'COMPLETED' | 'SKIPPED';
@@ -22,6 +24,8 @@ export interface TodayVisit {
   plateNo: string | null;
   location: string;
   locationNotes: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 const REASONS: Array<{ value: SkipReason; label: string }> = [
@@ -152,14 +156,30 @@ function VisitCard({ visit, order }: { visit: TodayVisit; order: number }) {
       </div>
 
       <div className="space-y-4 p-4">
-        <div className="flex items-start gap-3 rounded-[var(--radius-md)] bg-[var(--surface-2)] p-3.5">
-          <MapPin className="mt-0.5 size-5 shrink-0 text-accent" />
-          <div>
-            <p className="text-sm font-semibold leading-6 text-[var(--text-0)]">{visit.location}</p>
-            {visit.locationNotes && (
-              <p className="mt-1 text-[13px] leading-6 text-[var(--text-1)]">{visit.locationNotes}</p>
-            )}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-md)] bg-[var(--surface-2)] p-3.5">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <MapPin className="mt-0.5 size-5 shrink-0 text-accent" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold leading-6 text-[var(--text-0)]">{visit.location}</p>
+              {visit.locationNotes && (
+                <p className="mt-1 text-[13px] leading-6 text-[var(--text-1)]">{visit.locationNotes}</p>
+              )}
+            </div>
           </div>
+          {visit.lat !== null && visit.lng !== null && (
+            <a
+              href={directionsUrl(visit.lat, visit.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                buttonVariants({ variant: 'secondary' }),
+                'shrink-0 gap-1.5 font-bold text-accent'
+              )}
+            >
+              <Navigation className="size-4" />
+              الاتجاهات
+            </a>
+          )}
         </div>
 
         <Button variant="success" size="lg" className="h-14 w-full text-base" onClick={complete} disabled={pending}>

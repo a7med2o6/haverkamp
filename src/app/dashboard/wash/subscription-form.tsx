@@ -18,6 +18,7 @@ export interface WashSubscriptionFormValues {
   vehicleId: string;
   servicePackageId?: string | null;
   defaultWasherId?: string | null;
+  mapPoint?: string | null;
   area: string;
   block?: string | null;
   street?: string | null;
@@ -57,6 +58,7 @@ const EMPTY: WashSubscriptionFormValues = {
   vehicleId: '',
   servicePackageId: '',
   defaultWasherId: '',
+  mapPoint: '',
   area: '',
   block: '',
   street: '',
@@ -257,6 +259,20 @@ function WashSubscriptionFormModal({
           <Input
             value={values.building ?? ''}
             onChange={(event) => set('building', event.target.value)}
+          />
+        </Field>
+
+        <Field
+          label="إحداثيات الموقع"
+          error={errors.mapPoint?.[0]}
+          hint="انسخ رابط Google Maps الكامل أو الرقمين (مثل: 29.3375, 47.9744)"
+        >
+          <Input
+            value={values.mapPoint ?? ''}
+            onChange={(event) => set('mapPoint', event.target.value)}
+            placeholder="29.3375, 47.9744 أو رابط الخريطة…"
+            dir="ltr"
+            className="text-start tnum"
           />
         </Field>
 

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowRight, CalendarDays, Car, MapPin, UserRound } from 'lucide-react';
+import { ArrowRight, CalendarDays, Car, MapPin, Navigation, UserRound } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
@@ -13,6 +13,7 @@ import { EmptyState, Table, TableWrap, Td, Th, Tr } from '@/components/ui/table'
 import { AddPauseForm, DeletePauseButton } from './pause-controls';
 import { ShareWashButton } from './share-button';
 import { washLocationLine } from '@/app/dashboard/wash/location';
+import { directionsUrl } from '@/lib/geo';
 import { qrSvg } from '@/lib/qr';
 import { siteUrl } from '@/lib/site-url';
 
@@ -146,6 +147,21 @@ export default async function WashSubscriptionDetailPage({
               {subscription.locationNotes && (
                 <span className="mt-1 block text-[12px] text-[var(--text-2)]">
                   {subscription.locationNotes}
+                </span>
+              )}
+              {subscription.lat !== null && subscription.lng !== null ? (
+                <a
+                  href={directionsUrl(toNumber(subscription.lat), toNumber(subscription.lng))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:underline"
+                >
+                  <Navigation className="size-3.5" />
+                  الاتجاهات
+                </a>
+              ) : (
+                <span className="mt-1 block text-[12px] text-[var(--text-2)]">
+                  الموقع على الخريطة غير محدّد
                 </span>
               )}
             </Detail>

@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, Clock3, Route } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
 import { can } from '@/lib/rbac';
-import { formatDateOnly, todayDateOnly } from '@/lib/utils';
+import { formatDateOnly, todayDateOnly, toNumber } from '@/lib/utils';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -69,6 +69,8 @@ export default async function WashTodayPage() {
               street: true,
               building: true,
               locationNotes: true,
+              lat: true,
+              lng: true,
               customer: { select: { name: true, phone: true } },
               vehicle: { select: { make: true, model: true, plateNo: true } },
             },
@@ -112,6 +114,8 @@ export default async function WashTodayPage() {
             plateNo: subscription.vehicle.plateNo,
             location: washLocationLine(subscription),
             locationNotes: subscription.locationNotes,
+            lat: subscription.lat !== null ? toNumber(subscription.lat) : null,
+            lng: subscription.lng !== null ? toNumber(subscription.lng) : null,
           };
         })}
       />

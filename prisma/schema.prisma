@@ -1181,6 +1181,11 @@ model WashSubscription {
   notes     String?
   /// مفتاح متابعة الاشتراك للعميل (/w/[token]) — يولد عند أول إنشاء للعقد
   shareToken String? @unique @default(uuid(4))
+  /// إحداثيات موقع غسيل السيارة وتاريخ ضبطها تشغيلياً
+  lat           Decimal?  @db.Decimal(9, 6)
+  lng           Decimal?  @db.Decimal(9, 6)
+  locationSetAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

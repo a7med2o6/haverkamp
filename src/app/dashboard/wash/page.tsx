@@ -278,6 +278,10 @@ export default async function WashSubscriptionsPage({
                               vehicleId: subscription.vehicleId,
                               servicePackageId: subscription.servicePackageId,
                               defaultWasherId: subscription.defaultWasherId,
+                              mapPoint:
+                                subscription.lat !== null && subscription.lng !== null
+                                  ? `${subscription.lat}, ${subscription.lng}`
+                                  : '',
                               area: subscription.area,
                               block: subscription.block,
                               street: subscription.street,

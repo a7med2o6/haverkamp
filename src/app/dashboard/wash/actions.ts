@@ -9,6 +9,7 @@ import { dateOnlyFromInput, formatKWD, todayDateOnly, toNumber } from '@/lib/uti
 import { siteUrl } from '@/lib/site-url';
 import { waMeLink } from '@/lib/whatsapp';
 import { ensureWashShareToken } from '@/lib/wash-card';
+import { parseLatLng } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
 import { openWashMonthRecords } from './month-service';
 
@@ -27,6 +28,7 @@ const subscriptionFields = {
   vehicleId: z.string().min(1, 'السيارة مطلوبة'),
   servicePackageId: optionalString,
   defaultWasherId: optionalString,
+  mapPoint: optionalString,
   area: z.string().trim().min(1, 'المنطقة مطلوبة'),
   block: optionalString,
   street: optionalString,
@@ -101,19 +103,48 @@ async function validateReferences({
   }
 }
 
+/**
+ * النقطة كما يكتبها المكتب — وخانةُ تاريخها لا تُلمس إلا إذا تحرّكت النقطة.
+ *
+ * `locationSetAt` تُسأل يوماً: متى قيس هذا الموقع؟ فلو بُصمت مع كل حفظٍ
+ * للعقد، أجابت «الآن» عن نقطةٍ وُضعت قبل سنة، وصار تاريخُ التعديل يلبس
+ * ثوب تاريخ القياس.
+ */
+function subscriptionCoordinates(
+  mapPoint: string | null | undefined,
+  before?: { lat: Prisma.Decimal | null; lng: Prisma.Decimal | null }
+) {
+  if (!mapPoint) return { lat: null, lng: null, locationSetAt: null };
+
+  const parsed = parseLatLng(mapPoint);
+  if ('error' in parsed) throw new AppError(parsed.error);
+
+  const unchanged =
+    before?.lat != null &&
+    before?.lng != null &&
+    toNumber(before.lat) === parsed.lat &&
+    toNumber(before.lng) === parsed.lng;
+
+  return unchanged
+    ? { lat: parsed.lat, lng: parsed.lng }
+    : { lat: parsed.lat, lng: parsed.lng, locationSetAt: new Date() };
+}
+
 export const createWashSubscription = action({
   permission: 'wash:write',
   schema: createSchema,
   audit: { entity: 'WashSubscription', action: 'CREATE' },
   handler: async (input) => {
-    await validateReferences(input);
+    const { mapPoint, ...data } = input;
+    await validateReferences(data);
 
     const created = await db
       .$transaction(async (tx) =>
         tx.washSubscription.create({
           data: {
-            ...input,
-            defaultWasherId: input.defaultWasherId ?? null,
+            ...data,
+            defaultWasherId: data.defaultWasherId ?? null,
+            ...subscriptionCoordinates(mapPoint),
             code: await nextNumber('washSubscription'),
           },
         })
@@ -139,10 +170,10 @@ export const updateWashSubscription = action({
   schema: updateSchema,
   audit: { entity: 'WashSubscription', action: 'UPDATE' },
   handler: async (input) => {
-    const { id, defaultWasherId, ...data } = input;
+    const { id, defaultWasherId, mapPoint, ...data } = input;
     const before = await db.washSubscription.findUnique({
       where: { id },
-      select: { customerId: true, defaultWasherId: true },
+      select: { customerId: true, defaultWasherId: true, lat: true, lng: true },
     });
     if (!before) throw new AppError('اشتراك الغسيل غير موجود');
 
@@ -152,7 +183,11 @@ export const updateWashSubscription = action({
       .$transaction(async (tx) => {
         const subscription = await tx.washSubscription.update({
           where: { id },
-          data: { ...data, defaultWasherId: defaultWasherId ?? null },
+          data: {
+            ...data,
+            defaultWasherId: defaultWasherId ?? null,
+            ...subscriptionCoordinates(mapPoint, before),
+          },
         });
 
         if (before.defaultWasherId !== (defaultWasherId ?? null)) {

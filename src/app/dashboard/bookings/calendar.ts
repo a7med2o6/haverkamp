@@ -1,13 +1,32 @@
+import type { BookingStatus, CustomerSource } from '@/generated/prisma/enums';
+
 /** ما يحتاجه التقويم من الحجز — أخفّ من سجل الحجز الكامل */
 export interface CalendarBooking {
   id: string;
   code: string;
   scheduledAt: Date;
-  status: string;
+  status: BookingStatus;
   name: string;
   car: string;
   service: string;
   hasJob: boolean;
+  phone: string | null;
+  plateNo: string | null;
+  notes: string | null;
+  source: CustomerSource;
+  serviceKey: string | null;
+  serviceSpec: string | null;
+  customerId: string | null;
+  vehicleId: string | null;
+  guestName: string | null;
+  guestPhone: string | null;
+  guestCar: string | null;
+  confirmToken: string;
+  jobOrder: { id: string; number: string } | null;
+  reminderSentAt: Date | null;
+  confirmedAt: Date | null;
+  rescheduledAt: Date | null;
+  scheduledAtLocal: string;
 }
 
 /** ألوان الحالة على حافة البطاقة — تُقرأ باللمحة دون قراءة النص */

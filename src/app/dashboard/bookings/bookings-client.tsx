@@ -30,9 +30,11 @@ export interface BookingValues {
 export function BookingFormButton({
   booking,
   customers,
+  defaultScheduledAt,
 }: {
   booking?: BookingValues;
   customers: Array<{ id: string; name: string; phone: string }>;
+  defaultScheduledAt?: string;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -48,7 +50,7 @@ export function BookingFormButton({
       guestName: '',
       guestPhone: '',
       guestCar: '',
-      scheduledAt: toLocalInput(new Date(Date.now() + 86400000)),
+      scheduledAt: defaultScheduledAt ?? toLocalInput(new Date(Date.now() + 86400000)),
       notes: '',
       status: 'CONFIRMED',
     }

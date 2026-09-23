@@ -13,8 +13,8 @@ import { Table, TableWrap, Td, Th, Tr, EmptyState } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS, CUSTOMER_SOURCE } from '@/lib/labels';
 import { PAGE_SIZE } from '@/lib/constants';
-import { cn, formatDateTime, formatPhone, monthGridDays, startOfMonth, startOfWeek, toLocalInput, weekDays } from '@/lib/utils';
-import { queueWhere, reminderInclude, tomorrowKey } from '@/lib/reminders';
+import { cn, dayKey, formatDateTime, formatPhone, monthGridDays, startOfMonth, startOfWeek, toLocalInput, weekDays } from '@/lib/utils';
+import { dueWhere, kuwaitDayRange, queueWhere, reminderInclude, tomorrowKey } from '@/lib/reminders';
 import { bookingServiceLabel } from '@/lib/intake';
 import type { CalendarBooking } from './calendar';
 import { MonthView } from './month-view';
@@ -153,21 +153,30 @@ export default async function BookingsPage({
         })
       : [];
 
-  const [calBookings, weekendSetting] = isCalendar
+  const todayK = dayKey(now);
+  const tomorrowK = tomorrowKey(now);
+  const todayRange = kuwaitDayRange(todayK);
+  const tomorrowRange = kuwaitDayRange(tomorrowK);
+
+  const [calBookings, weekendSetting, todayCount, tomorrowCount, pendingCount, unsentRemindersCount] = isCalendar
     ? await Promise.all([
         db.booking.findMany({
           where: { scheduledAt: { gte: calStart, lte: calEnd } },
           orderBy: { scheduledAt: 'asc' },
           include: {
-            customer: { select: { name: true } },
-            vehicle: { select: { make: true, model: true } },
+            customer: { select: { id: true, name: true, phone: true } },
+            vehicle: { select: { id: true, make: true, model: true, plateNo: true } },
             service: { include: { translations: { where: { locale: 'ar' }, select: { name: true } } } },
-            jobOrder: { select: { id: true } },
+            jobOrder: { select: { id: true, number: true } },
           },
         }),
         db.siteSetting.findUnique({ where: { key: 'hr.weekend' } }),
+        db.booking.count({ where: { scheduledAt: { gte: todayRange.start, lte: todayRange.end } } }),
+        db.booking.count({ where: { scheduledAt: { gte: tomorrowRange.start, lte: tomorrowRange.end } } }),
+        db.booking.count({ where: { status: 'PENDING', scheduledAt: { gte: now } } }),
+        db.booking.count({ where: dueWhere(tomorrowK) }),
       ])
-    : [[], null];
+    : [[], null, 0, 0, 0, 0];
 
   const [bookings, total, customers] = await Promise.all([
     db.booking.findMany({
@@ -203,6 +212,23 @@ export default async function BookingsPage({
     car: b.vehicle ? `${b.vehicle.make} ${b.vehicle.model}` : (b.guestCar ?? ''),
     service: bookingServiceLabel(b) ?? '',
     hasJob: !!b.jobOrder,
+    phone: b.customer?.phone ?? b.guestPhone ?? null,
+    plateNo: b.vehicle?.plateNo ?? null,
+    notes: b.notes,
+    source: b.source,
+    serviceKey: b.serviceKey,
+    serviceSpec: b.serviceSpec,
+    customerId: b.customerId,
+    vehicleId: b.vehicleId,
+    guestName: b.guestName,
+    guestPhone: b.guestPhone,
+    guestCar: b.guestCar,
+    confirmToken: b.confirmToken,
+    jobOrder: b.jobOrder ? { id: b.jobOrder.id, number: b.jobOrder.number } : null,
+    reminderSentAt: b.reminderSentAt,
+    confirmedAt: b.confirmedAt,
+    rescheduledAt: b.rescheduledAt,
+    scheduledAtLocal: toLocalInput(b.scheduledAt),
   }));
 
   return (
@@ -211,7 +237,7 @@ export default async function BookingsPage({
         title="الحجوزات"
         description={
           isCalendar
-            ? `${calendar.length} حجز في المدى المعروض`
+            ? undefined
             : mode === 'reminders'
               ? `${reminders.filter((b) => !b.reminderSentAt).length} تذكير بانتظار الإرسال`
               : `${total} حجز`
@@ -228,6 +254,57 @@ export default async function BookingsPage({
           customerId={customer}
           clearHref="/dashboard/bookings?view=list"
         />
+      )}
+
+      {/* شريط الإحصائيات السريعة — أعلى تبويبات العرض في التقويم */}
+      {isCalendar && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-[12px]">
+          <Link
+            href="/dashboard/bookings?view=month"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1.5 font-semibold text-[var(--text-1)] transition-colors hover:border-accent hover:text-accent"
+          >
+            <span>اليوم</span>
+            <span className="tnum rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] font-bold text-[var(--text-0)]">
+              {todayCount}
+            </span>
+          </Link>
+
+          {tomorrowCount > 0 && (
+            <Link
+              href="/dashboard/bookings?view=month"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1.5 font-semibold text-[var(--text-1)] transition-colors hover:border-accent hover:text-accent"
+            >
+              <span>غداً</span>
+              <span className="tnum rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] font-bold text-[var(--text-0)]">
+                {tomorrowCount}
+              </span>
+            </Link>
+          )}
+
+          {pendingCount > 0 && (
+            <Link
+              href="/dashboard/bookings?view=list&filter=PENDING"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1.5 font-semibold text-[var(--text-1)] transition-colors hover:border-accent hover:text-accent"
+            >
+              <span>بانتظار التأكيد</span>
+              <span className="tnum rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] font-bold text-warn">
+                {pendingCount}
+              </span>
+            </Link>
+          )}
+
+          {unsentRemindersCount > 0 && (
+            <Link
+              href="/dashboard/bookings?view=reminders"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-1.5 font-semibold text-[var(--text-1)] transition-colors hover:border-accent hover:text-accent"
+            >
+              <span>تذكيرات الغد غير المُرسلة</span>
+              <span className="tnum rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] font-bold text-danger">
+                {unsentRemindersCount}
+              </span>
+            </Link>
+          )}
+        </div>
       )}
 
       {/* تبويبات العرض */}
@@ -254,6 +331,8 @@ export default async function BookingsPage({
           days={monthCells}
           today={new Date()}
           canWrite={canWrite}
+          canWorkshop={canWorkshop}
+          customers={customers}
           weekend={weekend}
           bookings={calendar}
         />

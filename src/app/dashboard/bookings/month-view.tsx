@@ -1,15 +1,17 @@
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS } from '@/lib/labels';
 import { DAY_CODES, cn, dayKey, formatMonthLabel, monthKey } from '@/lib/utils';
 import { LEGEND_STATUSES, STATUS_EDGE, type CalendarBooking } from './calendar';
-import { MonthGrid, type MonthDay } from './month-grid';
+import type { MonthDay } from './month-grid';
+import { MonthShell } from './month-shell';
 
 /**
  * تقويم الحجوزات الشهري — الشهر كاملاً في شاشة واحدة.
  * أفق التخطيط عند الاستقبال شهر لا أسبوع: توزّع الضغط ومواعيد العملاء
  * البعيدة لا تظهر في سبعة أيام. الخانة الضيقة تكفي للساعة والاسم،
- * ومن أراد التفاصيل نقر على اليوم فانتقل إلى عرض الأسبوع.
+ * واللوح الجانبي يعرض تفاصيل اليوم المختار.
  */
 export function MonthView({
   monthStart,
@@ -18,6 +20,8 @@ export function MonthView({
   weekend,
   today,
   canWrite,
+  canWorkshop,
+  customers,
 }: {
   monthStart: Date;
   /** خانات الشبكة — أسابيع كاملة تتجاوز حدّي الشهر */
@@ -27,6 +31,8 @@ export function MonthView({
   weekend: string[];
   today: Date;
   canWrite: boolean;
+  canWorkshop: boolean;
+  customers: Array<{ id: string; name: string; phone: string }>;
 }) {
   const byDay = new Map<string, CalendarBooking[]>();
   for (const b of bookings) {
@@ -62,12 +68,15 @@ export function MonthView({
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-[15px] font-bold text-[var(--text-0)]">
-          {formatMonthLabel(monthStart)}
-          <span className="tnum ms-2 text-[13px] font-medium text-[var(--text-2)]">
+        {/* عنوان الشهر وعدّاد الحجوزات مفصولان بشارة مستقلة حتى لا يلتصق الرقم بالسنة */}
+        <div className="flex items-center gap-2">
+          <h2 className="text-[15px] font-bold text-[var(--text-0)]">
+            {formatMonthLabel(monthStart)}
+          </h2>
+          <Badge tone="muted" className="tnum">
             {inMonthCount} حجز
-          </span>
-        </h2>
+          </Badge>
+        </div>
 
         <div className="flex items-center gap-1.5">
           <NavLink href={`?view=month&month=${shift(-1)}`} label="الشهر السابق">
@@ -85,7 +94,16 @@ export function MonthView({
         </div>
       </div>
 
-      <MonthGrid days={cells} canWrite={canWrite} />
+      {/* المفتاح بالشهر: الانتقال لشهرٍ آخر يُبقي المكوّن حيّاً، فيبقى اختيار يومٍ من الشهر السابق لا خانة له */}
+      <MonthShell
+        key={monthKey(monthStart)}
+        monthStart={monthStart}
+        days={cells}
+        canWrite={canWrite}
+        canWorkshop={canWorkshop}
+        customers={customers}
+        today={today}
+      />
 
       {/* دليل الألوان */}
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-2)]">

@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { cn, formatBookingTime, formatDayLabel, formatWeekday } from '@/lib/utils';
 import { STATUS_EDGE, type CalendarBooking } from './calendar';
@@ -21,11 +20,22 @@ const MAX_CHIPS = 3;
 
 /**
  * شبكة الشهر كاملاً — سبعة أعمدة وأسابيع كاملة.
- * الخانة هنا أضيق من عمود الأسبوع، فالبطاقة تُختصر إلى الساعة والاسم
- * والباقي يُقرأ في عرض الأسبوع. على الجوال تسقط الشبكة إلى قائمة أيام،
- * فسبع خانات في عرض الهاتف لا تُقرأ.
+ * الخانة هنا أضيق من عمود الأسبوع، فالبطاقة تُختصر إلى الساعة والاسم.
+ * النقر على اليوم أو البطاقة يحدده في اللوح الجانبي دون مغادرة الصفحة.
  */
-export function MonthGrid({ days, canWrite }: { days: MonthDay[]; canWrite: boolean }) {
+export function MonthGrid({
+  days,
+  canWrite,
+  selectedDay,
+  onSelectDay,
+  onSelectBooking,
+}: {
+  days: MonthDay[];
+  canWrite: boolean;
+  selectedDay?: string;
+  onSelectDay?: (key: string) => void;
+  onSelectBooking?: (id: string, dayKey: string) => void;
+}) {
   const dnd = useReschedule();
 
   return (
@@ -44,69 +54,85 @@ export function MonthGrid({ days, canWrite }: { days: MonthDay[]; canWrite: bool
         </div>
 
         <div className="grid grid-cols-7 gap-1.5">
-          {days.map((d) => (
-            <div
-              key={d.key}
-              onDragOver={(e) => {
-                if (!canWrite || !dnd.dragging) return;
-                e.preventDefault();
-                dnd.enter(d.key);
-              }}
-              onDragLeave={() => dnd.leave(d.key)}
-              onDrop={(e) => {
-                if (!canWrite) return;
-                e.preventDefault();
-                dnd.drop(d.key);
-              }}
-              className={cn(
-                'flex min-h-28 flex-col rounded-[var(--radius-sm)] border p-1.5 transition-colors lg:min-h-32',
-                d.isToday ? 'border-accent bg-accent/5' : 'border-[var(--line)]',
-                d.inMonth ? 'bg-[var(--surface-1)]' : 'bg-transparent',
-                !d.inMonth && 'opacity-45',
-                d.isOff && d.inMonth && 'bg-[var(--surface-2)]',
-                dnd.over === d.key && 'border-accent bg-accent/10 ring-1 ring-accent'
-              )}
-            >
-              <div className="mb-1 flex items-baseline justify-between gap-1">
-                <Link
-                  href={`?view=week&week=${d.key}`}
-                  title="عرض أسبوع هذا اليوم"
-                  className={cn(
-                    'tnum rounded px-1 text-[12px] font-bold transition-colors hover:text-accent',
-                    d.isToday ? 'text-accent' : 'text-[var(--text-0)]'
-                  )}
-                >
-                  {d.date.getDate()}
-                </Link>
-                {d.bookings.length > 0 && (
-                  <span className="tnum text-[10px] text-[var(--text-2)]">
-                    {d.bookings.length}
-                  </span>
+          {days.map((d) => {
+            const isSelected = selectedDay === d.key;
+
+            return (
+              <div
+                key={d.key}
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelectDay?.(d.key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectDay?.(d.key);
+                  }
+                }}
+                onDragOver={(e) => {
+                  if (!canWrite || !dnd.dragging) return;
+                  e.preventDefault();
+                  dnd.enter(d.key);
+                }}
+                onDragLeave={() => dnd.leave(d.key)}
+                onDrop={(e) => {
+                  if (!canWrite) return;
+                  e.preventDefault();
+                  dnd.drop(d.key);
+                }}
+                className={cn(
+                  'flex min-h-28 flex-col rounded-[var(--radius-sm)] border p-1.5 transition-colors lg:min-h-32 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  d.isToday ? 'border-accent bg-accent/5' : 'border-[var(--line)]',
+                  d.inMonth ? 'bg-[var(--surface-1)]' : 'bg-transparent',
+                  !d.inMonth && 'opacity-45',
+                  d.isOff && d.inMonth && 'bg-[var(--surface-2)]',
+                  dnd.over === d.key && 'border-accent bg-accent/10 ring-1 ring-accent',
+                  isSelected && 'ring-2 ring-accent z-10 relative'
                 )}
-              </div>
-
-              <div className="flex-1 space-y-1">
-                {d.bookings.slice(0, MAX_CHIPS).map((b) => (
-                  <Chip key={b.id} booking={b} day={d.key} canWrite={canWrite} dnd={dnd} />
-                ))}
-
-                {d.bookings.length > MAX_CHIPS && (
-                  <Link
-                    href={`?view=week&week=${d.key}`}
-                    className="block px-1 text-[10px] font-semibold text-accent hover:underline"
+              >
+                <div className="mb-1 flex items-baseline justify-between gap-1">
+                  <span
+                    className={cn(
+                      'tnum rounded px-1 text-[12px] font-bold select-none',
+                      d.isToday ? 'text-accent' : 'text-[var(--text-0)]'
+                    )}
                   >
-                    +{d.bookings.length - MAX_CHIPS} أخرى
-                  </Link>
-                )}
+                    {d.date.getDate()}
+                  </span>
+                  {d.bookings.length > 0 && (
+                    <span className="tnum text-[10px] text-[var(--text-2)]">
+                      {d.bookings.length}
+                    </span>
+                  )}
+                </div>
 
-                {d.bookings.length === 0 && dnd.over === d.key && (
-                  <p className="grid h-full place-items-center text-[10px] text-accent">
-                    أفلت هنا
-                  </p>
-                )}
+                <div className="flex-1 space-y-1">
+                  {d.bookings.slice(0, MAX_CHIPS).map((b) => (
+                    <Chip
+                      key={b.id}
+                      booking={b}
+                      day={d.key}
+                      canWrite={canWrite}
+                      dnd={dnd}
+                      onSelectBooking={onSelectBooking}
+                    />
+                  ))}
+
+                  {d.bookings.length > MAX_CHIPS && (
+                    <span className="block px-1 text-[10px] font-semibold text-accent">
+                      +{d.bookings.length - MAX_CHIPS} أخرى
+                    </span>
+                  )}
+
+                  {d.bookings.length === 0 && dnd.over === d.key && (
+                    <p className="grid h-full place-items-center text-[10px] text-accent">
+                      أفلت هنا
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -135,7 +161,14 @@ export function MonthGrid({ days, canWrite }: { days: MonthDay[]; canWrite: bool
               </p>
               <div className="space-y-1">
                 {d.bookings.map((b) => (
-                  <Chip key={b.id} booking={b} day={d.key} canWrite={false} dnd={dnd} />
+                  <Chip
+                    key={b.id}
+                    booking={b}
+                    day={d.key}
+                    canWrite={false}
+                    dnd={dnd}
+                    onSelectBooking={onSelectBooking}
+                  />
                 ))}
               </div>
             </div>
@@ -151,17 +184,19 @@ export function MonthGrid({ days, canWrite }: { days: MonthDay[]; canWrite: bool
   );
 }
 
-/** بطاقة مختصرة: الساعة والاسم — تفاصيل الخدمة والسيارة في عرض الأسبوع */
+/** بطاقة مختصرة: الساعة والاسم — النقر يحدد الحجز في اللوح الجانبي بدلاً من الانتقال */
 function Chip({
   booking: b,
   day,
   canWrite,
   dnd,
+  onSelectBooking,
 }: {
   booking: CalendarBooking;
   day: string;
   canWrite: boolean;
   dnd: ReturnType<typeof useReschedule>;
+  onSelectBooking?: (id: string, dayKey: string) => void;
 }) {
   const time = formatBookingTime(b.scheduledAt);
   const isMoving = dnd.moving === b.id;
@@ -169,10 +204,22 @@ function Chip({
   const draggable = canWrite && !b.hasJob && !dnd.pending;
 
   return (
-    <Link
-      href={`?view=list&filter=all&q=${b.code}`}
+    <div
+      role="button"
+      tabIndex={0}
       title={[time ?? 'بدون وقت', b.name, b.service, b.car].filter(Boolean).join(' · ')}
       draggable={draggable}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectBooking?.(b.id, day);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.stopPropagation();
+          e.preventDefault();
+          onSelectBooking?.(b.id, day);
+        }
+      }}
       onDragStart={(e) => {
         if (!draggable) return e.preventDefault();
         e.dataTransfer.effectAllowed = 'move';
@@ -180,7 +227,7 @@ function Chip({
       }}
       onDragEnd={() => dnd.end()}
       className={cn(
-        'flex items-baseline gap-1 rounded-[4px] border-s-2 border-[var(--line)] bg-[var(--surface-2)] px-1.5 py-1 transition-colors hover:border-accent',
+        'flex items-baseline gap-1 rounded-[4px] border-s-2 border-[var(--line)] bg-[var(--surface-2)] px-1.5 py-1 transition-colors hover:border-accent cursor-pointer select-none',
         STATUS_EDGE[b.status] ?? 'border-s-[var(--line-strong)]',
         draggable && 'cursor-grab active:cursor-grabbing',
         dnd.dragging?.id === b.id && 'opacity-40',
@@ -195,6 +242,6 @@ function Chip({
         </span>
       )}
       <span className="truncate text-[11px] text-[var(--text-0)]">{b.name}</span>
-    </Link>
+    </div>
   );
 }

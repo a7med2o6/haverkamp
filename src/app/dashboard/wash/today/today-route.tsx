@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useSyncExternalStore, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -26,7 +26,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn, formatDateOnly, todayDateOnly } from '@/lib/utils';
-import { checkGeolocationSupport, directionsUrl, getGeolocationErrorMessage } from '@/lib/geo';
+import { checkGeolocationSupport, directionsUrl, getGeolocationErrorMessage, routeUrl } from '@/lib/geo';
+import { distanceKm, orderStops } from '@/lib/route-order';
 import { waMeLink } from '@/lib/whatsapp';
 import { completeWashVisit, saveWashVisitLocation, skipWashVisit, undoWashVisit } from '../actions';
 import { isMakeupEligible } from '../makeup';
@@ -95,8 +96,7 @@ export interface TodayRouteProps {
   doneCount: number;
   remainingCount: number;
   upcomingRound?: { dateStr: string; dateLabel: string; count: number } | null;
-  routeLink?: string | null;
-  totalPointsCount?: number;
+  routeEnabled?: boolean;
   dateControls: DateControlsInfo;
   isSupervisor?: boolean;
   overdueBannerInfo?: OverdueBannerInfo;
@@ -127,6 +127,24 @@ const REASON_LABELS: Record<string, string> = {
   HOLIDAY: 'عطلة رسمية',
 };
 
+const ROUTE_START_EVENT = 'wash-route-start-change';
+
+function dispatchRouteStartChange() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(ROUTE_START_EVENT));
+  }
+}
+
+function subscribeRouteStart(callback: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  window.addEventListener(ROUTE_START_EVENT, callback);
+  return () => {
+    window.removeEventListener('storage', callback);
+    window.removeEventListener(ROUTE_START_EVENT, callback);
+  };
+}
+
 export function TodayRoute({
   visits,
   isToday,
@@ -135,15 +153,110 @@ export function TodayRoute({
   doneCount,
   remainingCount,
   upcomingRound,
-  routeLink,
-  totalPointsCount,
+  routeEnabled = false,
   dateControls,
   isSupervisor = false,
   overdueBannerInfo,
   washerFilterInfo,
 }: TodayRouteProps) {
+  const [locatingStart, setLocatingStart] = useState(false);
+  const storageKey = `wash_route_start_${dateControls.currentDateStr}`;
+
+  /*
+    قراءة واستعادة موقع البداية المحفوظ لليوم الحالي من localStorage باستخدام useSyncExternalStore
+    مع مزامنة الأحداث لمنع اختلاف التصيير بين الخادم والعميل (hydration mismatch) وتحديث الواجهة فوراً عند التغيير.
+  */
+  const rawSavedStart = useSyncExternalStore(
+    subscribeRouteStart,
+    () => {
+      if (!isToday || !canRecord || isSupervisor) return null;
+      try {
+        return localStorage.getItem(storageKey);
+      } catch {
+        return null;
+      }
+    },
+    () => null
+  );
+
+  const startPos = useMemo<{ lat: number; lng: number } | null>(() => {
+    if (!rawSavedStart) return null;
+    try {
+      const parsed = JSON.parse(rawSavedStart);
+      if (parsed && typeof parsed.lat === 'number' && typeof parsed.lng === 'number') {
+        return { lat: parsed.lat, lng: parsed.lng };
+      }
+    } catch {
+      // تجاهل أخطاء تحليل JSON
+    }
+    return null;
+  }, [rawSavedStart]);
+
+  function handleOrderByLocation() {
+    const supportErr = checkGeolocationSupport();
+    if (supportErr) {
+      toast.error(supportErr);
+      return;
+    }
+    setLocatingStart(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setLocatingStart(false);
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(coords));
+          dispatchRouteStartChange();
+        } catch {
+          // تجاهل أخطاء التخزين
+        }
+        toast.success('تم إعادة ترتيب الجولة بناءً على موقعك الحالي');
+      },
+      (error) => {
+        setLocatingStart(false);
+        toast.error(getGeolocationErrorMessage(error));
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  function handleClearLocationOrder() {
+    try {
+      localStorage.removeItem(storageKey);
+      dispatchRouteStartChange();
+    } catch {
+      // تجاهل أخطاء التخزين
+    }
+  }
+
+  // ترتيب الزيارات ومسافات الأطراف للوضع العادي
+  /*
+    بلا موقع بداية يبقى ترتيب الخادم كما هو: إعادة حسابه هنا من قائمةٍ مرتّبة
+    قد تقلب المسار نفسه طرفاً لطرف، فيختلف الرندر الأول عمّا رسمه الخادم.
+    والمسافات تُقاس داخل جولة الغسّيل الواحد — لا ساقَ بين آخر سيارة لغسّيل
+    وأول سيارة لغيره في عرض «الكل».
+  */
+  const { orderedVisits, legsKm } = useMemo(() => {
+    if (startPos) {
+      const { ordered, legsKm } = orderStops(visits, startPos);
+      return { orderedVisits: ordered, legsKm };
+    }
+    const lastByWasher = new Map<string, { lat: number; lng: number }>();
+    const legs = visits.map((v) => {
+      if (v.lat === null || v.lng === null) return null;
+      const key = v.assignedEmployee?.id ?? 'unassigned';
+      const prev = lastByWasher.get(key);
+      lastByWasher.set(key, { lat: v.lat, lng: v.lng });
+      return prev ? distanceKm(prev, { lat: v.lat, lng: v.lng }) : null;
+    });
+    return { orderedVisits: visits, legsKm: legs };
+  }, [visits, startPos]);
+
+  /*
+    البطاقات المكتملة/المتعذرة تبقى في مكانها ضمن المسار لأن الترتيب يمثّل الجولة الجغرافية لا قائمة المهام.
+    التالية تنتقل لأول بطاقة مجدولة في الترتيب الحالي.
+  */
   function scrollToNextPlanned() {
-    const firstPlanned = visits.find((v) => v.status === 'PLANNED');
+    const firstPlanned = orderedVisits.find((v) => v.status === 'PLANNED');
     if (firstPlanned) {
       const el = document.getElementById(`visit-card-${firstPlanned.id}`);
       if (el) {
@@ -165,11 +278,12 @@ export function TodayRoute({
     done: number;
     total: number;
     visits: TodayVisit[];
+    legsKm: Array<number | null>;
   }
 
-  const groups: WasherGroup[] = [];
-  if (isGroupedByWasher) {
-    const map = new Map<string, WasherGroup>();
+  const groups: WasherGroup[] = useMemo(() => {
+    if (!isGroupedByWasher) return [];
+    const map = new Map<string, { key: string; title: string; done: number; total: number; visits: TodayVisit[] }>();
 
     visits.forEach((visit) => {
       const key = visit.assignedEmployee ? visit.assignedEmployee.id : 'unassigned';
@@ -192,7 +306,50 @@ export function TodayRoute({
       if (b.key === 'unassigned') return -1;
       return a.title.localeCompare(b.title, 'ar');
     });
-    groups.push(...sortedGroups);
+
+    return sortedGroups.map((g) => {
+      const { ordered, legsKm } = orderStops(g.visits, startPos);
+      return { ...g, visits: ordered, legsKm };
+    });
+  }, [isGroupedByWasher, visits, startPos]);
+
+  /*
+    رابط الخريطة يتجاوز الغسلات المكتملة أو المتعذرة لعدم الحاجة للعودة إليها.
+  */
+  const activeLocatedPoints = useMemo(() => {
+    return orderedVisits
+      .filter((v) => v.status === 'PLANNED' && v.lat !== null && v.lng !== null)
+      .map((v) => ({ lat: v.lat!, lng: v.lng! }));
+  }, [orderedVisits]);
+
+  const clientRouteLink = useMemo(() => {
+    if (!isToday || !routeEnabled || activeLocatedPoints.length < 2) return null;
+    return routeUrl(activeLocatedPoints);
+  }, [isToday, routeEnabled, activeLocatedPoints]);
+
+  const totalLocatedCount = useMemo(() => {
+    return orderedVisits.filter((v) => v.lat !== null && v.lng !== null).length;
+  }, [orderedVisits]);
+
+  function formatLegText(
+    visit: TodayVisit,
+    legKm: number | null,
+    index: number,
+    hasStart: boolean
+  ): string | null {
+    if (visit.lat === null || visit.lng === null) {
+      return 'بلا موقع على الخريطة — خارج الترتيب';
+    }
+    if (legKm !== null) {
+      // سيارتان في مبنى واحد: «0 كم» رقمٌ لا يقول شيئاً، والمعنى أنها في المكان نفسه
+      if (legKm < 0.05) return index === 0 && hasStart ? 'عند موقعك' : 'في موقع السابقة نفسه';
+      const formatted = legKm.toLocaleString('ar-KW-u-nu-latn', { maximumFractionDigits: 1 });
+      if (index === 0 && hasStart) {
+        return `${formatted} كم من موقعك`;
+      }
+      return `${formatted} كم من السابقة`;
+    }
+    return null;
   }
 
   return (
@@ -353,24 +510,62 @@ export function TodayRoute({
         </div>
       )}
 
-      {/* زر رابط الجولة المجمعة على الخريطة (يظهر عند تحديد غسّال واحد وفي اليوم الحالي) */}
-      {isToday && routeLink && (
-        <div className="flex items-center justify-between gap-3">
-          <a
-            href={routeLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              buttonVariants({ variant: 'primary' }),
-              'w-full sm:w-auto h-12 gap-2 font-extrabold px-5 text-sm shadow-md'
-            )}
-          >
-            <Route className="size-5 shrink-0" />
-            <span>
-              افتح الجولة على الخريطة
-              {totalPointsCount && totalPointsCount > 10 ? ` (أول 10 سيارات من أصل ${totalPointsCount})` : ''}
-            </span>
-          </a>
+      {/* زر رابط الجولة المجمعة على الخريطة وزر إعادة الترتيب حسب الموقع */}
+      {isToday && (clientRouteLink || (canRecord && totalLocatedCount >= 2)) && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {clientRouteLink ? (
+            <a
+              href={clientRouteLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                buttonVariants({ variant: 'primary' }),
+                'w-full sm:w-auto h-12 gap-2 font-extrabold px-5 text-sm shadow-md'
+              )}
+            >
+              <Route className="size-5 shrink-0" />
+              <span>
+                افتح الجولة على الخريطة
+                {activeLocatedPoints.length > 10
+                  ? ` (أول 10 سيارات من أصل ${activeLocatedPoints.length})`
+                  : ''}
+              </span>
+            </a>
+          ) : (
+            <div />
+          )}
+
+          {/* موقع المشرف في مكتبه لا يصلح بدايةً لجولة غيره */}
+          {canRecord && isToday && !isSupervisor && totalLocatedCount >= 2 && (
+            startPos ? (
+              <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-accent/40 bg-accent/10 px-3 py-2 text-xs font-bold text-accent">
+                <Navigation className="size-4 shrink-0" />
+                <span>مرتّبة من موقعك</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearLocationOrder}
+                  className="h-7 px-2 text-xs font-bold text-[var(--text-1)] hover:text-danger"
+                >
+                  إلغاء
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleOrderByLocation}
+                disabled={locatingStart}
+                className="h-12 gap-2 font-bold px-4 text-xs sm:text-sm border-[var(--line-strong)]"
+              >
+                {locatingStart ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Navigation className="size-4 text-accent" />
+                )}
+                رتّب من موقعي
+              </Button>
+            )
+          )}
         </div>
       )}
 
@@ -449,6 +644,7 @@ export function TodayRoute({
                     key={visit.id}
                     visit={visit}
                     order={index + 1}
+                    legText={formatLegText(visit, group.legsKm[index], index, startPos !== null)}
                     canRecord={canRecord}
                     canReschedule={canReschedule}
                     isSupervisor={isSupervisor}
@@ -460,11 +656,12 @@ export function TodayRoute({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 pb-28">
-          {visits.map((visit, index) => (
+          {orderedVisits.map((visit, index) => (
             <VisitCard
               key={visit.id}
               visit={visit}
               order={index + 1}
+              legText={formatLegText(visit, legsKm[index], index, startPos !== null)}
               canRecord={canRecord}
               canReschedule={canReschedule}
               isSupervisor={isSupervisor}
@@ -508,12 +705,14 @@ export function TodayRoute({
 function VisitCard({
   visit,
   order,
+  legText,
   canRecord,
   canReschedule = false,
   isSupervisor = false,
 }: {
   visit: TodayVisit;
   order: number;
+  legText?: string | null;
   canRecord: boolean;
   canReschedule?: boolean;
   isSupervisor?: boolean;
@@ -642,10 +841,17 @@ function VisitCard({
                 </Badge>
               )}
             </div>
-            <p className="truncate text-[12px] text-[var(--text-2)]" dir="ltr">
-              {visit.car}
-              {visit.plateNo ? ` · ${visit.plateNo}` : ''}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-[12px] text-[var(--text-2)]" dir="ltr">
+                {visit.car}
+                {visit.plateNo ? ` · ${visit.plateNo}` : ''}
+              </p>
+              {legText && (
+                <span className="text-[11px] font-normal text-[var(--text-2)]">
+                  · {legText}
+                </span>
+              )}
+            </div>
           </div>
           <Badge tone={status === 'COMPLETED' ? 'ok' : 'warn'}>
             {status === 'COMPLETED' ? 'تمّت' : REASON_LABELS[reason ?? ''] ?? 'تعذّرت'}
@@ -701,6 +907,11 @@ function VisitCard({
               <Badge tone="accent">
                 تعويض عن {formatDateOnly(visit.dueDate)}
               </Badge>
+            )}
+            {legText && (
+              <span className="text-xs font-semibold text-[var(--text-2)] ms-auto">
+                {legText}
+              </span>
             )}
           </div>
           {/*

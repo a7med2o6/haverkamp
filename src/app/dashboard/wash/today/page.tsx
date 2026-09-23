@@ -11,7 +11,7 @@ import {
   todayDateOnly,
   toNumber,
 } from '@/lib/utils';
-import { routeUrl } from '@/lib/geo';
+import { orderStops } from '@/lib/route-order';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardBody } from '@/components/ui/card';
@@ -170,11 +170,12 @@ export default async function WashTodayPage({
       };
     });
 
-    const pointsWithCoords = mappedVisits
-      .filter((v) => v.lat !== null && v.lng !== null)
-      .map((v) => ({ lat: v.lat!, lng: v.lng! }));
-
-    const routeLink = isToday ? routeUrl(pointsWithCoords) : null;
+    /*
+      الخادم يرتّب الزيارات دون موقع بداية لأنه لا يعلم أين يقف الغسّيل حالياً.
+    */
+    const { ordered: orderedVisits } = orderStops(mappedVisits);
+    const locatedCount = orderedVisits.filter((v) => v.lat !== null && v.lng !== null).length;
+    const routeEnabled = isToday && locatedCount >= 2;
 
     return (
       <div className="mx-auto max-w-6xl space-y-4">
@@ -188,14 +189,13 @@ export default async function WashTodayPage({
         />
 
         <TodayRoute
-          visits={mappedVisits}
+          visits={orderedVisits}
           isToday={isToday}
           canRecord={isToday}
           doneCount={done}
           remainingCount={remaining}
           upcomingRound={upcomingRound}
-          routeLink={routeLink}
-          totalPointsCount={pointsWithCoords.length}
+          routeEnabled={routeEnabled}
           dateControls={{
             dateFormatted,
             prevStr,
@@ -361,7 +361,7 @@ export default async function WashTodayPage({
 
   const canReschedule = can(session.user.role, 'wash:write');
 
-  const mappedVisits = filteredVisits.map((visit) => {
+  function mapVisit(visit: (typeof dayVisits)[number]) {
     const subscription = visit.period.subscription;
     return {
       id: visit.id,
@@ -381,14 +381,45 @@ export default async function WashTodayPage({
         ? { id: visit.assignedEmployee.id, fullName: visit.assignedEmployee.fullName }
         : null,
     };
-  });
+  }
 
-  // مسار الخريطة يُشغَّل فقط عند اختيار غسّال مفرد وفي اليوم الحالي
-  const pointsWithCoords = mappedVisits
-    .filter((v) => v.lat !== null && v.lng !== null)
-    .map((v) => ({ lat: v.lat!, lng: v.lng! }));
+  let orderedVisits: ReturnType<typeof mapVisit>[] = [];
 
-  const routeLink = isToday && selectedWasher !== null ? routeUrl(pointsWithCoords) : null;
+  if (selectedWasher !== null) {
+    const mapped = filteredVisits.map(mapVisit);
+    /*
+      الخادم يرتّب الزيارات دون موقع بداية لأنه لا يعلم أين يقف الغسّيل حالياً.
+    */
+    orderedVisits = orderStops(mapped).ordered;
+  } else {
+    /*
+      في وضع المشرف عند اختيار «الكل»، يتم تجميع الزيارات حسب الغسّال (مع الحفاظ على الترتيب الأصلي للظهور)،
+      وترتيب زيارات كل غسّال على حدة بـ orderStops ليكون لكل غسّال مساره الخاص.
+    */
+    const washerGroupsMap = new Map<string, typeof dayVisits>();
+    const washerOrder: string[] = [];
+
+    for (const visit of dayVisits) {
+      const key = visit.assignedEmployee ? visit.assignedEmployee.id : 'unassigned';
+      if (!washerGroupsMap.has(key)) {
+        washerGroupsMap.set(key, []);
+        washerOrder.push(key);
+      }
+      washerGroupsMap.get(key)!.push(visit);
+    }
+
+    const result: typeof orderedVisits = [];
+    for (const key of washerOrder) {
+      const groupVisits = washerGroupsMap.get(key)!;
+      const mappedGroup = groupVisits.map(mapVisit);
+      const orderedGroup = orderStops(mappedGroup).ordered;
+      result.push(...orderedGroup);
+    }
+    orderedVisits = result;
+  }
+
+  const locatedCount = orderedVisits.filter((v) => v.lat !== null && v.lng !== null).length;
+  const routeEnabled = isToday && selectedWasher !== null && locatedCount >= 2;
 
   /*
     المشرف يسجّل أيّ يومٍ مضى، فعليه يُستدرك ما نسيه الغسّيل؛ والقادم لا يُسجَّل.
@@ -410,15 +441,14 @@ export default async function WashTodayPage({
       />
 
       <TodayRoute
-        visits={mappedVisits}
+        visits={orderedVisits}
         isToday={isToday}
         canRecord={canRecord}
         canReschedule={canReschedule}
         doneCount={done}
         remainingCount={remaining}
         upcomingRound={upcomingRound}
-        routeLink={routeLink}
-        totalPointsCount={pointsWithCoords.length}
+        routeEnabled={routeEnabled}
         dateControls={{
           dateFormatted,
           prevStr,

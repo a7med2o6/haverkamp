@@ -123,6 +123,26 @@ export function directionsUrl(lat: number | string, lng: number | string): strin
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
 
+/*
+  بناء رابط اتجاهات Google Maps لجولة كاملة تضم عدة محطات مرتبة.
+
+  يُسقف العدد عند 10 نقاط كحد أقصى (9 وسيطة + الوجهة الأخيرة) لأن خرائط
+  غوغل ترفض الروابط الطويلة المباشرة ولتجنب الإسقاط الصامت الذي قد يوجّه
+  الغسّيل إلى جولة ناقصة دون أن يعلم.
+*/
+export function routeUrl(points: Array<{ lat: number; lng: number }>): string | null {
+  if (!points || points.length < 2) return null;
+  const stops = points.slice(0, 10);
+  const destination = stops[stops.length - 1];
+  const waypoints = stops.slice(0, stops.length - 1);
+  const waypointsStr = waypoints.map((p) => `${p.lat},${p.lng}`).join('|');
+
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}${
+    waypointsStr ? `&waypoints=${waypointsStr}` : ''
+  }&travelmode=driving`;
+}
+
+
 /**
  * التحقق من دعم المتصفح والسياق الآمن للخدمات الجغرافية.
  */

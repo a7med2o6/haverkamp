@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { formatDateOnly, formatNumber, todayDateOnly, toNumber } from '@/lib/utils';
+import { formatDateOnly, todayDateOnly } from '@/lib/utils';
 import { siteUrl } from '@/lib/site-url';
 import { isCloudApiReady, sendWhatsApp } from '@/lib/whatsapp';
 import { ensureWashShareToken } from '@/lib/wash-card';
@@ -110,16 +110,16 @@ export async function GET(req: Request) {
       .filter(Boolean)
       .join(' ');
     const formattedToDate = formatDateOnly(period.toDate);
-    const formattedPrice = formatNumber(toNumber(sub.monthlyPrice), 3);
     const customerName = sub.customer.name;
 
     const cardUrl = `${siteUrl()}/w/${shareToken}`;
-    const fallbackBody = `مرحباً ${customerName}، ينتهي اشتراك غسيل سيارتك ${carText} يوم ${formattedToDate}. لتجديده شهراً جديداً بقيمة ${formattedPrice} د.ك اضغط الزر أدناه: ${cardUrl}`;
+    const fallbackBody = `مرحباً ${customerName}، فترة اشتراك غسيل سيارتك ${carText} المسجّلة لدينا تنتهي يوم ${formattedToDate}. تفاصيل اشتراكك وحالته متاحة عبر الرابط أدناه: ${cardUrl}`;
 
     const res = await sendWhatsApp({
       to: sub.customer.phone,
       body: fallbackBody,
-      templateVars: [customerName, carText, formattedToDate, formattedPrice],
+      // عدد المتغيرات وترتيبها يجب أن يطابق القالب المعتمد بالضبط (3 متغيرات)؛ تصنّف Meta السعر والدعوة للتجديد كـ Marketing فلذلك لا يتضمنهما القالب الخدمي.
+      templateVars: [customerName, carText, formattedToDate],
       urlSuffix: shareToken,
       template: { name: templateName },
     });

@@ -13,6 +13,7 @@ import { checkLatLng, parseLatLng, roundPoint } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
 import { initialPeriodYearMonth, openPeriodForSubscription, openWashMonthRecords } from './month-service';
 import { isMakeupEligible, makeupWindow, suggestMakeupDate } from './makeup';
+import { loadEndingInput, planWashEnding } from './end-service';
 
 const dateSchema = z
   .string()
@@ -519,9 +520,7 @@ export const washMakeupOptions = action({
 
     if (!visit) throw new AppError('الغسلة غير موجودة');
     const subscription = visit.period.subscription;
-    if (subscription.status === 'ENDED') {
-      throw new AppError('اشتراك الغسيل منتهٍ');
-    }
+    // العقد المنتهي يخدم فتراته المدفوعة حتى نهايتها، فيُسمح بتعويض غسلاتها
 
     const today = todayDateOnly();
     if (!isMakeupEligible(visit, today)) {
@@ -607,9 +606,7 @@ export const rescheduleWashVisit = action({
 
     if (!visit) throw new AppError('الغسلة غير موجودة');
     const subscription = visit.period.subscription;
-    if (subscription.status === 'ENDED') {
-      throw new AppError('اشتراك الغسيل منتهٍ');
-    }
+    // العقد المنتهي يخدم فتراته المدفوعة حتى نهايتها، فيُسمح بتعويض غسلاتها
 
     const today = todayDateOnly();
     if (!isMakeupEligible(visit, today)) {
@@ -822,5 +819,172 @@ export const saveWashVisitLocation = action({
     return { id: context.subscriptionId, message: 'تم حفظ موقع السيارة' };
   },
 });
+
+export const washEndPreview = action({
+  permission: 'wash:delete',
+  schema: z.object({ id: z.string().min(1, 'اشتراك الغسيل مطلوب') }),
+  handler: async ({ id }) => {
+    const subscription = await db.washSubscription.findUnique({
+      where: { id },
+      select: { id: true, status: true },
+    });
+    if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
+    if (subscription.status === 'ENDED') throw new AppError('الاشتراك منتهٍ بالفعل');
+
+    const periods = await loadEndingInput(db, id);
+    const result = planWashEnding({ today: todayDateOnly(), periods });
+    if (!result.ok) throw new AppError(result.reason);
+
+    return { data: result.plan as unknown as Record<string, unknown> };
+  },
+});
+
+export const endWashSubscription = action({
+  permission: 'wash:delete',
+  schema: z.object({
+    id: z.string().min(1, 'اشتراك الغسيل مطلوب'),
+    reason: z
+      .string()
+      .trim()
+      .min(3, 'سبب الإنهاء قصير جداً (3 حروف على الأقل)')
+      .max(300, 'سبب الإنهاء طويل جداً (300 حرف كحد أقصى)'),
+  }),
+  audit: { entity: 'WashSubscription', action: 'END' },
+  handler: async ({ id, reason }, { userId }) => {
+    const today = todayDateOnly();
+
+    const { endDateFormatted, cancelledInvoices, customerId } = await db.$transaction(
+      async (tx) => {
+        const subscription = await tx.washSubscription.findUnique({
+          where: { id },
+          select: { id: true, code: true, notes: true, status: true, customerId: true },
+        });
+        if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
+        if (subscription.status === 'ENDED') throw new AppError('الاشتراك منتهٍ بالفعل');
+
+        // إعادة التخطيط داخل المعاملة تضمن عدم اعتماد القرار على معاينة قديمة متزامنة
+        const periods = await loadEndingInput(tx, id);
+        const result = planWashEnding({ today, periods });
+        if (!result.ok) throw new AppError(result.reason);
+
+        const plan = result.plan;
+        const targetEndDate = dateOnlyFromInput(plan.endDate);
+
+        const noteLine = `أُنهي في ${formatDateOnly(today)}: ${reason}`;
+        const newNotes = subscription.notes ? `${subscription.notes}\n${noteLine}` : noteLine;
+
+        const claimed = await tx.washSubscription.updateMany({
+          where: { id, status: { not: 'ENDED' } },
+          data: {
+            status: 'ENDED',
+            endDate: targetEndDate,
+            notes: newNotes,
+          },
+        });
+        if (claimed.count === 0) throw new AppError('الاشتراك منتهٍ بالفعل');
+
+        for (const inv of plan.cancelledInvoices) {
+          const voided = await tx.order.updateMany({
+            where: {
+              id: inv.orderId,
+              paidAmount: 0,
+              status: { notIn: ['CANCELLED', 'REFUNDED'] },
+            },
+            data: {
+              status: 'CANCELLED',
+              voidedAt: new Date(),
+              voidReason: `إنهاء اشتراك ${subscription.code}: ${reason}`,
+              voidedById: userId,
+            },
+          });
+          if (voided.count === 0) {
+            throw new AppError(`تغيّر سداد الفاتورة ${inv.number} — حدّث الصفحة`);
+          }
+        }
+
+        const unpaidPeriodIds = plan.removedPeriodIds;
+
+        if (unpaidPeriodIds.length > 0) {
+          await tx.washVisit.deleteMany({
+            where: { periodId: { in: unpaidPeriodIds } },
+          });
+          await tx.washSubscriptionPeriod.deleteMany({
+            where: { id: { in: unpaidPeriodIds } },
+          });
+        }
+
+        return {
+          customerId: subscription.customerId,
+          endDateFormatted: formatDateOnly(targetEndDate),
+          cancelledInvoices: plan.cancelledInvoices,
+        };
+      }
+    );
+
+    revalidateWash([id]);
+    revalidatePath('/dashboard/invoices');
+    revalidatePath(`/dashboard/customers/${customerId}`);
+
+    let cancelPart = '';
+    if (cancelledInvoices.length === 1) {
+      cancelPart = `، وأُلغيت فاتورة ${cancelledInvoices[0].number}`;
+    } else if (cancelledInvoices.length > 1) {
+      cancelPart = `، وأُلغيت الفواتير ${cancelledInvoices.map((inv) => inv.number).join('، ')}`;
+    }
+
+    return {
+      id,
+      message: `أُنهي الاشتراك — آخر يوم غسيل ${endDateFormatted}${cancelPart}`,
+    };
+  },
+});
+
+export const resumeWashSubscription = action({
+  permission: 'wash:delete',
+  schema: z.object({ id: z.string().min(1, 'اشتراك الغسيل مطلوب') }),
+  audit: { entity: 'WashSubscription', action: 'RESUME' },
+  handler: async ({ id }) => {
+    const today = todayDateOnly();
+    const subscription = await db.washSubscription.findUnique({
+      where: { id },
+      select: { id: true, code: true, status: true, endDate: true, notes: true, customerId: true },
+    });
+
+    if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
+    if (subscription.status !== 'ENDED') throw new AppError('الاشتراك غير منتهٍ');
+    if (!subscription.endDate || subscription.endDate.getTime() < today.getTime()) {
+      throw new AppError('انتهت فترة الغسيل المدفوعة — لا يمكن استئناف العقد بعد انقضائها');
+    }
+
+    const noteLine = `استُؤنف في ${formatDateOnly(today)}`;
+    const newNotes = subscription.notes ? `${subscription.notes}\n${noteLine}` : noteLine;
+
+    // الفواتير الملغاة تبقى ملغاة لعدم فتح فترات مستقبليّة صامتة عند الاستئناف
+    try {
+      await db.washSubscription.update({
+        where: { id },
+        data: {
+          status: 'ACTIVE',
+          endDate: null,
+          notes: newNotes,
+        },
+      });
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+        throw new AppError('للسيارة اشتراك آخر سارٍ — لا يمكن الاستئناف');
+      }
+      throw error;
+    }
+
+    revalidateWash([id]);
+    revalidatePath(`/dashboard/customers/${subscription.customerId}`);
+
+    return {
+      id,
+      message: `تم استئناف اشتراك الغسيل ${subscription.code}`,
+    };
+  },
+});
+
 
 

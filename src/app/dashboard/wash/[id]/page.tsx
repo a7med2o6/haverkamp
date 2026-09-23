@@ -12,12 +12,14 @@ import { buttonVariants } from '@/components/ui/button';
 import { Card, CardBody, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AddPauseCollapsible, DeletePauseButton } from './pause-controls';
 import { ShareWashButton } from './share-button';
+import { EndSubscription, ResumeSubscription } from './end-subscription';
 import { washLocationLine } from '@/app/dashboard/wash/location';
 import { directionsUrl } from '@/lib/geo';
 import { qrSvg } from '@/lib/qr';
 import { siteUrl } from '@/lib/site-url';
 import { isMakeupEligible } from '../makeup';
 import { MakeupPanel } from '../makeup-panel';
+import { washStatusBadge } from '@/app/dashboard/wash/status';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,6 +143,7 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
   const defaultWasher = subscription.defaultWasher ?? null;
 
   const canWrite = can(session.user.role, 'wash:write');
+  const canDelete = can(session.user.role, 'wash:delete');
   /*
     رابط الفاتورة يقتصر على الصلاحية pos:read؛ لأن صفحة تفاصيل الفواتير
     تتطلب هذه الصلاحية للدخول، وفي حال عدم امتلاكها تُعرض خانة الفاتورة كنص عادي.
@@ -150,14 +153,12 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
   const qrCodeSvg =
     canWrite && subscription.shareToken ? await qrSvg(`${siteUrl()}/w/${subscription.shareToken}`) : null;
 
-  const subscriptionStatus = {
-    ACTIVE: { label: 'سارٍ', tone: 'ok' as const },
-    PAUSED: { label: 'موقوف', tone: 'warn' as const },
-    ENDED: { label: 'منتهٍ', tone: 'muted' as const },
-  }[subscription.status];
-
   const here = `/dashboard/wash/${subscription.id}`;
   const today = todayDateOnly();
+
+  const isPastEnded = subscription.status === 'ENDED' && (!subscription.endDate || subscription.endDate < today);
+
+  const subscriptionStatus = washStatusBadge(subscription, today);
 
   /*
     الشهر الحالي هو الذي يضم اليوم (fromDate <= today <= toDate)؛
@@ -248,6 +249,16 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
               <Navigation className="size-4" />
               الاتجاهات
             </a>
+          )}
+          {canDelete && (
+            <>
+              {(subscription.status === 'ACTIVE' || subscription.status === 'PAUSED') && (
+                <EndSubscription id={subscription.id} />
+              )}
+              {subscription.status === 'ENDED' && subscription.endDate && subscription.endDate >= today && (
+                <ResumeSubscription id={subscription.id} />
+              )}
+            </>
           )}
         </div>
       </div>
@@ -579,7 +590,7 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
                     <p className="text-[12px] leading-5 text-[var(--text-2)]">
                       رابط متابعة الغسلات للعميل لمشاركته عبر الواتساب أو مسحه.
                     </p>
-                    <ShareWashButton subscriptionId={subscription.id} />
+                    {!isPastEnded && <ShareWashButton subscriptionId={subscription.id} />}
                   </div>
                 </div>
               </CardBody>
@@ -594,7 +605,7 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
               </div>
             </CardHeader>
             <CardBody className="p-4 space-y-4">
-              {canWrite && <AddPauseCollapsible subscriptionId={subscription.id} />}
+              {canWrite && !isPastEnded && <AddPauseCollapsible subscriptionId={subscription.id} />}
               {subscription.pauses.length === 0 ? (
                 <p className="py-3 text-center text-[13px] text-[var(--text-2)]">لا توجد إيقافات مسجّلة.</p>
               ) : (

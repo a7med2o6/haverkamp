@@ -3,23 +3,18 @@ import Image from 'next/image';
 import { AlertCircle, Calendar, Car, CalendarClock, MapPin, ShieldAlert, Sparkles } from 'lucide-react';
 import { getWashCardByToken } from '@/lib/wash-card';
 import { hasWashAccess, phoneLast4 } from '@/lib/wash-access';
-import { formatDateOnly, formatKWD } from '@/lib/utils';
+import { cn, formatDateOnly, formatKWD, todayDateOnly } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { VerifyForm } from './verify-form';
 import { AutoRefresh } from './auto-refresh';
 import { SetLocation } from './set-location';
+import { washStatusBadge } from '@/app/dashboard/wash/status';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'كارت متابعة الغسيل',
   robots: { index: false, follow: false },
-};
-
-const STATUS_BADGE = {
-  ACTIVE: { label: 'سارٍ', tone: 'ok' as const },
-  PAUSED: { label: 'موقوف', tone: 'warn' as const },
-  ENDED: { label: 'منتهٍ', tone: 'muted' as const },
 };
 
 const VISIT_STATUS_BADGE = {
@@ -107,7 +102,9 @@ export default async function PublicWashCardPage({
   }
 
   const { subscription, current, history, shop } = doc;
-  const subStatus = STATUS_BADGE[subscription.status];
+  const today = todayDateOnly();
+
+  const subStatus = washStatusBadge(subscription, today);
 
   return (
     <Shell>
@@ -139,6 +136,23 @@ export default async function PublicWashCardPage({
             <Badge tone={subStatus.tone}>{subStatus.label}</Badge>
           </div>
         </div>
+
+        {subscription.status === 'ENDED' && (
+          <div
+            className={cn(
+              'rounded-[var(--radius-lg)] border p-4 text-center text-[14px] font-medium',
+              subscription.endDate && subscription.endDate >= today
+                ? 'border-warn/30 bg-warn/10 text-[var(--text-0)]'
+                : 'border-[var(--line)] bg-[var(--surface-1)] text-[var(--text-1)]'
+            )}
+          >
+            {subscription.endDate && subscription.endDate >= today
+              ? `ينتهي اشتراكك في ${formatDateOnly(subscription.endDate)} — شكراً لك.`
+              : subscription.endDate
+                ? `انتهى اشتراكك في ${formatDateOnly(subscription.endDate)}.`
+                : 'انتهى اشتراكك.'}
+          </div>
+        )}
 
         <div className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-5 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -274,7 +288,7 @@ export default async function PublicWashCardPage({
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-[var(--line)] text-[13px]">
+                <div className={cn('grid gap-3 pt-2 border-t border-[var(--line)] text-[13px]', subscription.status !== 'ENDED' && 'sm:grid-cols-2')}>
                   <div className="flex items-center gap-2.5">
                     <Sparkles className="size-4 shrink-0 text-accent" />
                     <div>
@@ -290,18 +304,20 @@ export default async function PublicWashCardPage({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5">
-                    <Calendar className="size-4 shrink-0 text-[var(--text-2)]" />
-                    <div>
-                      <span className="text-[var(--text-2)]">يتجدد في: </span>
-                      <span className="tnum font-semibold text-[var(--text-0)]">
-                        {formatDateOnly(current.renewsOn)}
-                      </span>
-                      <span className="tnum text-[12px] text-[var(--text-2)] ms-1">
-                        (متبقٍ: {current.daysLeft} يوم)
-                      </span>
+                  {subscription.status !== 'ENDED' && (
+                    <div className="flex items-center gap-2.5">
+                      <Calendar className="size-4 shrink-0 text-[var(--text-2)]" />
+                      <div>
+                        <span className="text-[var(--text-2)]">يتجدد في: </span>
+                        <span className="tnum font-semibold text-[var(--text-0)]">
+                          {formatDateOnly(current.renewsOn)}
+                        </span>
+                        <span className="tnum text-[12px] text-[var(--text-2)] ms-1">
+                          (متبقٍ: {current.daysLeft} يوم)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </>
             )}

@@ -18,9 +18,11 @@ import {
   dateOnlyToInput,
   formatDateOnly,
   formatKWD,
+  todayDateOnly,
   toNumber,
 } from '@/lib/utils';
 import { WashSubscriptionFormButton } from './subscription-form';
+import { washStatusBadge } from '@/app/dashboard/wash/status';
 
 export const metadata: Metadata = { title: 'اشتراكات الغسيل' };
 export const dynamic = 'force-dynamic';
@@ -47,6 +49,7 @@ export default async function WashSubscriptionsPage({
   const session = await requirePermission('wash:read');
   const { q, page: pageParam, filter: filterParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+  const today = todayDateOnly();
 
   /*
     قيمة الرابط نصّ غير موثوق، لذلك لا تدخل في enum بريزما إلا بعد
@@ -54,9 +57,26 @@ export default async function WashSubscriptionsPage({
   */
   const selectedFilter = FILTERS.find((item) => item.key === filterParam) ?? FILTERS[0];
   const filter = selectedFilter.key;
-  const byFilter: Prisma.WashSubscriptionWhereInput = selectedFilter.status
-    ? { status: selectedFilter.status }
-    : {};
+  
+  let byFilter: Prisma.WashSubscriptionWhereInput = {};
+  if (filter === 'active') {
+    byFilter = {
+      OR: [
+        { status: 'ACTIVE' },
+        { status: 'ENDED', endDate: { gte: today } },
+      ],
+    };
+  } else if (filter === 'paused') {
+    byFilter = { status: 'PAUSED' };
+  } else if (filter === 'ended') {
+    byFilter = {
+      status: 'ENDED',
+      OR: [
+        { endDate: { lt: today } },
+        { endDate: null },
+      ],
+    };
+  }
 
   const [plateIds, phoneIds] = q
     ? await Promise.all([vehicleIdsByPlate(q), customerIdsByPhone(q)])
@@ -212,11 +232,7 @@ export default async function WashSubscriptionsPage({
                   `/dashboard/customers/${subscription.customer.id}`,
                   here
                 );
-                const status = {
-                  ACTIVE: { tone: 'ok' as const, label: 'سارٍ' },
-                  PAUSED: { tone: 'warn' as const, label: 'موقوف' },
-                  ENDED: { tone: 'muted' as const, label: 'منتهٍ' },
-                }[subscription.status];
+                const status = washStatusBadge(subscription, today);
 
                 return (
                   <Tr key={subscription.id}>

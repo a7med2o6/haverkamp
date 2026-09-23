@@ -5,13 +5,14 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, moneySchema, optionalString } from '@/lib/action-utils';
-import { dateOnlyFromInput, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
+import { dateOnlyFromInput, dateOnlyToInput, formatDateOnly, formatKWD, formatWeekday, todayDateOnly, toNumber } from '@/lib/utils';
 import { siteUrl } from '@/lib/site-url';
 import { waMeLink } from '@/lib/whatsapp';
 import { ensureWashShareToken } from '@/lib/wash-card';
 import { checkLatLng, parseLatLng, roundPoint } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
 import { initialPeriodYearMonth, openPeriodForSubscription, openWashMonthRecords } from './month-service';
+import { isMakeupEligible, makeupWindow, suggestMakeupDate } from './makeup';
 
 const dateSchema = z
   .string()
@@ -370,6 +371,17 @@ export const deleteWashPause = action({
 
 const visitIdSchema = z.object({ visitId: z.string().min(1, 'الغسلة مطلوبة') });
 const washerSkipReasons = ['CAR_ABSENT', 'CUSTOMER_TRAVEL', 'WEATHER', 'OTHER'] as const;
+const allSkipReasons = ['CAR_ABSENT', 'CUSTOMER_TRAVEL', 'WEATHER', 'OPERATIONAL', 'OTHER'] as const;
+
+const REASON_LABELS: Record<string, string> = {
+  UNPAID: 'غير مسدّد',
+  CAR_ABSENT: 'السيارة غير موجودة',
+  CUSTOMER_TRAVEL: 'العميل مسافر',
+  WEATHER: 'الطقس',
+  HOLIDAY: 'عطلة رسمية',
+  OPERATIONAL: 'من جهتنا (لم يحضر الغسّيل)',
+  OTHER: 'سبب آخر',
+};
 
 async function visitMutationContext(
   visitId: string,
@@ -410,6 +422,7 @@ async function visitMutationContext(
   }
 
   return {
+    role: user.role,
     employeeId: user.employee?.id ?? null,
     subscriptionId: visit.period.subscriptionId,
     authorizationWhere: (user.role === 'WASHER'
@@ -444,12 +457,22 @@ export const skipWashVisit = action({
   permission: 'wash:visit',
   schema: z.object({
     visitId: z.string().min(1, 'الغسلة مطلوبة'),
-    reason: z.enum(washerSkipReasons),
+    reason: z.enum(allSkipReasons),
     notes: optionalString,
   }),
   audit: { entity: 'WashVisit', action: 'SKIP' },
   handler: async ({ visitId, reason, notes }, { userId }) => {
     const context = await visitMutationContext(visitId, userId, ['PLANNED']);
+    /*
+      «من جهتنا» اعترافٌ بتقصير الفريق، يقوله المشرف لا الغسّيل عن نفسه؛
+      فقائمة الغسّيل تبقى كما كانت ويُردّ ما عداها من الخادم لا من القائمة وحدها.
+    */
+    if (
+      context.role === 'WASHER' &&
+      !(washerSkipReasons as readonly string[]).includes(reason)
+    ) {
+      throw new AppError('هذا السبب يسجّله المشرف');
+    }
     const updated = await db.washVisit.updateMany({
       where: { id: visitId, status: 'PLANNED', ...context.authorizationWhere },
       data: {
@@ -464,6 +487,199 @@ export const skipWashVisit = action({
     if (updated.count !== 1) throw new AppError('تغيّرت حالة الغسلة — حدّث الصفحة');
     revalidateWash([context.subscriptionId]);
     return { id: visitId, message: 'تم تسجيل التعذّر' };
+  },
+});
+
+export const washMakeupOptions = action({
+  permission: 'wash:write',
+  schema: z.object({ visitId: z.string().min(1, 'الغسلة مطلوبة') }),
+  handler: async ({ visitId }) => {
+    const visit = await db.washVisit.findUnique({
+      where: { id: visitId },
+      select: {
+        id: true,
+        status: true,
+        skipReason: true,
+        dueDate: true,
+        scheduledDate: true,
+        period: {
+          select: {
+            toDate: true,
+            subscription: {
+              select: {
+                id: true,
+                status: true,
+                pauses: { select: { fromDate: true, toDate: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!visit) throw new AppError('الغسلة غير موجودة');
+    const subscription = visit.period.subscription;
+    if (subscription.status === 'ENDED') {
+      throw new AppError('اشتراك الغسيل منتهٍ');
+    }
+
+    const today = todayDateOnly();
+    if (!isMakeupEligible(visit, today)) {
+      throw new AppError('هذه الغسلة غير مؤهلة للتعويض');
+    }
+
+    const occupiedVisits = await db.washVisit.findMany({
+      where: {
+        period: { subscriptionId: subscription.id },
+        id: { not: visitId },
+        status: { not: 'SKIPPED' },
+      },
+      select: { scheduledDate: true },
+    });
+
+    const window = makeupWindow(visit.period, today);
+    if (window.latest.getTime() < today.getTime()) {
+      throw new AppError('انقضت نافذة التعويض — مضى أسبوع على نهاية فترة هذه الغسلة');
+    }
+    const occupied = occupiedVisits.map((v) => v.scheduledDate);
+    const suggested = suggestMakeupDate({
+      today,
+      latest: window.latest,
+      occupied,
+      pauses: subscription.pauses,
+    });
+
+    return {
+      data: {
+        suggested: suggested ? dateOnlyToInput(suggested) : null,
+        min: dateOnlyToInput(window.earliest),
+        max: dateOnlyToInput(window.latest),
+        dueDate: dateOnlyToInput(visit.dueDate),
+      },
+    };
+  },
+});
+
+const rescheduleSchema = z.object({
+  visitId: z.string().min(1, 'الغسلة مطلوبة'),
+  date: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'تاريخ التعويض مطلوب')
+    .refine((value) => {
+      const parsed = new Date(`${value}T00:00:00.000Z`);
+      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+    }, 'التاريخ غير صالح')
+    .transform((value) => dateOnlyFromInput(value)),
+});
+
+export const rescheduleWashVisit = action({
+  permission: 'wash:write',
+  schema: rescheduleSchema,
+  audit: { entity: 'WashVisit', action: 'RESCHEDULE' },
+  handler: async ({ visitId, date }) => {
+    /*
+      المرساة الأصليّة (dueDate) تُحفظ كما هي حفاظاً على التزام العقد ومحاسبة الفترة.
+      إذن wash:write مخصّص للمشرف فقط؛ فالغسّيل لا يحقّ له تحريك موعد عمله بنفسه.
+    */
+    const visit = await db.washVisit.findUnique({
+      where: { id: visitId },
+      select: {
+        id: true,
+        status: true,
+        skipReason: true,
+        dueDate: true,
+        scheduledDate: true,
+        period: {
+          select: {
+            toDate: true,
+            subscription: {
+              select: {
+                id: true,
+                status: true,
+                pauses: { select: { fromDate: true, toDate: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!visit) throw new AppError('الغسلة غير موجودة');
+    const subscription = visit.period.subscription;
+    if (subscription.status === 'ENDED') {
+      throw new AppError('اشتراك الغسيل منتهٍ');
+    }
+
+    const today = todayDateOnly();
+    if (!isMakeupEligible(visit, today)) {
+      throw new AppError('هذه الغسلة غير مؤهلة للتعويض');
+    }
+
+    const window = makeupWindow(visit.period, today);
+    if (date.getTime() < today.getTime() || date.getTime() > window.latest.getTime()) {
+      throw new AppError('التاريخ المحدد خارج نافذة التعويض المسموحة');
+    }
+
+    const insidePause = subscription.pauses.some(
+      (p) => p.fromDate.getTime() <= date.getTime() && date.getTime() <= p.toDate.getTime()
+    );
+    if (insidePause) {
+      throw new AppError('التاريخ المحدد يقع ضمن فترة إيقاف للاشتراك');
+    }
+
+    const conflict = await db.washVisit.findFirst({
+      where: {
+        period: { subscriptionId: subscription.id },
+        id: { not: visitId },
+        scheduledDate: date,
+        status: { not: 'SKIPPED' },
+      },
+      select: { id: true },
+    });
+    if (conflict) {
+      throw new AppError('يوجد غسيل آخر مجدول للسيارة في هذا اليوم');
+    }
+
+    const formattedDueDate = formatDateOnly(visit.dueDate);
+    let notes = `تعويض عن غسلة ${formattedDueDate}`;
+    if (visit.skipReason) {
+      const reasonLabel = REASON_LABELS[visit.skipReason] ?? visit.skipReason;
+      notes += ` — ${reasonLabel}`;
+    }
+
+    /*
+      تُنفَّذ عملية التحديث بشرط تطابق المعرّف والحالة والتاريخ وقت الفحص،
+      حتى إذا طرأ تغيير متزامن سَبَق تنفيذ الطلب لا تُدرَس التعديلات على سجل متغيّر.
+    */
+    const updated = await db.$transaction(async (tx) => {
+      return tx.washVisit.updateMany({
+        where: {
+          id: visitId,
+          status: visit.status,
+          scheduledDate: visit.scheduledDate,
+        },
+        data: {
+          status: 'PLANNED',
+          scheduledDate: date,
+          skipReason: null,
+          completedAt: null,
+          completedByEmployeeId: null,
+          recordedByUserId: null,
+          notes,
+        },
+      });
+    });
+
+    if (updated.count !== 1) {
+      throw new AppError('تغيّرت حالة الغسلة — حدّث الصفحة');
+    }
+
+    revalidateWash([subscription.id]);
+    return {
+      id: visitId,
+      message: `نُقلت الغسلة إلى ${formatWeekday(date)} ${formatDateOnly(date)}`,
+    };
   },
 });
 

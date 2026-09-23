@@ -25,16 +25,20 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, formatDateOnly, todayDateOnly } from '@/lib/utils';
 import { checkGeolocationSupport, directionsUrl, getGeolocationErrorMessage } from '@/lib/geo';
 import { waMeLink } from '@/lib/whatsapp';
 import { completeWashVisit, saveWashVisitLocation, skipWashVisit, undoWashVisit } from '../actions';
+import { isMakeupEligible } from '../makeup';
+import { MakeupPanel } from '../makeup-panel';
 
 type VisitStatus = 'PLANNED' | 'COMPLETED' | 'SKIPPED';
-type SkipReason = 'CAR_ABSENT' | 'CUSTOMER_TRAVEL' | 'WEATHER' | 'OTHER';
+type SkipReason = 'CAR_ABSENT' | 'CUSTOMER_TRAVEL' | 'WEATHER' | 'OPERATIONAL' | 'OTHER';
 
 export interface TodayVisit {
   id: string;
+  dueDate: Date;
+  scheduledDate: Date;
   status: VisitStatus;
   skipReason: string | null;
   customerName: string;
@@ -87,6 +91,7 @@ export interface TodayRouteProps {
   visits: TodayVisit[];
   isToday: boolean;
   canRecord: boolean;
+  canReschedule?: boolean;
   doneCount: number;
   remainingCount: number;
   upcomingRound?: { dateStr: string; dateLabel: string; count: number } | null;
@@ -98,10 +103,18 @@ export interface TodayRouteProps {
   washerFilterInfo?: WasherFilterInfo;
 }
 
-const REASONS: Array<{ value: SkipReason; label: string }> = [
+const WASHER_REASONS: Array<{ value: SkipReason; label: string }> = [
   { value: 'CAR_ABSENT', label: 'سيارة غير موجودة' },
   { value: 'CUSTOMER_TRAVEL', label: 'العميل مسافر' },
   { value: 'WEATHER', label: 'طقس' },
+  { value: 'OTHER', label: 'سبب آخر' },
+];
+
+const SUPERVISOR_REASONS: Array<{ value: SkipReason; label: string }> = [
+  { value: 'CAR_ABSENT', label: 'سيارة غير موجودة' },
+  { value: 'CUSTOMER_TRAVEL', label: 'العميل مسافر' },
+  { value: 'WEATHER', label: 'طقس' },
+  { value: 'OPERATIONAL', label: 'من جهتنا (لم يحضر الغسّيل)' },
   { value: 'OTHER', label: 'سبب آخر' },
 ];
 
@@ -109,6 +122,7 @@ const REASON_LABELS: Record<string, string> = {
   CAR_ABSENT: 'السيارة غير موجودة',
   CUSTOMER_TRAVEL: 'العميل مسافر',
   WEATHER: 'الطقس',
+  OPERATIONAL: 'من جهتنا (لم يحضر الغسّيل)',
   OTHER: 'سبب آخر',
   HOLIDAY: 'عطلة رسمية',
 };
@@ -117,6 +131,7 @@ export function TodayRoute({
   visits,
   isToday,
   canRecord,
+  canReschedule = false,
   doneCount,
   remainingCount,
   upcomingRound,
@@ -435,6 +450,7 @@ export function TodayRoute({
                     visit={visit}
                     order={index + 1}
                     canRecord={canRecord}
+                    canReschedule={canReschedule}
                     isSupervisor={isSupervisor}
                   />
                 ))}
@@ -450,6 +466,7 @@ export function TodayRoute({
               visit={visit}
               order={index + 1}
               canRecord={canRecord}
+              canReschedule={canReschedule}
               isSupervisor={isSupervisor}
             />
           ))}
@@ -492,11 +509,13 @@ function VisitCard({
   visit,
   order,
   canRecord,
+  canReschedule = false,
   isSupervisor = false,
 }: {
   visit: TodayVisit;
   order: number;
   canRecord: boolean;
+  canReschedule?: boolean;
   isSupervisor?: boolean;
 }) {
   const router = useRouter();
@@ -505,6 +524,10 @@ function VisitCard({
   const [status, setStatus] = useState(visit.status);
   const [reason, setReason] = useState(visit.skipReason);
   const [showReasons, setShowReasons] = useState(false);
+
+  const today = todayDateOnly();
+  const isMakeup = visit.scheduledDate.getTime() !== visit.dueDate.getTime();
+  const eligibleForMakeup = isMakeupEligible(visit, today);
 
   const collapsed = status !== 'PLANNED';
 
@@ -601,15 +624,24 @@ function VisitCard({
     });
   }
 
+  const reasonsList = isSupervisor ? SUPERVISOR_REASONS : WASHER_REASONS;
+
   if (collapsed) {
     return (
       <Card id={`visit-card-${visit.id}`} className="overflow-hidden">
-        <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3">
           <span className="tnum flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-2)] text-xs font-bold text-[var(--text-2)]">
             {order}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-[var(--text-0)]">{visit.customerName}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="truncate text-sm font-bold text-[var(--text-0)]">{visit.customerName}</p>
+              {isMakeup && (
+                <Badge tone="accent" className="text-[10px]">
+                  تعويض عن {formatDateOnly(visit.dueDate)}
+                </Badge>
+              )}
+            </div>
             <p className="truncate text-[12px] text-[var(--text-2)]" dir="ltr">
               {visit.car}
               {visit.plateNo ? ` · ${visit.plateNo}` : ''}
@@ -641,6 +673,10 @@ function VisitCard({
             )}
           </div>
 
+          {isSupervisor && canReschedule && eligibleForMakeup && (
+            <MakeupPanel visitId={visit.id} />
+          )}
+
           {canRecord && (
             <Button variant="ghost" size="sm" onClick={undo} disabled={pending}>
               {pending ? <Loader2 className="animate-spin size-4" /> : <RotateCcw className="size-4" />}
@@ -659,7 +695,14 @@ function VisitCard({
           {order}
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-extrabold text-[var(--text-0)]">{visit.customerName}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-extrabold text-[var(--text-0)]">{visit.customerName}</h2>
+            {isMakeup && (
+              <Badge tone="accent">
+                تعويض عن {formatDateOnly(visit.dueDate)}
+              </Badge>
+            )}
+          </div>
           {/*
             اسم السيارة لاتيني ورقم اللوحة لاتيني، وبينهما نصٌّ عربي: تُركا
             متجاورين فالتصقا حتى قُرئا شيئاً واحداً — «Nissan Patrol 3-33333».
@@ -755,7 +798,13 @@ function VisitCard({
           )}
         </div>
 
-        {/* أزرار التسجيل تظهر عند canRecord (الشاشة تعكس visitMutationContext في الخادم) */}
+        {/* أزرار التسجيل والتعويض للمشرف */}
+        {isSupervisor && canReschedule && eligibleForMakeup && (
+          <div className="pt-2 border-t border-[var(--line)]">
+            <MakeupPanel visitId={visit.id} />
+          </div>
+        )}
+
         {canRecord && (
           <>
             <Button
@@ -783,7 +832,7 @@ function VisitCard({
 
             {showReasons && (
               <div className="grid grid-cols-2 gap-2" aria-label="سبب تعذّر الغسيل">
-                {REASONS.map((item) => (
+                {reasonsList.map((item) => (
                   <Button
                     key={item.value}
                     variant="outline"

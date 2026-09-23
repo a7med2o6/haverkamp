@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AlertTriangle } from 'lucide-react';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/guard';
+import { can } from '@/lib/rbac';
 import {
   dateOnlyFromInput,
   dateOnlyToInput,
@@ -153,6 +154,8 @@ export default async function WashTodayPage({
       const subscription = visit.period.subscription;
       return {
         id: visit.id,
+        dueDate: visit.dueDate,
+        scheduledDate: visit.scheduledDate,
         status: visit.status as 'PLANNED' | 'COMPLETED' | 'SKIPPED',
         skipReason: visit.skipReason,
         customerName: subscription.customer.name,
@@ -356,10 +359,14 @@ export default async function WashTodayPage({
     }
   }
 
+  const canReschedule = can(session.user.role, 'wash:write');
+
   const mappedVisits = filteredVisits.map((visit) => {
     const subscription = visit.period.subscription;
     return {
       id: visit.id,
+      dueDate: visit.dueDate,
+      scheduledDate: visit.scheduledDate,
       status: visit.status as 'PLANNED' | 'COMPLETED' | 'SKIPPED',
       skipReason: visit.skipReason,
       customerName: subscription.customer.name,
@@ -406,6 +413,7 @@ export default async function WashTodayPage({
         visits={mappedVisits}
         isToday={isToday}
         canRecord={canRecord}
+        canReschedule={canReschedule}
         doneCount={done}
         remainingCount={remaining}
         upcomingRound={upcomingRound}

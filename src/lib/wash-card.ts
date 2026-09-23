@@ -61,6 +61,7 @@ async function load(token: string) {
             orderBy: { scheduledDate: 'asc' },
             select: {
               id: true,
+              dueDate: true,
               scheduledDate: true,
               status: true,
               skipReason: true,
@@ -147,12 +148,16 @@ async function load(token: string) {
       nextWash: nextPlannedVisit
         ? {
             id: nextPlannedVisit.id,
+            dueDate: nextPlannedVisit.dueDate,
             scheduledDate: nextPlannedVisit.scheduledDate,
+            isMakeup: nextPlannedVisit.scheduledDate.getTime() !== nextPlannedVisit.dueDate.getTime(),
           }
         : null,
       visits: currentRaw.visits.map((v) => ({
         id: v.id,
+        dueDate: v.dueDate,
         scheduledDate: v.scheduledDate,
+        isMakeup: v.scheduledDate.getTime() !== v.dueDate.getTime(),
         status: v.status as WashVisitStatus,
         skipReason: v.skipReason as WashSkipReason | null,
         completedAt: v.completedAt,

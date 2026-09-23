@@ -16,6 +16,8 @@ import { washLocationLine } from '@/app/dashboard/wash/location';
 import { directionsUrl } from '@/lib/geo';
 import { qrSvg } from '@/lib/qr';
 import { siteUrl } from '@/lib/site-url';
+import { isMakeupEligible } from '../makeup';
+import { MakeupPanel } from '../makeup-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +34,7 @@ const SKIP_REASON = {
   CUSTOMER_TRAVEL: 'العميل مسافر',
   WEATHER: 'الطقس',
   HOLIDAY: 'عطلة رسمية',
-  OPERATIONAL: 'سبب تشغيلي',
+  OPERATIONAL: 'من جهتنا (لم يحضر الغسّيل)',
   OTHER: 'سبب آخر',
 };
 
@@ -406,9 +408,11 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
                             لا توجد غسلات بعد
                           </p>
                         ) : (
-                          <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                          <div className="grid items-start gap-2.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                             {period.visits.map((visit) => {
                               const isToday = visit.scheduledDate.getTime() === today.getTime();
+                              const isMakeup = visit.scheduledDate.getTime() !== visit.dueDate.getTime();
+                              const eligibleForMakeup = isMakeupEligible(visit, today);
                               const visitStatus = VISIT_STATUS[visit.status];
                               const washer = visit.completedByEmployee ?? visit.assignedEmployee;
                               /*
@@ -427,40 +431,55 @@ export default async function WashSubscriptionDetailPage({ params }: { params: P
                                 <div
                                   key={visit.id}
                                   className={cn(
-                                    'rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px]',
+                                    'rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface-1)] px-3 py-2.5 text-[13px] flex flex-col justify-between',
                                     isToday && 'ring-2 ring-accent border-accent bg-accent/5'
                                   )}
                                 >
-                                  <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="font-semibold text-[var(--text-0)]">
-                                        {formatWeekday(visit.scheduledDate)}
-                                      </span>
-                                      <span className="tnum text-[12px] text-[var(--text-2)]">
-                                        {formatDateOnly(visit.scheduledDate)}
-                                      </span>
+                                  <div>
+                                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="font-semibold text-[var(--text-0)]">
+                                          {formatWeekday(visit.scheduledDate)}
+                                        </span>
+                                        <span className="tnum text-[12px] text-[var(--text-2)]">
+                                          {formatDateOnly(visit.scheduledDate)}
+                                        </span>
+                                      </div>
+                                      <div className="flex flex-wrap items-center gap-1">
+                                        {isMakeup && (
+                                          <Badge tone="accent">
+                                            تعويض عن {formatDateOnly(visit.dueDate)}
+                                          </Badge>
+                                        )}
+                                        <Badge tone={visitStatus.tone}>{visitStatus.label}</Badge>
+                                      </div>
                                     </div>
-                                    <Badge tone={visitStatus.tone}>{visitStatus.label}</Badge>
+
+                                    {hasMeta && (
+                                      <div className="mt-2 space-y-1 text-[12px] text-[var(--text-2)]">
+                                        {visit.status === 'SKIPPED' && visit.skipReason && (
+                                          <p className="text-warn font-medium">
+                                            السبب: {SKIP_REASON[visit.skipReason]}
+                                          </p>
+                                        )}
+                                        {visit.status === 'COMPLETED' && visit.completedAt && (
+                                          <p className="tnum">تمّت: {completedTime(visit.completedAt)}</p>
+                                        )}
+                                        {showWasher && (
+                                          <p className="text-[var(--text-1)]">
+                                            الغسّيل: <span className="font-medium">{washer.fullName}</span>
+                                          </p>
+                                        )}
+                                        {isToday && (
+                                          <p className="text-[11px] font-bold text-accent">غسلة اليوم</p>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
 
-                                  {hasMeta && (
-                                    <div className="mt-2 space-y-1 text-[12px] text-[var(--text-2)]">
-                                      {visit.status === 'SKIPPED' && visit.skipReason && (
-                                        <p className="text-warn font-medium">
-                                          السبب: {SKIP_REASON[visit.skipReason]}
-                                        </p>
-                                      )}
-                                      {visit.status === 'COMPLETED' && visit.completedAt && (
-                                        <p className="tnum">تمّت: {completedTime(visit.completedAt)}</p>
-                                      )}
-                                      {showWasher && (
-                                        <p className="text-[var(--text-1)]">
-                                          الغسّيل: <span className="font-medium">{washer.fullName}</span>
-                                        </p>
-                                      )}
-                                      {isToday && (
-                                        <p className="text-[11px] font-bold text-accent">غسلة اليوم</p>
-                                      )}
+                                  {canWrite && eligibleForMakeup && (
+                                    <div className="mt-2.5 pt-2 border-t border-[var(--line)]">
+                                      <MakeupPanel visitId={visit.id} />
                                     </div>
                                   )}
                                 </div>

@@ -282,6 +282,11 @@ export default async function PublicWashCardPage({
                       <span className="tnum font-semibold text-[var(--text-0)]">
                         {current.nextWash ? formatDateOnly(current.nextWash.scheduledDate) : '—'}
                       </span>
+                      {current.nextWash?.isMakeup && (
+                        <span className="ms-1.5 text-[11px] font-medium text-accent">
+                          (غسلة تعويضية عن {formatDateOnly(current.nextWash.dueDate)})
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -312,9 +317,16 @@ export default async function PublicWashCardPage({
                 return (
                   <div key={v.id} className="py-3 flex flex-wrap items-center justify-between gap-2 first:pt-0 last:pb-0">
                     <div>
-                      <p className="tnum text-[14px] font-semibold text-[var(--text-0)]">
-                        {formatDateOnly(v.scheduledDate)}
-                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="tnum text-[14px] font-semibold text-[var(--text-0)]">
+                          {formatDateOnly(v.scheduledDate)}
+                        </p>
+                        {v.isMakeup && (
+                          <span className="text-[11px] font-medium text-accent">
+                            غسلة تعويضية عن {formatDateOnly(v.dueDate)}
+                          </span>
+                        )}
+                      </div>
                       {v.status === 'COMPLETED' && v.completedAt && (
                         <p className="tnum text-[12px] text-[var(--text-2)]">
                           تمّت في: {completedTime(v.completedAt)}

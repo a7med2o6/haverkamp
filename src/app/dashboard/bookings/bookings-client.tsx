@@ -31,10 +31,12 @@ export function BookingFormButton({
   booking,
   customers,
   defaultScheduledAt,
+  children,
 }: {
   booking?: BookingValues;
   customers: Array<{ id: string; name: string; phone: string }>;
   defaultScheduledAt?: string;
+  children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -79,14 +81,26 @@ export function BookingFormButton({
 
   return (
     <>
-      <Button
-        variant={isEdit ? 'ghost' : 'primary'}
-        size={isEdit ? 'icon-sm' : 'md'}
-        onClick={() => setOpen(true)}
-        aria-label={isEdit ? 'تعديل الحجز' : undefined}
-      >
-        {isEdit ? <Pencil /> : <><Plus />حجز جديد</>}
-      </Button>
+      {children ? (
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {children}
+        </span>
+      ) : (
+        <Button
+          variant={isEdit ? 'ghost' : 'primary'}
+          size={isEdit ? 'icon-sm' : 'md'}
+          onClick={() => setOpen(true)}
+          aria-label={isEdit ? 'تعديل الحجز' : undefined}
+        >
+          {isEdit ? <Pencil /> : <><Plus />حجز جديد</>}
+        </Button>
+      )}
 
       {open && (
         <Modal

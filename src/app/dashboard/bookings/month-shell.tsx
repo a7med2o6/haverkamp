@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { dayKey } from '@/lib/utils';
-import { DayPanel } from './day-panel';
+import { CalendarShell, useCalendarShell } from './calendar-shell';
 import { MonthGrid, type MonthDay } from './month-grid';
 
 /**
- * الحاوية التفاعلية للتقويم الشهري على جانب سطح المكتب.
- * تدير اختيار اليوم والحجز المتوسع، وتربط شبكة الشهر باللوح الجانبي.
+ * الحاوية التفاعلية للتقويم الشهري.
+ * تدير اختيار اليوم والحجز المتوسع عبر CalendarShell، وتربط شبكة الشهر باللوح الجانبي.
  */
 export function MonthShell({
   monthStart,
@@ -33,49 +33,38 @@ export function MonthShell({
     return dayKey(monthStart);
   }, [days, todayK, monthStart]);
 
-  const [selectedDay, setSelectedDay] = useState<string>(defaultDay);
-  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
-
-  // البحث عن تاريخ وموضوع اليوم المختار
-  const selectedMonthDay = days.find((d) => d.key === selectedDay);
-  const selectedDate = selectedMonthDay?.date ?? new Date(`${selectedDay}T00:00:00`);
-  const selectedDayBookings = selectedMonthDay?.bookings ?? [];
-
-  function handleSelectDay(key: string) {
-    setSelectedDay(key);
-  }
-
-  function handleSelectBooking(bookingId: string, dayKeyVal: string) {
-    setSelectedDay(dayKeyVal);
-    setExpandedBookingId((prev) => (prev === bookingId ? null : bookingId));
-  }
-
-  function handleToggleExpand(bookingId: string) {
-    setExpandedBookingId((prev) => (prev === bookingId ? null : bookingId));
-  }
+  const {
+    selectedDay,
+    selectedDate,
+    selectedDayBookings,
+    expandedBookingId,
+    handleSelectDay,
+    handleSelectBooking,
+    handleToggleExpand,
+  } = useCalendarShell({
+    days,
+    defaultDay,
+  });
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-6 lg:items-start">
-      <div className="min-w-0">
-        <MonthGrid
-          days={days}
-          canWrite={canWrite}
-          selectedDay={selectedDay}
-          onSelectDay={handleSelectDay}
-          onSelectBooking={handleSelectBooking}
-        />
-      </div>
-
-      <DayPanel
-        selectedDay={selectedDay}
-        selectedDate={selectedDate}
-        bookings={selectedDayBookings}
-        expandedBookingId={expandedBookingId}
-        onToggleExpand={handleToggleExpand}
+    <CalendarShell
+      selectedDay={selectedDay}
+      selectedDate={selectedDate}
+      selectedDayBookings={selectedDayBookings}
+      expandedBookingId={expandedBookingId}
+      onToggleExpand={handleToggleExpand}
+      canWrite={canWrite}
+      canWorkshop={canWorkshop}
+      customers={customers}
+    >
+      <MonthGrid
+        days={days}
         canWrite={canWrite}
-        canWorkshop={canWorkshop}
+        selectedDay={selectedDay}
+        onSelectDay={handleSelectDay}
+        onSelectBooking={handleSelectBooking}
         customers={customers}
       />
-    </div>
+    </CalendarShell>
   );
 }

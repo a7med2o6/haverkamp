@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { BOOKING_STATUS } from '@/lib/labels';
 import { DAY_CODES, cn, dayKey, formatMonthLabel, monthKey } from '@/lib/utils';
-import { LEGEND_STATUSES, STATUS_EDGE, type CalendarBooking } from './calendar';
+import { LEGEND_STATUSES, STATUS_CHIP, STATUS_EDGE, type CalendarBooking } from './calendar';
 import type { MonthDay } from './month-grid';
 import { MonthShell } from './month-shell';
 
@@ -68,14 +68,32 @@ export function MonthView({
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        {/* عنوان الشهر وعدّاد الحجوزات مفصولان بشارة مستقلة حتى لا يلتصق الرقم بالسنة */}
-        <div className="flex items-center gap-2">
-          <h2 className="text-[15px] font-bold text-[var(--text-0)]">
-            {formatMonthLabel(monthStart)}
-          </h2>
-          <Badge tone="muted" className="tnum">
-            {inMonthCount} حجز
-          </Badge>
+        {/* عنوان الشهر ومفتاح الألوان وشارة العدّاد */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[15px] font-bold text-[var(--text-0)]">
+              {formatMonthLabel(monthStart)}
+            </h2>
+            <Badge tone="muted" className="tnum">
+              {inMonthCount} حجز
+            </Badge>
+          </div>
+
+          {/* دليل الألوان المدمج شريطياً */}
+          <div className="ms-2 hidden sm:flex flex-wrap items-center gap-1.5">
+            {LEGEND_STATUSES.map((s) => (
+              <span
+                key={s}
+                className={cn(
+                  'inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium border-s-2',
+                  STATUS_CHIP[s],
+                  STATUS_EDGE[s]
+                )}
+              >
+                {BOOKING_STATUS[s].label}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -104,19 +122,6 @@ export function MonthView({
         customers={customers}
         today={today}
       />
-
-      {/* دليل الألوان */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-2)]">
-        {LEGEND_STATUSES.map((s) => (
-          <span key={s} className="inline-flex items-center gap-1.5">
-            <span
-              className={cn('inline-block h-3 w-0.5 rounded-full border-s-2', STATUS_EDGE[s])}
-              style={{ borderInlineStartWidth: 3 }}
-            />
-            {BOOKING_STATUS[s].label}
-          </span>
-        ))}
-      </div>
     </>
   );
 }

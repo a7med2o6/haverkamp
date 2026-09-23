@@ -21,6 +21,7 @@ import { ReminderButton } from './reminder-button';
  * يعتمد عليها موظف الاستقبال لمعاينة حجوزات اليوم المختار وتعديلها وإدارتها دون التنقل بعيداً عن التقويم.
  */
 export function DayPanel({
+  variant = 'aside',
   selectedDay,
   selectedDate,
   bookings,
@@ -30,6 +31,7 @@ export function DayPanel({
   canWorkshop,
   customers,
 }: {
+  variant?: 'aside' | 'inline';
   /** مفتاح اليوم المختار صيغة YYYY-MM-DD */
   selectedDay: string;
   selectedDate: Date;
@@ -47,7 +49,14 @@ export function DayPanel({
   const defaultScheduledAt = `${selectedDay}T10:00`;
 
   return (
-    <aside className="hidden lg:block lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-4 shadow-sm">
+    <aside
+      className={cn(
+        'rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-4 shadow-sm',
+        variant === 'aside'
+          ? 'hidden lg:block lg:sticky lg:top-4 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto'
+          : 'block lg:hidden mt-4'
+      )}
+    >
       {/* ترويسة اللوحة: اليوم والعدد وزر الإضافة ورابط الأسبوع */}
       <div className="mb-4 pb-3 border-b border-[var(--line)]">
         <div className="flex items-center justify-between gap-2">
@@ -79,8 +88,9 @@ export function DayPanel({
 
       {/* قائمة الحجوزات */}
       {sortedBookings.length === 0 ? (
-        <div className="py-8 text-center text-[13px] text-[var(--text-2)]">
-          <p>لا حجوزات في هذا اليوم</p>
+        <div className="py-8 text-center text-[13px] text-[var(--text-2)] space-y-3">
+          {/* زرّ الإضافة في رأس اللوحة فوقه مباشرة؛ نسخةٌ ثانية هنا تكرار */}
+          <p>{canWrite ? 'فاضي — أضف حجزاً من الزرّ أعلاه' : 'فاضي'}</p>
         </div>
       ) : (
         <div className="space-y-2.5">

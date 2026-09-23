@@ -39,6 +39,17 @@ export const STATUS_EDGE: Record<string, string> = {
   NO_SHOW: 'border-s-[var(--mark-muted)]',
 };
 
+/** خلفية زاهية معتمة لكل حالة على شريحة الحجز */
+export const STATUS_CHIP: Record<string, string> = {
+  PENDING: 'bg-[var(--mark-warn)]/14',
+  CONFIRMED: 'bg-[var(--mark-ok)]/14',
+  IN_PROGRESS: 'bg-[var(--mark-accent)]/14',
+  COMPLETED: 'bg-[var(--mark-violet)]/14',
+  CANCELLED: 'bg-[var(--mark-danger)]/14',
+  NO_SHOW: 'bg-[var(--mark-muted)]/14',
+};
+
+
 /**
  * دليل الألوان أسفل التقويم — الحالات الست كاملة.
  * كان يعرض أربعاً لأن لونين منها كانا متطابقين تقريباً فلا يفيد ذكرهما.

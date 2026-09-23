@@ -1,8 +1,10 @@
 'use client';
 
+import { useEffect, useMemo, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { cn, formatBookingTime, formatDayLabel, formatWeekday } from '@/lib/utils';
-import { STATUS_EDGE, type CalendarBooking } from './calendar';
+import { cn, dayKey, formatBookingTime, formatWeekday } from '@/lib/utils';
+import { STATUS_CHIP, STATUS_EDGE, type CalendarBooking } from './calendar';
+import { BookingFormButton } from './bookings-client';
 import { useReschedule } from './use-reschedule';
 
 export interface MonthDay {
@@ -29,14 +31,17 @@ export function MonthGrid({
   selectedDay,
   onSelectDay,
   onSelectBooking,
+  customers = [],
 }: {
   days: MonthDay[];
   canWrite: boolean;
   selectedDay?: string;
   onSelectDay?: (key: string) => void;
   onSelectBooking?: (id: string, dayKey: string) => void;
+  customers?: Array<{ id: string; name: string; phone: string }>;
 }) {
   const dnd = useReschedule();
+  const todayK = dayKey(new Date());
 
   return (
     <>
@@ -56,6 +61,7 @@ export function MonthGrid({
         <div className="grid grid-cols-7 gap-1.5">
           {days.map((d) => {
             const isSelected = selectedDay === d.key;
+            const isPastDay = d.key < todayK;
 
             return (
               <div
@@ -81,29 +87,63 @@ export function MonthGrid({
                   dnd.drop(d.key);
                 }}
                 className={cn(
-                  'flex min-h-28 flex-col rounded-[var(--radius-sm)] border p-1.5 transition-colors lg:min-h-32 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  'group relative flex min-h-24 flex-col rounded-[var(--radius-sm)] border p-1.5 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent',
                   d.isToday ? 'border-accent bg-accent/5' : 'border-[var(--line)]',
                   d.inMonth ? 'bg-[var(--surface-1)]' : 'bg-transparent',
                   !d.inMonth && 'opacity-45',
                   d.isOff && d.inMonth && 'bg-[var(--surface-2)]',
                   dnd.over === d.key && 'border-accent bg-accent/10 ring-1 ring-accent',
-                  isSelected && 'ring-2 ring-accent z-10 relative'
+                  isSelected && 'ring-2 ring-accent z-10'
                 )}
               >
-                <div className="mb-1 flex items-baseline justify-between gap-1">
+                <div className="mb-1 flex items-center justify-between gap-1">
                   <span
                     className={cn(
                       'tnum rounded px-1 text-[12px] font-bold select-none',
-                      d.isToday ? 'text-accent' : 'text-[var(--text-0)]'
+                      d.isToday
+                        ? 'text-accent font-extrabold'
+                        : isPastDay
+                          ? 'text-[var(--text-2)]'
+                          : 'text-[var(--text-0)]'
                     )}
                   >
                     {d.date.getDate()}
                   </span>
-                  {d.bookings.length > 0 && (
-                    <span className="tnum text-[10px] text-[var(--text-2)]">
-                      {d.bookings.length}
-                    </span>
-                  )}
+
+                  <div className="flex items-center gap-1">
+                    {/* زر الإضافة السريعة: يظهر عند الحوم على الخانة في الشهر الحالي وغير الماضية */}
+                    {canWrite && d.inMonth && !isPastDay && (
+                      <div
+                        className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
+                      >
+                        <BookingFormButton
+                          customers={customers}
+                          defaultScheduledAt={`${d.key}T10:00`}
+                        >
+                          <button
+                            type="button"
+                            aria-label="إضافة حجز"
+                            title="إضافة حجز"
+                            className="grid size-5 place-items-center rounded bg-accent/20 hover:bg-accent text-accent hover:text-[var(--accent-ink)] transition-colors text-[12px] font-bold"
+                          >
+                            +
+                          </button>
+                        </BookingFormButton>
+                      </div>
+                    )}
+
+                    {d.bookings.length > 0 && (
+                      <span className="tnum text-[10px] text-[var(--text-2)]">
+                        {d.bookings.length}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex-1 space-y-1">
@@ -136,51 +176,88 @@ export function MonthGrid({
         </div>
       </div>
 
-      {/* الجوال — أيام الشهر التي فيها حجوزات فقط */}
-      <div className="space-y-2 md:hidden">
-        {days
-          .filter((d) => d.inMonth && d.bookings.length > 0)
-          .map((d) => (
-            <div
+      {/* شريط الجوال الأفقي (< md) */}
+      <MobileMonthStrip
+        days={days}
+        selectedDay={selectedDay}
+        onSelectDay={onSelectDay}
+      />
+    </>
+  );
+}
+
+/** شريط أفقي لأيام الشهر على الجوال — يُمرّر الحاوية فقط لتثبيت اليوم المختار في المشهد */
+function MobileMonthStrip({
+  days,
+  selectedDay,
+  onSelectDay,
+}: {
+  days: MonthDay[];
+  selectedDay?: string;
+  onSelectDay?: (key: string) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inMonthDays = useMemo(() => days.filter((d) => d.inMonth), [days]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !selectedDay) return;
+
+    const selectedEl = container.querySelector<HTMLElement>(`[data-day="${selectedDay}"]`);
+    if (!selectedEl) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = selectedEl.getBoundingClientRect();
+
+    const scrollDelta =
+      itemRect.left + itemRect.width / 2 - (containerRect.left + containerRect.width / 2);
+    container.scrollBy({ left: scrollDelta, behavior: 'smooth' });
+  }, [selectedDay]);
+
+  return (
+    <div className="md:hidden">
+      <div
+        ref={containerRef}
+        className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {inMonthDays.map((d) => {
+          const isSelected = selectedDay === d.key;
+          // كل أسماء الأيام تبدأ بـ«ال»، فحرفها الأول «ا» للجميع؛ هذه اختصاراتها المتعارفة
+          const weekdayInitial = ['ح', 'ن', 'ث', 'ر', 'خ', 'ج', 'س'][d.date.getDay()];
+          const hasBookings = d.bookings.length > 0;
+
+          return (
+            <button
               key={d.key}
+              type="button"
+              data-day={d.key}
+              onClick={() => onSelectDay?.(d.key)}
               className={cn(
-                'rounded-[var(--radius-lg)] border bg-[var(--surface-1)] p-2.5',
-                d.isToday ? 'border-accent' : 'border-[var(--line)]'
+                'flex flex-col items-center justify-center shrink-0 w-12 h-14 rounded-[var(--radius-sm)] border text-center transition-all select-none',
+                isSelected
+                  ? 'bg-accent text-[var(--accent-ink)] border-accent shadow-sm font-bold'
+                  : d.isToday
+                    ? 'border-accent text-accent bg-accent/10 font-bold'
+                    : 'border-[var(--line)] bg-[var(--surface-1)] text-[var(--text-1)] hover:border-[var(--line-strong)]'
               )}
             >
-              <p className="mb-1.5 flex items-baseline justify-between gap-2">
-                <span className="text-[13px] font-bold text-[var(--text-0)]">
-                  {formatWeekday(d.date)}{' '}
-                  <span className="tnum font-medium text-[var(--text-2)]">
-                    {formatDayLabel(d.date)}
-                  </span>
-                </span>
-                <span className="tnum text-[11px] text-[var(--text-2)]">
-                  {d.bookings.length} حجز
-                </span>
-              </p>
-              <div className="space-y-1">
-                {d.bookings.map((b) => (
-                  <Chip
-                    key={b.id}
-                    booking={b}
-                    day={d.key}
-                    canWrite={false}
-                    dnd={dnd}
-                    onSelectBooking={onSelectBooking}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-
-        {days.every((d) => !d.inMonth || d.bookings.length === 0) && (
-          <p className="rounded-[var(--radius-lg)] border border-[var(--line)] p-6 text-center text-[13px] text-[var(--text-2)]">
-            لا توجد حجوزات هذا الشهر
-          </p>
-        )}
+              <span className="text-[10px] font-medium opacity-80">{weekdayInitial}</span>
+              <span className="tnum text-[14px] leading-tight font-bold">{d.date.getDate()}</span>
+              {hasBookings ? (
+                <span
+                  className={cn(
+                    'size-1.5 rounded-full mt-0.5',
+                    isSelected ? 'bg-[var(--accent-ink)]' : 'bg-accent'
+                  )}
+                />
+              ) : (
+                <span className="size-1.5 mt-0.5 opacity-0" />
+              )}
+            </button>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -200,8 +277,8 @@ function Chip({
 }) {
   const time = formatBookingTime(b.scheduledAt);
   const isMoving = dnd.moving === b.id;
-  // أمر الشغل يثبّت الموعد — النقل يجري من أمر الشغل عندها
   const draggable = canWrite && !b.hasJob && !dnd.pending;
+  const isCancelled = b.status === 'CANCELLED';
 
   return (
     <div
@@ -227,8 +304,9 @@ function Chip({
       }}
       onDragEnd={() => dnd.end()}
       className={cn(
-        'flex items-baseline gap-1 rounded-[4px] border-s-2 border-[var(--line)] bg-[var(--surface-2)] px-1.5 py-1 transition-colors hover:border-accent cursor-pointer select-none',
+        'flex items-baseline gap-1 rounded-[4px] border-s-2 border-[var(--line)] px-1.5 py-1 transition-colors hover:border-accent cursor-pointer select-none',
         STATUS_EDGE[b.status] ?? 'border-s-[var(--line-strong)]',
+        STATUS_CHIP[b.status] ?? 'bg-[var(--surface-2)]',
         draggable && 'cursor-grab active:cursor-grabbing',
         dnd.dragging?.id === b.id && 'opacity-40',
         isMoving && 'pointer-events-none opacity-50'
@@ -237,11 +315,18 @@ function Chip({
       {isMoving ? (
         <Loader2 className="size-3 shrink-0 animate-spin" />
       ) : (
-        <span className="tnum shrink-0 text-[10px] font-semibold text-[var(--text-1)]">
-          {time ?? '—'}
+        <span className="tnum shrink-0 text-[10px] font-semibold text-[var(--text-1)]" dir="ltr">
+          {time ?? 'بدون وقت'}
         </span>
       )}
-      <span className="truncate text-[11px] text-[var(--text-0)]">{b.name}</span>
+      <span
+        className={cn(
+          'truncate text-[11px] text-[var(--text-0)]',
+          isCancelled && 'line-through opacity-75'
+        )}
+      >
+        {b.name}
+      </span>
     </div>
   );
 }

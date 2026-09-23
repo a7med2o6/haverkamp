@@ -338,9 +338,13 @@ export default async function BookingsPage({
         />
       ) : mode === 'week' ? (
         <WeekView
+          // المفتاح بالأسبوع: التنقّل يُبقي المكوّن حيّاً، فيبقى يومٌ مختار من أسبوعٍ آخر
+          key={toLocalInput(weekStart).slice(0, 10)}
           start={weekStart}
           today={new Date()}
           canWrite={canWrite}
+          canWorkshop={canWorkshop}
+          customers={customers}
           weekend={weekend}
           bookings={calendar}
         />

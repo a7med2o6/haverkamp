@@ -1,14 +1,17 @@
+'use client';
+
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BOOKING_STATUS } from '@/lib/labels';
 import { DAY_CODES, cn, dayKey, formatDayLabel, weekDays } from '@/lib/utils';
 import { LEGEND_STATUSES, STATUS_EDGE, type CalendarBooking } from './calendar';
+import { CalendarShell, useCalendarShell } from './calendar-shell';
 import { WeekGrid, type DayColumn } from './week-grid';
 
 /**
  * تقويم الحجوزات الأسبوعي.
  * الأسبوع أفق التفاصيل: الخانة تتّسع لاسم العميل وخدمته وسيارته.
- * للنظرة الشاملة على الشهر كاملاً هناك عرض الشهر.
+ * يشارك MonthView في نفس غلاف CalendarShell لإظهار اللوح الجانبي لليوم المختار.
  */
 export function WeekView({
   start,
@@ -16,6 +19,8 @@ export function WeekView({
   weekend,
   today,
   canWrite,
+  canWorkshop = false,
+  customers = [],
 }: {
   start: Date;
   bookings: CalendarBooking[];
@@ -23,6 +28,8 @@ export function WeekView({
   weekend: string[];
   today: Date;
   canWrite: boolean;
+  canWorkshop?: boolean;
+  customers?: Array<{ id: string; name: string; phone: string }>;
 }) {
   const days = weekDays(start);
   const end = days[6];
@@ -54,6 +61,22 @@ export function WeekView({
     };
   });
 
+  // يُقرأ مرةً عند التركيب فقط، فلا حاجة لتذكّره
+  const defaultDay = columns.some((d) => d.isToday) ? todayK : dayKey(start);
+
+  const {
+    selectedDay,
+    selectedDate,
+    selectedDayBookings,
+    expandedBookingId,
+    handleSelectDay,
+    handleSelectBooking,
+    handleToggleExpand,
+  } = useCalendarShell({
+    days: columns,
+    defaultDay,
+  });
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -77,7 +100,24 @@ export function WeekView({
         </div>
       </div>
 
-      <WeekGrid days={columns} canWrite={canWrite} />
+      <CalendarShell
+        selectedDay={selectedDay}
+        selectedDate={selectedDate}
+        selectedDayBookings={selectedDayBookings}
+        expandedBookingId={expandedBookingId}
+        onToggleExpand={handleToggleExpand}
+        canWrite={canWrite}
+        canWorkshop={canWorkshop}
+        customers={customers}
+      >
+        <WeekGrid
+          days={columns}
+          canWrite={canWrite}
+          selectedDay={selectedDay}
+          onSelectDay={handleSelectDay}
+          onSelectBooking={handleSelectBooking}
+        />
+      </CalendarShell>
 
       {/* دليل الألوان */}
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-[var(--text-2)]">

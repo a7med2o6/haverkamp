@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
+  AlertTriangle,
   Calendar,
   Check,
   CheckCircle2,
@@ -44,6 +45,7 @@ export interface TodayVisit {
   locationNotes: string | null;
   lat: number | null;
   lng: number | null;
+  assignedEmployee?: { id: string; fullName: string } | null;
 }
 
 export interface DateControlsInfo {
@@ -53,17 +55,47 @@ export interface DateControlsInfo {
   canPrev: boolean;
   canNext: boolean;
   isToday: boolean;
+  currentDateStr: string;
+}
+
+export interface OverdueDayInfo {
+  dateStr: string;
+  dateLabel: string;
+  count: number;
+  isNavigable: boolean;
+}
+
+export interface OverdueBannerInfo {
+  days: OverdueDayInfo[];
+  totalCount: number;
+}
+
+export interface WasherChipInfo {
+  id: string;
+  fullName: string;
+  count: number;
+}
+
+export interface WasherFilterInfo {
+  chips: WasherChipInfo[];
+  unassignedCount: number;
+  selectedWasher: string | null;
+  totalDayVisitsCount: number;
 }
 
 export interface TodayRouteProps {
   visits: TodayVisit[];
   isToday: boolean;
+  canRecord: boolean;
   doneCount: number;
   remainingCount: number;
   upcomingRound?: { dateStr: string; dateLabel: string; count: number } | null;
   routeLink?: string | null;
   totalPointsCount?: number;
   dateControls: DateControlsInfo;
+  isSupervisor?: boolean;
+  overdueBannerInfo?: OverdueBannerInfo;
+  washerFilterInfo?: WasherFilterInfo;
 }
 
 const REASONS: Array<{ value: SkipReason; label: string }> = [
@@ -84,12 +116,16 @@ const REASON_LABELS: Record<string, string> = {
 export function TodayRoute({
   visits,
   isToday,
+  canRecord,
   doneCount,
   remainingCount,
   upcomingRound,
   routeLink,
   totalPointsCount,
   dateControls,
+  isSupervisor = false,
+  overdueBannerInfo,
+  washerFilterInfo,
 }: TodayRouteProps) {
   function scrollToNextPlanned() {
     const firstPlanned = visits.find((v) => v.status === 'PLANNED');
@@ -101,15 +137,100 @@ export function TodayRoute({
     }
   }
 
+  // الاحتفاظ بالفلتر washer عند التنقل بين الأيام
+  const selectedWasher = washerFilterInfo?.selectedWasher;
+  const washerParam = selectedWasher ? `&washer=${selectedWasher}` : '';
+
+  // تجميع البطاقات حسب الغسّال عند اختيار «الكل» في وضع المشرف
+  const isGroupedByWasher = isSupervisor && selectedWasher === null && visits.length > 0;
+
+  interface WasherGroup {
+    key: string;
+    title: string;
+    done: number;
+    total: number;
+    visits: TodayVisit[];
+  }
+
+  const groups: WasherGroup[] = [];
+  if (isGroupedByWasher) {
+    const map = new Map<string, WasherGroup>();
+
+    visits.forEach((visit) => {
+      const key = visit.assignedEmployee ? visit.assignedEmployee.id : 'unassigned';
+      const title = visit.assignedEmployee ? visit.assignedEmployee.fullName : 'غير مسند';
+
+      let group = map.get(key);
+      if (!group) {
+        group = { key, title, done: 0, total: 0, visits: [] };
+        map.set(key, group);
+      }
+      group.visits.push(visit);
+      group.total++;
+      if (visit.status !== 'PLANNED') {
+        group.done++;
+      }
+    });
+
+    const sortedGroups = Array.from(map.values()).sort((a, b) => {
+      if (a.key === 'unassigned') return 1;
+      if (b.key === 'unassigned') return -1;
+      return a.title.localeCompare(b.title, 'ar');
+    });
+    groups.push(...sortedGroups);
+  }
+
   return (
     <div className="space-y-4">
+      {/* شريط تنبيه الغسلات المتأخرة (للمشرف فقط) */}
+      {isSupervisor && overdueBannerInfo && overdueBannerInfo.totalCount > 0 && (
+        <div className="rounded-[var(--radius-lg)] border border-warn/40 bg-warn/10 p-4 text-[var(--text-0)] space-y-2.5 shadow-sm">
+          <div className="flex items-center gap-2 font-extrabold text-sm text-[var(--text-0)]">
+            <AlertTriangle className="size-5 text-warn shrink-0" />
+            {/* العربية لا تقرن العدد بالمفرد والمثنّى: «غسلتان» لا «2 غسلتان» */}
+            <span>
+              {overdueBannerInfo.totalCount === 1
+                ? 'غسلة فات يومها ولم تُسجّل'
+                : overdueBannerInfo.totalCount === 2
+                  ? 'غسلتان فات يومهما ولم تُسجّلا'
+                  : `${overdueBannerInfo.totalCount} ${
+                      overdueBannerInfo.totalCount <= 10 ? 'غسلات' : 'غسلة'
+                    } فات يومها ولم تُسجّل`}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {overdueBannerInfo.days.map((day) =>
+              day.isNavigable ? (
+                <Link
+                  key={day.dateStr}
+                  href={`/dashboard/wash/today?date=${day.dateStr}${washerParam}`}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-warn/50 bg-[var(--surface-1)] px-3 py-1 text-xs font-bold text-warn hover:bg-warn/15 transition-colors"
+                >
+                  <span>{day.dateLabel}</span>
+                  <span className="tnum font-extrabold text-danger">({day.count})</span>
+                </Link>
+              ) : (
+                <span
+                  key={day.dateStr}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--line-strong)] bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--text-2)]"
+                >
+                  <span>{day.dateLabel}</span>
+                  <span className="tnum font-bold text-[var(--text-1)]">({day.count})</span>
+                  <span className="text-[11px] opacity-75">(عبر صفحة الاشتراك)</span>
+                </span>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
       {/* شريط التحكم في اليوم مع العدادات في سطر مضغوط */}
       <div className="rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface-1)] p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         {/* أدوات التنقل بين التواريخ */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {dateControls.canPrev ? (
             <Link
-              href={`/dashboard/wash/today?date=${dateControls.prevStr}`}
+              href={`/dashboard/wash/today?date=${dateControls.prevStr}${washerParam}`}
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 px-2.5 gap-1 text-xs font-semibold')}
             >
               <ChevronRight className="size-4" />
@@ -128,7 +249,7 @@ export function TodayRoute({
 
           {dateControls.canNext ? (
             <Link
-              href={`/dashboard/wash/today?date=${dateControls.nextStr}`}
+              href={`/dashboard/wash/today?date=${dateControls.nextStr}${washerParam}`}
               className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'h-9 px-2.5 gap-1 text-xs font-semibold')}
             >
               غداً
@@ -143,7 +264,7 @@ export function TodayRoute({
 
           {!dateControls.isToday && (
             <Link
-              href="/dashboard/wash/today"
+              href={`/dashboard/wash/today${selectedWasher ? `?washer=${selectedWasher}` : ''}`}
               className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'h-9 ms-1 px-3 text-xs font-bold text-accent')}
             >
               اليوم
@@ -151,7 +272,7 @@ export function TodayRoute({
           )}
         </div>
 
-        {/* عدادات الإنجاز والمتبقي */}
+        {/* عدادات الإنجاز والمتبقي من المعروض */}
         <div className="flex items-center gap-3 tnum border-s border-[var(--line)] ps-3 ms-auto sm:ms-0">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-1)]">
             <CheckCircle2 className="size-4 text-ok shrink-0" />
@@ -167,7 +288,57 @@ export function TodayRoute({
         </div>
       </div>
 
-      {/* زر رابط الجولة المجمعة على الخريطة */}
+      {/* شريط فلترة الغسّالين (للمشرف فقط) */}
+      {isSupervisor && washerFilterInfo && (
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/dashboard/wash/today?date=${dateControls.currentDateStr}`}
+            className={cn(
+              'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-colors border',
+              washerFilterInfo.selectedWasher === null
+                ? 'border-accent bg-accent text-[var(--accent-ink)]'
+                : 'border-[var(--line-strong)] bg-[var(--surface-1)] text-[var(--text-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-0)]'
+            )}
+          >
+            <span>الكل</span>
+            <span className="tnum text-[11px] font-extrabold">({washerFilterInfo.totalDayVisitsCount})</span>
+          </Link>
+
+          {washerFilterInfo.chips.map((w) => (
+            <Link
+              key={w.id}
+              href={`/dashboard/wash/today?date=${dateControls.currentDateStr}&washer=${w.id}`}
+              className={cn(
+                'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-colors border',
+                washerFilterInfo.selectedWasher === w.id
+                  ? 'border-accent bg-accent text-[var(--accent-ink)]'
+                  : 'border-[var(--line-strong)] bg-[var(--surface-1)] text-[var(--text-1)] hover:bg-[var(--surface-2)] hover:text-[var(--text-0)]'
+              )}
+            >
+              <span>{w.fullName}</span>
+              <span className="tnum text-[11px] font-extrabold">({w.count})</span>
+            </Link>
+          ))}
+
+          {washerFilterInfo.unassignedCount > 0 && (
+            <Link
+              href={`/dashboard/wash/today?date=${dateControls.currentDateStr}&washer=unassigned`}
+              className={cn(
+                'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-bold transition-colors border',
+                washerFilterInfo.selectedWasher === 'unassigned'
+                  ? 'border-warn bg-warn text-[var(--surface-1)]'
+                  : 'border-warn/40 bg-warn/10 text-warn hover:bg-warn/20'
+              )}
+            >
+              <TriangleAlert className="size-3.5" />
+              <span>غير مسند</span>
+              <span className="tnum text-[11px] font-extrabold">({washerFilterInfo.unassignedCount})</span>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* زر رابط الجولة المجمعة على الخريطة (يظهر عند تحديد غسّال واحد وفي اليوم الحالي) */}
       {isToday && routeLink && (
         <div className="flex items-center justify-between gap-3">
           <a
@@ -217,7 +388,7 @@ export function TodayRoute({
               </p>
               <div className="mt-5">
                 <Link
-                  href={`/dashboard/wash/today?date=${upcomingRound.dateStr}`}
+                  href={`/dashboard/wash/today?date=${upcomingRound.dateStr}${washerParam}`}
                   className={buttonVariants({ variant: 'secondary', size: 'sm' })}
                 >
                   الانتقال إلى الجولة القادمة
@@ -228,9 +399,48 @@ export function TodayRoute({
             <>
               <CheckCircle2 className="mx-auto size-10 text-ok" />
               <h2 className="mt-3 text-base font-bold text-[var(--text-0)]">لا توجد غسلات مجدولة في هذا اليوم</h2>
-              <p className="mt-1 text-sm text-[var(--text-2)]">ولا توجد جولات قادمة مسندة إليك حالياً.</p>
+              <p className="mt-1 text-sm text-[var(--text-2)]">
+                {isSupervisor
+                  ? 'ولا توجد جولات قادمة مجدولة حالياً.'
+                  : 'ولا توجد جولات قادمة مسندة إليك حالياً.'}
+              </p>
             </>
           )}
+        </div>
+      ) : isGroupedByWasher ? (
+        <div className="space-y-6 pb-28">
+          {groups.map((group) => (
+            <div key={group.key} className="space-y-3">
+              <div className="flex items-center justify-between border-b border-[var(--line-strong)] pb-2 pt-1">
+                <h3
+                  className={cn(
+                    'text-base font-extrabold flex items-center gap-2',
+                    group.key === 'unassigned' ? 'text-warn' : 'text-[var(--text-0)]'
+                  )}
+                >
+                  {group.key === 'unassigned' && <TriangleAlert className="size-4 shrink-0" />}
+                  <span>{group.title}</span>
+                </h3>
+                <Badge tone={group.done === group.total ? 'ok' : 'neutral'}>
+                  <span className="tnum font-bold">
+                    تم {group.done} من {group.total}
+                  </span>
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                {group.visits.map((visit, index) => (
+                  <VisitCard
+                    key={visit.id}
+                    visit={visit}
+                    order={index + 1}
+                    canRecord={canRecord}
+                    isSupervisor={isSupervisor}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 pb-28">
@@ -239,14 +449,15 @@ export function TodayRoute({
               key={visit.id}
               visit={visit}
               order={index + 1}
-              isToday={isToday}
+              canRecord={canRecord}
+              isSupervisor={isSupervisor}
             />
           ))}
         </div>
       )}
 
-      {/* الشريط السفلي العائم والتفاعلي (يظهر فقط في اليوم الحالي عند وجود غسلات متبقية) */}
-      {isToday && remainingCount > 0 && (
+      {/* الشريط السفلي العائم (يظهر عند السماح بالتسجيل وجود غسلات متبقية) */}
+      {canRecord && remainingCount > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line-strong)] bg-[var(--surface-1)]/95 p-3 backdrop-blur-md pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-lg">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-2">
             <div className="flex items-center gap-2 text-sm font-bold text-[var(--text-0)]">
@@ -273,18 +484,20 @@ export function TodayRoute({
 
 /*
   الأزرار التفاعلية (تسجيل الغسيل، التعذر، التراجع، حفظ/تحديث الموقع)
-  تظهر فقط عندما يكون اليوم المعروض هو اليوم الحقيقي (isToday). في أي يوم
-  آخر (أمس أو غداً) تكون البطاقات للعرض فقط، لأن الخادم يرفض العمليات
-  الميدانية خارج يومها بحسب visitMutationContext.
+  الشاشة تعكس visitMutationContext في الخادم: لا تتيح إلا ما يقبله الخادم (canRecord).
+  للغسّيل: canRecord = isToday.
+  للمشرف: canRecord = viewedDate <= today.
 */
 function VisitCard({
   visit,
   order,
-  isToday,
+  canRecord,
+  isSupervisor = false,
 }: {
   visit: TodayVisit;
   order: number;
-  isToday: boolean;
+  canRecord: boolean;
+  isSupervisor?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -297,9 +510,15 @@ function VisitCard({
 
   const waMsg = `مرحباً ${visit.customerName}، فريق هافركامب لغسيل السيارات في الطريق إليك لغسيل سيارتك (${visit.car}).`;
   const waUrl = waMeLink(visit.phone, waMsg);
+  /*
+    الالتقاط يأخذ موقع الجهاز نفسه، فهو موقع السيارة فقط حين يقف حاملُه
+    عندها. المشرف يسجّل من مكتبه غالباً، فلو ضغط لحُفظ موقع المكتب نقطةً
+    للسيارة — وموقعها يُضبط له من صفحة الاشتراك.
+  */
+  const canCapture = canRecord && !isSupervisor;
 
   function handleCaptureLocation() {
-    if (!isToday) return;
+    if (!canCapture) return;
     const supportError = checkGeolocationSupport();
     if (supportError) {
       toast.error(supportError);
@@ -337,7 +556,7 @@ function VisitCard({
   }
 
   function complete() {
-    if (!isToday) return;
+    if (!canRecord) return;
     startTransition(async () => {
       const result = await completeWashVisit({ visitId: visit.id });
       if (!result.ok) {
@@ -352,7 +571,7 @@ function VisitCard({
   }
 
   function skip(skipReason: SkipReason) {
-    if (!isToday) return;
+    if (!canRecord) return;
     startTransition(async () => {
       const result = await skipWashVisit({ visitId: visit.id, reason: skipReason });
       if (!result.ok) {
@@ -368,7 +587,7 @@ function VisitCard({
   }
 
   function undo() {
-    if (!isToday) return;
+    if (!canRecord) return;
     startTransition(async () => {
       const result = await undoWashVisit({ visitId: visit.id });
       if (!result.ok) {
@@ -422,7 +641,7 @@ function VisitCard({
             )}
           </div>
 
-          {isToday && (
+          {canRecord && (
             <Button variant="ghost" size="sm" onClick={undo} disabled={pending}>
               {pending ? <Loader2 className="animate-spin size-4" /> : <RotateCcw className="size-4" />}
               تراجع
@@ -508,7 +727,7 @@ function VisitCard({
                 <Navigation className="size-4" />
                 الاتجاهات
               </a>
-              {isToday && (
+              {canCapture && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -521,7 +740,7 @@ function VisitCard({
                 </Button>
               )}
             </div>
-          ) : isToday ? (
+          ) : canCapture ? (
             <Button
               variant="secondary"
               onClick={handleCaptureLocation}
@@ -536,8 +755,8 @@ function VisitCard({
           )}
         </div>
 
-        {/* أزرار التسجيل تظهر فقط في اليوم الحالي (isToday) */}
-        {isToday && (
+        {/* أزرار التسجيل تظهر عند canRecord (الشاشة تعكس visitMutationContext في الخادم) */}
+        {canRecord && (
           <>
             <Button
               variant="success"

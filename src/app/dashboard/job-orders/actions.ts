@@ -1,9 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import type { Prisma } from '@/generated/prisma/client';
 import { z } from 'zod';
 import { db } from '@/lib/db';
+import { sendInvoiceReceipt } from '@/lib/invoice-receipt';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString, phoneSchema } from '@/lib/action-utils';
 import { normalizePlate } from '@/lib/search';
@@ -222,11 +224,11 @@ async function syncJobInvoice(tx: Prisma.TransactionClient, jobOrderId: string) 
   const status = paid >= total ? 'COMPLETED' : paid > 0 ? 'PARTIAL' : 'DRAFT';
   await tx.order.update({ where: { id: order.id }, data: { subtotal, total, status } });
 
-  return { id: order.id, customerId: order.customerId };
+  return { id: order.id, customerId: order.customerId, status };
 }
 
 /** ما يعرض الفاتورة أو مستحقّها — يُبطَل مع كل مزامنة */
-function revalidateInvoice(invoice: { id: string; customerId: string | null } | null) {
+function revalidateInvoice(invoice: { id: string; customerId: string | null; status?: string } | null) {
   if (!invoice) return;
   // قائمة الأوامر تعرض إجمالي الفاتورة لكل أمر — فتتبعها
   revalidatePath('/dashboard/job-orders');
@@ -234,6 +236,14 @@ function revalidateInvoice(invoice: { id: string; customerId: string | null } | 
   revalidatePath(`/dashboard/invoices/${invoice.id}`);
   if (invoice.customerId) revalidatePath(`/dashboard/customers/${invoice.customerId}`);
   revalidatePath('/dashboard');
+
+  if (invoice.status === 'COMPLETED') {
+    /*
+      تعديل بنود أمر الشغل قد يجعل الفاتورة مسددة بالكامل (مثل تخفيض إجمالي البنود).
+      تأجيل الإرسال بـ after كي لا ينتظر الموظف رد Meta، والحجز يسبق الطلب لمنع المزدوج.
+    */
+    after(() => sendInvoiceReceipt(invoice.id));
+  }
 }
 
 export const updateJobOrder = action({
@@ -561,6 +571,14 @@ export const createInvoiceFromJob = action({
         },
       });
     });
+
+    if (order.status === 'COMPLETED') {
+      /*
+        إصدار فاتورة أمر شغل مسددة بالكامل (مثل دفع العربون كاملاً أو الفاتورة الصفرية) يرسل الإيصال آلياً.
+        تأجيل الإرسال بـ after كي لا ينتظر الموظف رد Meta، والحجز يسبق الطلب لمنع المزدوج.
+      */
+      after(() => sendInvoiceReceipt(order.id));
+    }
 
     revalidatePath(`/dashboard/job-orders/${jobOrderId}`);
     revalidatePath('/dashboard/job-orders');

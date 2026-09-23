@@ -15,6 +15,7 @@ import { CollectPaymentButton } from './collect-button';
 import { DiscountButton } from './discount-button';
 import { VoidInvoiceButton } from './void-button';
 import { ShareInvoiceButton } from './share-button';
+import { ReceiptStatus } from './receipt-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +106,15 @@ export default async function InvoiceDetailPage({
             />
           )}
           {can(role, 'pos:write') && <ShareInvoiceButton orderId={doc.id} />}
+          {doc.channel === 'INVOICE' && (
+            <ReceiptStatus
+              orderId={doc.id}
+              status={doc.status}
+              receiptSentAt={doc.receiptSentAt}
+              receiptError={doc.receiptError}
+              canResend={doc.status === 'COMPLETED' && can(role, 'pos:write')}
+            />
+          )}
 
           {/* ورق الشركة المطبوع للفواتير الرسمية، والأبيض لغيرها، والإيصال لطابعة الكاشير */}
           <div className="flex rounded-[var(--radius-sm)] border border-[var(--line)] p-0.5 text-[12px]">

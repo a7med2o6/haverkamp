@@ -1356,6 +1356,9 @@ model Order {
   /// مفتاح نسخة العميل العامة (/i/[token]) — يولد عند أول مشاركة لا مع كل
   /// فاتورة: ما لم يُرسَل لا يُفتح من خارج اللوحة
   shareToken String? @unique @default(uuid(4))
+  /// إيصال الواتساب التلقائي للفاتورة المسددة
+  receiptSentAt DateTime?
+  receiptError  String?
 
   items    OrderItem[]
   payments Payment[]

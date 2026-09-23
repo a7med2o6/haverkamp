@@ -1,12 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { nextNumber } from '@/lib/counters';
 import { AppError, action, optionalString } from '@/lib/action-utils';
 import type { Prisma } from '@/generated/prisma/client';
 import { todayDateOnly, toNumber } from '@/lib/utils';
+import { sendInvoiceReceipt } from '@/lib/invoice-receipt';
 
 /** يقرّب إلى 3 خانات عشرية (فلس) لتفادي أخطاء الفاصلة العائمة */
 function fils(n: number) {
@@ -352,6 +354,15 @@ export const setOrderDiscount = action({
       return null;
     });
 
+    if (order.channel === 'INVOICE' && settled) {
+      /*
+        الخصم قد يكمل سداد فاتورة أمر الشغل — فيُرسل الإيصال تلقائياً عبر الواتساب.
+        تأجيل الإرسال بـ after تجنباً لانتظار شبكة Meta وتأخير الكاشير،
+        والخدمة تحجز الإرسال مسبقاً قبل الطلب لمنع الرسائل المزدوجة.
+      */
+      after(() => sendInvoiceReceipt(orderId));
+    }
+
     /*
       الخصم يغيّر ما يُطلب من العميل، وما يُطلب يُعرض في غير صفحة الفاتورة:
       أمرُ شغلها يعرض إجماليها، وملفُّ صاحبها يعرض مستحقّه، واللوحة تعرض
@@ -493,6 +504,14 @@ export const collectPayment = action({
         }
       }
     });
+
+    if (order.channel === 'INVOICE' && settled) {
+      /*
+        تحصيل الدفعة التي تمحوا المتبقي وتستكمل سداد فاتورة أمر الشغل يرسل الإيصال آلياً.
+        تأجيل الإرسال بـ after كي لا ينتظر الكاشير رد Meta، والحجز يسبق الطلب لمنع المزدوج.
+      */
+      after(() => sendInvoiceReceipt(orderId));
+    }
 
     revalidatePath('/dashboard/invoices');
     revalidatePath(`/dashboard/invoices/${orderId}`);

@@ -86,6 +86,8 @@ async function load(where: Prisma.OrderWhereUniqueInput) {
     channel: order.channel,
     issuedAt: order.createdAt,
     shareToken: order.shareToken,
+    receiptSentAt: order.receiptSentAt,
+    receiptError: order.receiptError,
     voided,
     void: voided
       ? {

@@ -8,6 +8,8 @@ import { ensureShareToken, invoiceShareUrl } from '@/lib/invoice-document';
 import { waMeLink } from '@/lib/whatsapp';
 import { formatKWD, toNumber } from '@/lib/utils';
 
+import { sendInvoiceReceipt } from '@/lib/invoice-receipt';
+
 /**
  * رابط نسخة العميل من الفاتورة، ورسالة واتساب جاهزة به.
  *
@@ -64,5 +66,25 @@ export const shareInvoice = action({
         whatsapp: order.customer?.phone ? waMeLink(order.customer.phone, text) : null,
       },
     };
+  },
+});
+
+/**
+ * إعادة إرسال إيصال السداد على الواتساب يدوياً.
+ *
+ * يُنفَّذ متزامناً بناءً على رغبة الموظف (force: true) ليتلقى نتيجة الإرسال
+ * مباشرة في الشاشة سواء بالنجاح أو بتوضيح السبب عند الفشل.
+ */
+export const resendInvoiceReceipt = action({
+  permission: 'pos:write',
+  schema: z.object({ orderId: z.string() }),
+  audit: { entity: 'Order', action: 'RECEIPT' },
+  handler: async ({ orderId }) => {
+    const res = await sendInvoiceReceipt(orderId, { force: true });
+    if (!res.ok) {
+      throw new AppError(res.error);
+    }
+    revalidatePath(`/dashboard/invoices/${orderId}`);
+    return { id: orderId, message: 'تم إعادة إرسال إيصال السداد على واتساب' };
   },
 });

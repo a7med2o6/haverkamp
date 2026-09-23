@@ -13,7 +13,8 @@ import { checkLatLng, parseLatLng, roundPoint } from '@/lib/geo';
 import type { Prisma } from '@/generated/prisma/client';
 import { initialPeriodYearMonth, openPeriodForSubscription, openWashMonthRecords } from './month-service';
 import { isMakeupEligible, makeupWindow, suggestMakeupDate } from './makeup';
-import { loadEndingInput, planWashEnding } from './end-service';
+import { executeWashEnding, loadEndingInput, planWashEnding } from './end-service';
+import { openNextPeriod } from './renewal-service';
 
 const dateSchema = z
   .string()
@@ -839,6 +840,49 @@ export const washEndPreview = action({
   },
 });
 
+export const renewWashSubscription = action({
+  permission: 'wash:write',
+  schema: z.object({ id: z.string().min(1, 'اشتراك الغسيل مطلوب') }),
+  audit: { entity: 'WashSubscription', action: 'RENEW' },
+  handler: async ({ id }) => {
+    const result = await db.$transaction(async (tx) => {
+      return openNextPeriod(tx, id);
+    });
+
+    revalidateWash([id]);
+
+    return {
+      id,
+      message: result.opened
+        ? 'تم تجديد اشتراك الغسيل وفتح فترته القادمة وفاتورتها'
+        : 'سبق تجديد هذا الاشتراك وتأكيد فترته القادمة',
+    };
+  },
+});
+
+export const markRenewalNotified = action({
+  permission: 'wash:write',
+  schema: z.object({ periodId: z.string().min(1, 'فترة الاشتراك مطلوبة') }),
+  audit: { entity: 'WashSubscriptionPeriod', action: 'NOTIFY' },
+  handler: async ({ periodId }) => {
+    const period = await db.washSubscriptionPeriod.findUnique({
+      where: { id: periodId },
+      select: { id: true, subscriptionId: true, renewalNotifiedAt: true },
+    });
+    if (!period) throw new AppError('فترة الاشتراك غير موجودة');
+
+    if (!period.renewalNotifiedAt) {
+      await db.washSubscriptionPeriod.update({
+        where: { id: periodId },
+        data: { renewalNotifiedAt: new Date() },
+      });
+    }
+
+    revalidateWash([period.subscriptionId]);
+    return { id: periodId };
+  },
+});
+
 export const endWashSubscription = action({
   permission: 'wash:delete',
   schema: z.object({
@@ -854,71 +898,7 @@ export const endWashSubscription = action({
     const today = todayDateOnly();
 
     const { endDateFormatted, cancelledInvoices, customerId } = await db.$transaction(
-      async (tx) => {
-        const subscription = await tx.washSubscription.findUnique({
-          where: { id },
-          select: { id: true, code: true, notes: true, status: true, customerId: true },
-        });
-        if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
-        if (subscription.status === 'ENDED') throw new AppError('الاشتراك منتهٍ بالفعل');
-
-        // إعادة التخطيط داخل المعاملة تضمن عدم اعتماد القرار على معاينة قديمة متزامنة
-        const periods = await loadEndingInput(tx, id);
-        const result = planWashEnding({ today, periods });
-        if (!result.ok) throw new AppError(result.reason);
-
-        const plan = result.plan;
-        const targetEndDate = dateOnlyFromInput(plan.endDate);
-
-        const noteLine = `أُنهي في ${formatDateOnly(today)}: ${reason}`;
-        const newNotes = subscription.notes ? `${subscription.notes}\n${noteLine}` : noteLine;
-
-        const claimed = await tx.washSubscription.updateMany({
-          where: { id, status: { not: 'ENDED' } },
-          data: {
-            status: 'ENDED',
-            endDate: targetEndDate,
-            notes: newNotes,
-          },
-        });
-        if (claimed.count === 0) throw new AppError('الاشتراك منتهٍ بالفعل');
-
-        for (const inv of plan.cancelledInvoices) {
-          const voided = await tx.order.updateMany({
-            where: {
-              id: inv.orderId,
-              paidAmount: 0,
-              status: { notIn: ['CANCELLED', 'REFUNDED'] },
-            },
-            data: {
-              status: 'CANCELLED',
-              voidedAt: new Date(),
-              voidReason: `إنهاء اشتراك ${subscription.code}: ${reason}`,
-              voidedById: userId,
-            },
-          });
-          if (voided.count === 0) {
-            throw new AppError(`تغيّر سداد الفاتورة ${inv.number} — حدّث الصفحة`);
-          }
-        }
-
-        const unpaidPeriodIds = plan.removedPeriodIds;
-
-        if (unpaidPeriodIds.length > 0) {
-          await tx.washVisit.deleteMany({
-            where: { periodId: { in: unpaidPeriodIds } },
-          });
-          await tx.washSubscriptionPeriod.deleteMany({
-            where: { id: { in: unpaidPeriodIds } },
-          });
-        }
-
-        return {
-          customerId: subscription.customerId,
-          endDateFormatted: formatDateOnly(targetEndDate),
-          cancelledInvoices: plan.cancelledInvoices,
-        };
-      }
+      async (tx) => executeWashEnding(tx, { subscriptionId: id, reason, userId, today })
     );
 
     revalidateWash([id]);

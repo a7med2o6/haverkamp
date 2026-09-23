@@ -56,6 +56,8 @@ export async function sendWhatsApp(params: {
   templateVars?: string[];
   /** ذيل زر الرابط الديناميكي في القالب — التوكن وحده لا الرابط الكامل */
   urlSuffix?: string;
+  /** اسم القالب واللغة المخصصة — عند الرغبة في إرسال قالب يختلف عن القالب الافتراضي */
+  template?: { name: string; lang?: string };
 }): Promise<SendResult> {
   if (!isCloudApiReady()) {
     return { ok: false, error: 'مفاتيح واتساب غير مضبوطة', unconfigured: true };
@@ -64,15 +66,16 @@ export async function sendWhatsApp(params: {
   const to = normalizePhone(params.to);
   if (!to) return { ok: false, error: 'رقم هاتف غير صالح' };
 
-  const template = process.env.WHATSAPP_TEMPLATE;
-  const payload = template
+  const templateName = params.template?.name ?? process.env.WHATSAPP_TEMPLATE;
+  const templateLang = params.template?.lang ?? process.env.WHATSAPP_TEMPLATE_LANG ?? 'ar';
+  const payload = templateName
     ? {
         messaging_product: 'whatsapp',
         to,
         type: 'template',
         template: {
-          name: template,
-          language: { code: process.env.WHATSAPP_TEMPLATE_LANG || 'ar' },
+          name: templateName,
+          language: { code: templateLang },
           components: [
             {
               type: 'body',

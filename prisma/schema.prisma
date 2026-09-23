@@ -1199,6 +1199,11 @@ model WashSubscription {
   @@map("wash_subscriptions")
 }
 
+enum WashRenewalDecision {
+  RENEW
+  DECLINE
+}
+
 enum WashPeriodStatus {
   DUE
   ELIGIBLE
@@ -1207,19 +1212,23 @@ enum WashPeriodStatus {
 
 /** استحقاق شهر واحد يحتفظ بسعر العقد وحدوده كما كانت عند فتحه */
 model WashSubscriptionPeriod {
-  id             String @id @default(cuid())
-  subscriptionId String
-  subscription   WashSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  year           Int
-  month          Int
-  fromDate       DateTime @db.Date
-  toDate         DateTime @db.Date
-  priceSnapshot  Decimal  @db.Decimal(12, 3)
-  orderId        String?  @unique
-  order          Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  status         WashPeriodStatus @default(DUE)
-  eligibleAt     DateTime?
-  createdAt      DateTime @default(now())
+  id                String               @id @default(cuid())
+  subscriptionId    String
+  subscription      WashSubscription     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  year              Int
+  month             Int
+  fromDate          DateTime             @db.Date
+  toDate            DateTime             @db.Date
+  priceSnapshot     Decimal              @db.Decimal(12, 3)
+  orderId           String?              @unique
+  order             Order?               @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  status            WashPeriodStatus     @default(DUE)
+  eligibleAt        DateTime?
+  renewalNotifiedAt DateTime?
+  renewalRemindedAt DateTime?
+  renewalDecision   WashRenewalDecision?
+  renewalDecidedAt  DateTime?
+  createdAt         DateTime             @default(now())
 
   visits WashVisit[]
 

@@ -1,5 +1,6 @@
 import type { Prisma } from '@/generated/prisma/client';
-import { dateOnlyToInput, toNumber } from '@/lib/utils';
+import { AppError } from '@/lib/action-utils';
+import { dateOnlyFromInput, dateOnlyToInput, formatDateOnly, toNumber } from '@/lib/utils';
 
 export type WashEndPlan = {
   endDate: string; // 'YYYY-MM-DD' — آخر يوم غسيل مدفوع
@@ -158,4 +159,83 @@ export async function loadEndingInput(
     },
     orderBy: { fromDate: 'asc' },
   });
+}
+
+/**
+ * يُنفّذ عملية إنهاء اشتراك الغسيل داخل معاملة قاعدة البيانات.
+ * ما دُفع يُخدم حتى نهايته، وما لم يُدفع تُسترجع فواتيره وتُلغى زياراته.
+ */
+export async function executeWashEnding(
+  tx: Prisma.TransactionClient,
+  params: {
+    subscriptionId: string;
+    reason: string;
+    userId: string | null;
+    today: Date;
+  }
+) {
+  const { subscriptionId: id, reason, userId, today } = params;
+
+  const subscription = await tx.washSubscription.findUnique({
+    where: { id },
+    select: { id: true, code: true, notes: true, status: true, customerId: true },
+  });
+  if (!subscription) throw new AppError('اشتراك الغسيل غير موجود');
+  if (subscription.status === 'ENDED') throw new AppError('الاشتراك منتهٍ بالفعل');
+
+  const periods = await loadEndingInput(tx, id);
+  const result = planWashEnding({ today, periods });
+  if (!result.ok) throw new AppError(result.reason);
+
+  const plan = result.plan;
+  const targetEndDate = dateOnlyFromInput(plan.endDate);
+
+  const noteLine = `أُنهي في ${formatDateOnly(today)}: ${reason}`;
+  const newNotes = subscription.notes ? `${subscription.notes}\n${noteLine}` : noteLine;
+
+  const claimed = await tx.washSubscription.updateMany({
+    where: { id, status: { not: 'ENDED' } },
+    data: {
+      status: 'ENDED',
+      endDate: targetEndDate,
+      notes: newNotes,
+    },
+  });
+  if (claimed.count === 0) throw new AppError('الاشتراك منتهٍ بالفعل');
+
+  for (const inv of plan.cancelledInvoices) {
+    const voided = await tx.order.updateMany({
+      where: {
+        id: inv.orderId,
+        paidAmount: 0,
+        status: { notIn: ['CANCELLED', 'REFUNDED'] },
+      },
+      data: {
+        status: 'CANCELLED',
+        voidedAt: new Date(),
+        voidReason: `إنهاء اشتراك ${subscription.code}: ${reason}`,
+        voidedById: userId,
+      },
+    });
+    if (voided.count === 0) {
+      throw new AppError(`تغيّر سداد الفاتورة ${inv.number} — حدّث الصفحة`);
+    }
+  }
+
+  const unpaidPeriodIds = plan.removedPeriodIds;
+
+  if (unpaidPeriodIds.length > 0) {
+    await tx.washVisit.deleteMany({
+      where: { periodId: { in: unpaidPeriodIds } },
+    });
+    await tx.washSubscriptionPeriod.deleteMany({
+      where: { id: { in: unpaidPeriodIds } },
+    });
+  }
+
+  return {
+    customerId: subscription.customerId,
+    endDateFormatted: formatDateOnly(targetEndDate),
+    cancelledInvoices: plan.cancelledInvoices,
+  };
 }

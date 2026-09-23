@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import type { WashSkipReason, WashSubscriptionStatus, WashVisitStatus } from '@/generated/prisma/client';
 import { db } from '@/lib/db';
 import { washLocationLine } from '@/app/dashboard/wash/location';
+import { washPeriodBounds } from '@/app/dashboard/wash/month-service';
+import { isRenewalOpen, nextPeriodYearMonth, splitEndingPeriod } from '@/app/dashboard/wash/renewal-service';
 import { formatDateOnly, todayDateOnly, toNumber } from '@/lib/utils';
 
 /**
@@ -49,6 +51,10 @@ async function load(token: string) {
           toDate: true,
           priceSnapshot: true,
           status: true,
+          renewalNotifiedAt: true,
+          renewalRemindedAt: true,
+          renewalDecision: true,
+          renewalDecidedAt: true,
           order: {
             select: {
               id: true,
@@ -183,6 +189,36 @@ async function load(token: string) {
     };
   });
 
+  let renewal: {
+    open: boolean;
+    decision: 'RENEW' | 'DECLINE' | null;
+    endsOn: Date;
+    nextPrice: number;
+    nextFrom: Date | null;
+  } | null = null;
+
+  const { ending: latestPeriod, next: nextPeriod } = splitEndingPeriod(subscription.periods, today);
+  if (latestPeriod) {
+    const open = isRenewalOpen(subscription, today);
+    const decision = nextPeriod
+      ? 'RENEW'
+      : ((latestPeriod.renewalDecision as 'RENEW' | 'DECLINE' | null) ?? null);
+    const endsOn = latestPeriod.toDate;
+    const nextPrice = toNumber(subscription.monthlyPrice);
+
+    const { year: nextYear, month: nextMonth } = nextPeriodYearMonth(latestPeriod);
+    const nextBounds = washPeriodBounds(subscription.startDate, nextYear, nextMonth);
+    const nextFrom = nextPeriod?.fromDate ?? nextBounds?.fromDate ?? null;
+
+    renewal = {
+      open,
+      decision,
+      endsOn,
+      nextPrice,
+      nextFrom,
+    };
+  }
+
   return {
     subscription: {
       id: subscription.id,
@@ -208,6 +244,7 @@ async function load(token: string) {
     },
     current,
     history,
+    renewal,
     shop: {
       phone: shopPhone,
     },

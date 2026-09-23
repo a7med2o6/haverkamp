@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { VerifyForm } from './verify-form';
 import { AutoRefresh } from './auto-refresh';
 import { SetLocation } from './set-location';
+import { RenewalBox } from './renewal-box';
 import { washStatusBadge } from '@/app/dashboard/wash/status';
 
 export const dynamic = 'force-dynamic';
@@ -137,7 +138,10 @@ export default async function PublicWashCardPage({
           </div>
         </div>
 
-        {subscription.status === 'ENDED' && (
+        <RenewalBox token={token} renewal={doc.renewal} />
+
+        {/* من رفض التجديد يقرأ جوابه في صندوق التجديد؛ إعلان الانتهاء بجانبه يقول الشيء نفسه مرتين */}
+        {subscription.status === 'ENDED' && doc.renewal?.decision !== 'DECLINE' && (
           <div
             className={cn(
               'rounded-[var(--radius-lg)] border p-4 text-center text-[14px] font-medium',

@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import {
   clearWashAttempts,
@@ -10,6 +11,8 @@ import {
   tooManyWashAttempts,
 } from '@/lib/wash-access';
 import { checkLatLng, roundPoint } from '@/lib/geo';
+import { todayDateOnly } from '@/lib/utils';
+import { isRenewalOpen, openNextPeriod, recordDecline, splitEndingPeriod } from '@/app/dashboard/wash/renewal-service';
 
 /**
  * التحقّق قبل عرض كارت متابعة الغسيل: آخر أربعة أرقام من جوّال صاحب الاشتراك.
@@ -103,4 +106,123 @@ export async function saveWashCardLocation(
   });
 
   return { error: null };
+}
+
+async function findAndGateSubscription(token: string) {
+  if (!token) return null;
+
+  const subscription = await db.washSubscription.findUnique({
+    where: { shareToken: token },
+    select: {
+      id: true,
+      status: true,
+      customer: { select: { phone: true } },
+      periods: {
+        orderBy: [{ year: 'desc' }, { month: 'desc' }],
+        take: 2,
+        select: {
+          id: true,
+          fromDate: true,
+          toDate: true,
+          renewalDecision: true,
+        },
+      },
+    },
+  });
+
+  if (!subscription || subscription.status === 'ENDED') return null;
+
+  const guarded = Boolean(phoneLast4(subscription.customer?.phone));
+  const open = !guarded || (await hasWashAccess(token));
+  if (!open) return null;
+
+  return subscription;
+}
+
+/**
+ * تجديد الاشتراك بطلب من العميل عبر الكارت العام (/w/[token]).
+ */
+export async function renewFromCard(
+  token: string
+): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  const subscription = await findAndGateSubscription(token);
+  if (!subscription) {
+    return { ok: false, error: 'تعذّر إكمال الطلب' };
+  }
+
+  const today = todayDateOnly();
+  const { ending, next } = splitEndingPeriod(subscription.periods, today);
+  if (next || ending?.renewalDecision === 'RENEW') {
+    return { ok: true, message: 'سبق تجديد اشتراكك' };
+  }
+
+  if (!isRenewalOpen(subscription, today)) {
+    return { ok: false, error: 'تجديد الاشتراك غير متاح حالياً' };
+  }
+
+  try {
+    await db.$transaction(async (tx) => {
+      await openNextPeriod(tx, subscription.id);
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId: null,
+        action: 'RENEW',
+        entity: 'WashSubscription',
+        entityId: subscription.id,
+      },
+    });
+
+    revalidatePath(`/w/${token}`);
+    return { ok: true, message: 'تم تجديد اشتراكك بنجاح' };
+  } catch {
+    return { ok: false, error: 'تعذّر تجديد الاشتراك' };
+  }
+}
+
+/**
+ * تسجيل عدم رغبة العميل في التجديد عبر الكارت العام (/w/[token]).
+ */
+export async function declineFromCard(
+  token: string
+): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  const subscription = await findAndGateSubscription(token);
+  if (!subscription) {
+    return { ok: false, error: 'تعذّر إكمال الطلب' };
+  }
+
+  const today = todayDateOnly();
+  const { ending, next } = splitEndingPeriod(subscription.periods, today);
+  if (ending?.renewalDecision === 'DECLINE') {
+    return { ok: true, message: 'تم تسجيل عدم رغبتك في التجديد' };
+  }
+  // من جدّد ثم عدل يكلّمنا: إلغاء شهرٍ فُتحت فاتورته قرارُ موظف لا زرٌّ في رابط
+  if (next) {
+    return { ok: false, error: 'سبق تجديد اشتراكك — تواصل معنا لإلغاء التجديد' };
+  }
+
+  if (!isRenewalOpen(subscription, today)) {
+    return { ok: false, error: 'تعديل الاشتراك غير متاح حالياً' };
+  }
+
+  try {
+    await db.$transaction(async (tx) => {
+      await recordDecline(tx, subscription.id, today);
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId: null,
+        action: 'DECLINE',
+        entity: 'WashSubscription',
+        entityId: subscription.id,
+      },
+    });
+
+    revalidatePath(`/w/${token}`);
+    return { ok: true, message: 'تم تسجيل طلب عدم التجديد' };
+  } catch {
+    return { ok: false, error: 'تعذّر تسجيل طلب عدم التجديد' };
+  }
 }

@@ -11,7 +11,8 @@ import { buttonVariants } from '@/components/ui/button';
 import { EmptyState, Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { withFrom } from '@/lib/back-link';
 import { cn, formatDateOnly, formatKWD, todayDateOnly, toNumber } from '@/lib/utils';
-import { OpenWashMonthButton } from '../open-month-button';
+import { loadRenewalBoard } from '../renewal-service';
+import { RenewalBoard } from './renewals';
 
 export const metadata: Metadata = { title: 'تحصيل اشتراكات الغسيل' };
 export const dynamic = 'force-dynamic';
@@ -66,6 +67,8 @@ export default async function WashBillingPage({
   const hasNext = next.year <= MAX_YEAR;
   const isCurrentMonth = year === currentYear && month === currentMonth;
   const canWrite = can(session.user.role, 'wash:write');
+
+  const renewalRows = await loadRenewalBoard(today);
 
   const periods = await db.washSubscriptionPeriod.findMany({
     where: { year, month },
@@ -144,22 +147,26 @@ export default async function WashBillingPage({
         }
       />
 
-      <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="عدد المشتركين" value={periods.length} icon="Users" />
-        <StatCard label="المستحق" value={formatKWD(totals.due)} icon="ReceiptText" tone="warn" />
-        <StatCard
-          label="المحصّل"
-          value={formatKWD(totals.paid)}
-          hint={`نسبة التحصيل ${collectionRate}%`}
-          icon="BadgeCheck"
-          tone="ok"
-        />
-        <StatCard
-          label="المتبقّي"
-          value={formatKWD(remaining)}
-          icon="CircleAlert"
-          tone={remaining > 0 ? 'danger' : 'neutral'}
-        />
+      <div className="mb-6 space-y-5">
+        <RenewalBoard rows={renewalRows} canWrite={canWrite} />
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="عدد المشتركين" value={periods.length} icon="Users" />
+          <StatCard label="المستحق" value={formatKWD(totals.due)} icon="ReceiptText" tone="warn" />
+          <StatCard
+            label="المحصّل"
+            value={formatKWD(totals.paid)}
+            hint={`نسبة التحصيل ${collectionRate}%`}
+            icon="BadgeCheck"
+            tone="ok"
+          />
+          <StatCard
+            label="المتبقّي"
+            value={formatKWD(remaining)}
+            icon="CircleAlert"
+            tone={remaining > 0 ? 'danger' : 'neutral'}
+          />
+        </div>
       </div>
 
       <TableWrap>
@@ -181,13 +188,10 @@ export default async function WashBillingPage({
           <tbody>
             {periods.length === 0 ? (
               <EmptyState
-                title={`لم يُفتح شهر ${label} بعد`}
-                description="افتح الشهر لإنشاء فواتير الاشتراكات وجدول الغسلات المستحقة."
+                title="لا فترات لهذا الشهر"
+                description="العقود تتجدّد من قائمة التجديدات أعلاه."
                 colSpan={9}
-                icon={<CircleDollarSign className="size-6" />}
-                action={
-                  canWrite ? <OpenWashMonthButton year={year} month={month} label={label} /> : null
-                }
+                icon={<CircleDollarSign className="size-6 text-[var(--text-2)]" />}
               />
             ) : (
               periods.map((period) => {
